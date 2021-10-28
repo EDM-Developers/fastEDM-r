@@ -11,6 +11,39 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// run_command
+std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List ropts, int tau, int p, int numReps, int crossfold, bool full, bool dtMode, bool allowMissing, int verbosity);
+RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP libsSEXP, SEXP roptsSEXP, SEXP tauSEXP, SEXP pSEXP, SEXP numRepsSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP dtModeSEXP, SEXP allowMissingSEXP, SEXP verbositySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type es(esSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type libs(libsSEXP);
+    Rcpp::traits::input_parameter< List >::type ropts(roptsSEXP);
+    Rcpp::traits::input_parameter< int >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type numReps(numRepsSEXP);
+    Rcpp::traits::input_parameter< int >::type crossfold(crossfoldSEXP);
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    Rcpp::traits::input_parameter< bool >::type dtMode(dtModeSEXP);
+    Rcpp::traits::input_parameter< bool >::type allowMissing(allowMissingSEXP);
+    Rcpp::traits::input_parameter< int >::type verbosity(verbositySEXP);
+    rcpp_result_gen = Rcpp::wrap(run_command(df, es, libs, ropts, tau, p, numReps, crossfold, full, dtMode, allowMissing, verbosity));
+    return rcpp_result_gen;
+END_RCPP
+}
+// run_json_test
+std::string run_json_test(std::string fnameIn);
+RcppExport SEXP _fastEDM_run_json_test(SEXP fnameInSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type fnameIn(fnameInSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_json_test(fnameIn));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcppeigen_hello_world
 Eigen::MatrixXd rcppeigen_hello_world();
 RcppExport SEXP _fastEDM_rcppeigen_hello_world() {
@@ -56,6 +89,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 12},
+    {"_fastEDM_run_json_test", (DL_FUNC) &_fastEDM_run_json_test, 1},
     {"_fastEDM_rcppeigen_hello_world", (DL_FUNC) &_fastEDM_rcppeigen_hello_world, 0},
     {"_fastEDM_rcppeigen_outerproduct", (DL_FUNC) &_fastEDM_rcppeigen_outerproduct, 1},
     {"_fastEDM_rcppeigen_innerproduct", (DL_FUNC) &_fastEDM_rcppeigen_innerproduct, 1},
