@@ -655,8 +655,17 @@ void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, co
 
   // Pull out the nearest neighbours from the manifold, and
   // simultaneously prepend a column of ones in front of the manifold data.
+#if EIGEN_VERSION_AT_LEAST(3,4,0)
   MatrixXd X_ls_cj(k, M.E_actual() + 1);
   X_ls_cj << Eigen::VectorXd::Ones(k), M.map()(kNNInds, Eigen::all);
+#else
+  MatrixXd X_ls(k, M.E_actual());
+  for (int i = 0; i < k; i++) {
+    X_ls.row(i) = M.map().row(kNNInds[i]);
+  }
+  MatrixXd X_ls_cj(k, M.E_actual() + 1);
+  X_ls_cj << Eigen::VectorXd::Ones(k), X_ls;
+#endif
 
   // Calculate the weight for each neighbour
   Eigen::Map<const Eigen::VectorXd> distsMap(&(dists[0]), dists.size());
@@ -665,17 +674,32 @@ void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, co
   // For the sake of debugging, count how many neighbours we end up with.
   if (opts.saveKUsed) {
     int numNonZeroWeights = 0;
+#if EIGEN_VERSION_AT_LEAST(3,4,0)
     for (double& w_i : w) {
       if (w_i > 0) {
         numNonZeroWeights += 1;
       }
     }
+#else
+    for (int i = 0; i < w.size(); i++) {
+      if (w[i] > 0) {
+        numNonZeroWeights += 1;
+      }
+    }
+#endif
     *kUsed = numNonZeroWeights;
   }
 
   // Scale everything by our weights vector
+#if EIGEN_VERSION_AT_LEAST(3,4,0)
   X_ls_cj.array().colwise() *= w.array();
   Eigen::VectorXd y_ls = M.yMap()(kNNInds).array() * w.array();
+#else
+  Eigen::VectorXd y_ls(k);
+  for (int i = 0; i < k; i++) {
+    y_ls[i] = M.y(kNNInds[i]) * w[i];
+  }
+#endif
 
   // The old way to solve this system:
   // Eigen::BDCSVD<MatrixXd> svd(X_ls_cj, Eigen::ComputeThinU | Eigen::ComputeThinV);
