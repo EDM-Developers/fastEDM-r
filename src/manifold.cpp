@@ -182,7 +182,7 @@ Manifold ManifoldGenerator::create_manifold(int E, const std::vector<bool>& filt
     }
   }
 
-  auto flat = std::make_unique<double[]>(nobs * E_actual(E));
+  std::shared_ptr<double[]> flat(new double[nobs * E_actual(E)], std::default_delete<double[]>());
 
   std::vector<double> y;
   std::vector<int> panelIDs;

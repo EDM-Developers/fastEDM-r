@@ -38,7 +38,7 @@ class Manifold
   int _nobs, _E_x, _E_dt, _E_extras, _E_lagged_extras, _E_actual;
 
 public:
-  Manifold(std::unique_ptr<double[]>& flat, std::vector<double> y, std::vector<int> panelIDs, int nobs, int E_x,
+  Manifold(std::shared_ptr<double[]>& flat, std::vector<double> y, std::vector<int> panelIDs, int nobs, int E_x,
            int E_dt, int E_extras, int E_lagged_extras, int E_actual)
     : _flat(std::move(flat))
     , _y(y)
@@ -144,7 +144,7 @@ public:
   const std::vector<double>& yvec() const { return _y; }
   std::shared_ptr<double[]> laggedObsMapf64(int obsNum) const
   {
-    return std::move(std::shared_ptr<double[]>(_flat, _flat.get() + obsNum * _E_actual));
+    return std::shared_ptr<double[]>(_flat, _flat.get() + obsNum * _E_actual);
   }
 
 #if defined(WITH_ARRAYFIRE)
