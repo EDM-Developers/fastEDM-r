@@ -55,7 +55,7 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
     af::setMemStepSize(1024 * 1024 * 5);
     taskRunnerPool.set_num_workers(1); // Avoid oversubscribing to the GPU
 #else
-    taskRunnerPool.set_num_workers(num_physical_cores());
+    taskRunnerPool.set_num_workers(1);
 #endif
     return true;
   }();
@@ -140,6 +140,9 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
 
         opts.copredict = false;
         opts.k = kAdj;
+        
+        opts.E = E;
+        opts.library = library;
 
         futures.emplace_back(launch_edm_task(generator, opts, E, splitter.trainingRows(), splitter.predictionRows(), io,
                                              keep_going, all_tasks_finished));
@@ -215,6 +218,7 @@ std::future<Prediction> launch_edm_task(const ManifoldGenerator& generator, Opti
 
   numTasksStarted += 1;
 
+#ifdef DUMP_LOW_LEVEL_INPUTS
   // This hack is simply to dump some really low level data structures
   // purely for the purpose of generating microbenchmarks.
   if (io != nullptr && io->verbosity > 4) {
@@ -228,6 +232,7 @@ std::future<Prediction> launch_edm_task(const ManifoldGenerator& generator, Opti
     std::ofstream o("lowLevelInputDump.json");
     o << lowLevelInputDump << std::endl;
   }
+#endif
 
   // Note, we can't have missing data inside the training manifold when using the S-Map algorithm
   bool skipMissing = (opts.algorithm == Algorithm::SMap);
@@ -360,6 +365,11 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
     for (int t = 0; t < numThetas * opts.calcRhoMAE; t++) {
       PredictionStats stats;
 
+      stats.E = opts.E;
+      stats.library = opts.library;
+      stats.k = opts.k;
+      stats.theta = opts.thetas[t];
+      
       // TODO POTENTIAL SPEEDUP: if ystar and y exist on GPU
       //      this could potentially be faster on GPU for larger nobs
       std::vector<double> y1, y2;

@@ -1,10 +1,15 @@
 
 #define STRICT_R_HEADERS
 
+// [[Rcpp::plugins(cpp17)]]
+// [[Rcpp::depends(RcppThread)]]
+
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// [[Rcpp::plugins(cpp17)]]
+
+#include <RcppThread.h>
+#define RCPPTHREAD_OVERRIDE_THREAD 1
 
 #include <RcppEigen.h>
 // [[Rcpp::depends(RcppEigen)]]
@@ -12,6 +17,7 @@ using namespace Rcpp;
 //#include "common.h"
 //#include "edm.h"
 #include "cli.h"
+#include "cpu.h"
 
 class RConsoleIO : public IO
 {
@@ -79,14 +85,17 @@ Options parse_options(const List &l) {
   return opts;
 }
 
+bool rcpp_keep_going() {
+  Rcpp::checkUserInterrupt();
+  return !RcppThread::isInterrupted();
+}
+
 // [[Rcpp::export]]
 std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List ropts,
                         int tau, int p, int numReps=1, int crossfold=0,
                         bool full=false, bool dtMode=false, bool allowMissing=false,
                         int verbosity = 1)
 {
-  int rc = 0;
-
   RConsoleIO io(verbosity);
   
   Rcout << "Verbosity set to " << verbosity << "\n";
@@ -97,6 +106,8 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   Options opts = parse_options(ropts);
 
   Rcout << "Num threads used is " << opts.nthreads << "\n";
+  Rcout << "CPU has " << num_logical_cores() << " logical cores and " << num_physical_cores() << " physical cores\n";
+  
   Rcout << "k is " << opts.k << "\n";
   
   
@@ -189,24 +200,48 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   
   std::vector<std::future<Prediction>> futures = launch_task_group(
     generator, opts, Es, libraries, k, numReps, crossfold, explore, full, saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs,
-    copredictMode, usable, rngState, &io, nullptr, nullptr);
+    copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
 
   Rcout << "Waiting for " << futures.size() << " results to come back\n";
   io.flush();
   
   json results;
+  json summaryTable;
 
   // Collect the results of this task group before moving on to the next task group
+  int rc = 0;
+  
+  // futures.size() iterations in loop, update progress every 1 sec
+  RcppThread::ProgressBar bar(futures.size(), 1);
+  //RcppThread::parallelFor(0, 100, [&] (int i) {
+  //  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  //  bar++;
+  //});
+  
   for (int f = 0; f < futures.size(); f++) {
     const Prediction pred = futures[f].get();
+    bar++;
     io.print(io.get_and_clear_async_buffer());
     io.flush();
 
-    results.push_back(pred);
+    summaryTable.push_back(pred.stats);
     if (pred.rc > rc) {
       rc = pred.rc;
     }
+    
+    std::vector<double> yStarVec, coeffsVec;
+    if (pred.ystar != nullptr) {
+      yStarVec = std::vector<double>(pred.ystar.get(), pred.ystar.get() + pred.numThetas * pred.numPredictions);
+      results["predictions"] = yStarVec;
+    }
+    if (pred.coeffs != nullptr) {
+      coeffsVec = std::vector<double>(pred.coeffs.get(), pred.coeffs.get() + pred.numPredictions * pred.numCoeffCols);
+      results["coeffs"] = coeffsVec;
+    }
   }
+  
+  results["summaryTable"] = summaryTable;
+  results["rc"] = rc;
   
   Rcout << "Got them all\n rc";
 

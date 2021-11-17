@@ -92,6 +92,7 @@ struct Options
   std::vector<Metric> metrics;
   std::string cmdLine;
   bool saveKUsed;
+  int E, library;
 };
 
 void to_json(json& j, const Options& o);
@@ -99,6 +100,8 @@ void from_json(const json& j, Options& o);
 
 struct PredictionStats
 {
+  int E, library, k;
+  double theta;
   double mae, rho;
 };
 

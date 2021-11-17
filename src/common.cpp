@@ -50,11 +50,22 @@ void from_json(const json& j, Options& o)
 
 void to_json(json& j, const PredictionStats& s)
 {
-  j = json{ { "mae", s.mae }, { "rho", s.rho } };
+  j = json{ 
+    { "E", s.E },
+    { "library", s.library },
+    { "k", s.k },
+    { "theta", s.theta},
+    { "mae", s.mae }, 
+    { "rho", s.rho }
+    };
 }
 
 void from_json(const json& j, PredictionStats& s)
 {
+  j.at("E").get_to(s.E);
+  j.at("library").get_to(s.library);
+  j.at("k").get_to(s.k);
+  j.at("theta").get_to(s.theta);
   j.at("mae").get_to(s.mae);
   j.at("rho").get_to(s.rho);
 }
@@ -70,29 +81,30 @@ void to_json(json& j, const Prediction& p)
   }
 
   j = json{ { "rc", p.rc },
-            { "numThetas", p.numThetas },
-            { "numPredictions", p.numPredictions },
-            { "numCoeffCols", p.numCoeffCols },
+//            { "numThetas", p.numThetas },
+//            { "numPredictions", p.numPredictions },
+//            { "numCoeffCols", p.numCoeffCols },
             { "ystar", yStarVec },
             { "coeffs", coeffsVec },
             { "stats", p.stats },
-            { "predictionRows", p.predictionRows },
+//            { "predictionRows", p.predictionRows },
             { "kUsed", p.kUsed },
             { "cmdLine", p.cmdLine },
-            { "configNum", p.configNum } };
+//            { "configNum", p.configNum } 
+    };
 }
 
 void from_json(const json& j, Prediction& p)
 {
   j.at("rc").get_to(p.rc);
-  j.at("numThetas").get_to(p.numThetas);
-  j.at("numPredictions").get_to(p.numPredictions);
-  j.at("numCoeffCols").get_to(p.numCoeffCols);
-  j.at("predictionRows").get_to(p.predictionRows);
+//  j.at("numThetas").get_to(p.numThetas);
+//  j.at("numPredictions").get_to(p.numPredictions);
+//  j.at("numCoeffCols").get_to(p.numCoeffCols);
+//  j.at("predictionRows").get_to(p.predictionRows);
   j.at("stats").get_to(p.stats);
   j.at("kUsed").get_to(p.kUsed);
   j.at("cmdLine").get_to(p.cmdLine);
-  j.at("configNum").get_to(p.configNum);
+//  j.at("configNum").get_to(p.configNum);
 
   // TODO: Test this coeffs/ystar loading works as expected
   std::vector<double> ystar = j.at("ystar");
