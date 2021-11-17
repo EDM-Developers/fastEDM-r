@@ -145,11 +145,10 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   std::vector<std::vector<double>> extras = {};
   int numExtrasLagged = 0;
 
-  bool dt0 = dtMode;
   bool reldt = false;
 
-  const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extras, numExtrasLagged, dtMode, dt0, reldt,
-                                    allowMissing);
+  const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extras,
+                                    numExtrasLagged, dtMode, reldt, allowMissing);
 
   int maxE = Es[Es.size()-1];
   
@@ -198,10 +197,13 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   io.print("Starting the command!\n");
   io.flush();
   
-  std::vector<std::future<Prediction>> futures = launch_task_group(
-    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs,
+  bool shuffle = false;
+  
+  std::vector<std::future<PredictionResult>> futures = launch_task_group(
+    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle,
+    saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs,
     copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
-
+  
   Rcout << "Waiting for " << futures.size() << " results to come back\n";
   io.flush();
   
@@ -219,7 +221,7 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   //});
   
   for (int f = 0; f < futures.size(); f++) {
-    const Prediction pred = futures[f].get();
+    const PredictionResult pred = futures[f].get();
     bar++;
     io.print(io.get_and_clear_async_buffer());
     io.flush();
@@ -229,13 +231,15 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
       rc = pred.rc;
     }
     
-    std::vector<double> yStarVec, coeffsVec;
-    if (pred.ystar != nullptr) {
-      yStarVec = std::vector<double>(pred.ystar.get(), pred.ystar.get() + pred.numThetas * pred.numPredictions);
-      results["predictions"] = yStarVec;
+    std::vector<double> predictionsVec, coeffsVec;
+    if (pred.predictions != nullptr) {
+      predictionsVec = std::vector<double>(pred.predictions.get(),
+                                           pred.predictions.get() + pred.numThetas * pred.numPredictions);
+      results["predictions"] = predictionsVec;
     }
     if (pred.coeffs != nullptr) {
-      coeffsVec = std::vector<double>(pred.coeffs.get(), pred.coeffs.get() + pred.numPredictions * pred.numCoeffCols);
+      coeffsVec = std::vector<double>(pred.coeffs.get(),
+                                      pred.coeffs.get() + pred.numPredictions * pred.numCoeffCols);
       results["coeffs"] = coeffsVec;
     }
   }

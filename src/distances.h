@@ -2,6 +2,9 @@
 
 #include "common.h"
 
+std::vector<Metric> expand_metrics(const ManifoldGenerator& generator, int E, Distance distance,
+                                   const std::vector<Metric>& metrics);
+
 DistanceIndexPairs lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,
                                 std::vector<int> inds);
 DistanceIndexPairs wasserstein_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,

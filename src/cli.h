@@ -27,7 +27,7 @@ struct Inputs
   Options opts;
   ManifoldGenerator generator;
   int E;
-  std::vector<bool> trainingRows, predictionRows;
+  std::vector<bool> libraryRows, predictionRows;
 };
 
 Inputs parse_lowlevel_inputs_file(const json& j);

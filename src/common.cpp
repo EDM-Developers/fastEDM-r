@@ -70,51 +70,52 @@ void from_json(const json& j, PredictionStats& s)
   j.at("rho").get_to(s.rho);
 }
 
-void to_json(json& j, const Prediction& p)
+void to_json(json& j, const PredictionResult& p)
 {
-  std::vector<double> yStarVec, coeffsVec;
-  if (p.ystar != nullptr) {
-    yStarVec = std::vector<double>(p.ystar.get(), p.ystar.get() + p.numThetas * p.numPredictions);
+  std::vector<double> predictionsVec, coeffsVec;
+  if (p.predictions != nullptr) {
+    predictionsVec = std::vector<double>(p.predictions.get(), p.predictions.get() + p.numThetas * p.numPredictions);
   }
   if (p.coeffs != nullptr) {
     coeffsVec = std::vector<double>(p.coeffs.get(), p.coeffs.get() + p.numPredictions * p.numCoeffCols);
   }
 
   j = json{ { "rc", p.rc },
-//            { "numThetas", p.numThetas },
-//            { "numPredictions", p.numPredictions },
-//            { "numCoeffCols", p.numCoeffCols },
-            { "ystar", yStarVec },
+            { "numThetas", p.numThetas },
+            { "numPredictions", p.numPredictions },
+            { "numCoeffCols", p.numCoeffCols },
+            { "predictions", predictionsVec },
             { "coeffs", coeffsVec },
             { "stats", p.stats },
-//            { "predictionRows", p.predictionRows },
-            { "kUsed", p.kUsed },
+            { "predictionRows", p.predictionRows },
+            { "kMin", p.kMin },
+            { "kMax", p.kMax },
             { "cmdLine", p.cmdLine },
-//            { "configNum", p.configNum } 
-    };
+            { "configNum", p.configNum } };
 }
 
-void from_json(const json& j, Prediction& p)
+void from_json(const json& j, PredictionResult& p)
 {
   j.at("rc").get_to(p.rc);
-//  j.at("numThetas").get_to(p.numThetas);
-//  j.at("numPredictions").get_to(p.numPredictions);
-//  j.at("numCoeffCols").get_to(p.numCoeffCols);
-//  j.at("predictionRows").get_to(p.predictionRows);
+  j.at("numThetas").get_to(p.numThetas);
+  j.at("numPredictions").get_to(p.numPredictions);
+  j.at("numCoeffCols").get_to(p.numCoeffCols);
+  j.at("predictionRows").get_to(p.predictionRows);
   j.at("stats").get_to(p.stats);
-  j.at("kUsed").get_to(p.kUsed);
+  j.at("kMin").get_to(p.kMin);
+  j.at("kMax").get_to(p.kMax);
   j.at("cmdLine").get_to(p.cmdLine);
-//  j.at("configNum").get_to(p.configNum);
+  j.at("configNum").get_to(p.configNum);
 
-  // TODO: Test this coeffs/ystar loading works as expected
-  std::vector<double> ystar = j.at("ystar");
-  if (ystar.size()) {
-    p.ystar = std::make_unique<double[]>(ystar.size());
-    for (int i = 0; i < ystar.size(); i++) {
-      p.ystar[i] = ystar[i];
+  // TODO: Test this coeffs/predictions loading works as expected
+  std::vector<double> predictions = j.at("predictions");
+  if (predictions.size()) {
+    p.predictions = std::make_unique<double[]>(predictions.size());
+    for (int i = 0; i < predictions.size(); i++) {
+      p.predictions[i] = predictions[i];
     }
   } else {
-    p.ystar = nullptr;
+    p.predictions = nullptr;
   }
 
   std::vector<double> coeffs = j.at("coeffs");

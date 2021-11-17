@@ -13,9 +13,9 @@
 #include "edm.h"
 #include "cpu.h"
 #include "distances.h"
+#include "library_prediction_split.h"
 #include "stats.h" // for correlation and mean_absolute_error
 #include "thread_pool.h"
-#include "train_predict_split.h"
 
 #ifndef FMT_HEADER_ONLY
 #define FMT_HEADER_ONLY
@@ -27,8 +27,11 @@
 #include <algorithm> // std::partial_sort
 #include <chrono>
 #include <cmath>
-#include <fstream> // just to create low-level input dumps
+
+#if defined(DUMP_LOW_LEVEL_INPUTS) || defined(WITH_ARRAYFIRE)
+#include <fstream>
 #include <iostream>
+#endif
 
 #if defined(WITH_ARRAYFIRE)
 #include <af/macros.h>
@@ -38,17 +41,45 @@
 #endif
 #endif
 
+using MatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using MatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int E, const std::vector<bool>& libraryRows,
+                          const std::vector<bool> predictionRows, IO* io, bool keep_going(), void all_tasks_finished());
+
+void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,
+                     Eigen::Map<MatrixXd> predictionsView, Eigen::Map<MatrixXi> rcView, Eigen::Map<MatrixXd> coeffsView,
+                     int* kUsed, bool keep_going());
+
+std::vector<int> potential_neighbour_indices(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp);
+
+DistanceIndexPairs kNearestNeighbours(const DistanceIndexPairs& potentialNeighbours, int k);
+
+void simplex_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, const std::vector<double>& dists,
+                        const std::vector<int>& kNNInds, Eigen::Map<MatrixXd> predictionsView,
+                        Eigen::Map<MatrixXi> rcView);
+
+void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, const Manifold& Mp,
+                     const std::vector<double>& dists, const std::vector<int>& kNNInds,
+                     Eigen::Map<MatrixXd> predictionsView, Eigen::Map<MatrixXd> coeffsView,
+                     Eigen::Map<MatrixXi> rcView);
+
+#if defined(WITH_ARRAYFIRE)
+void af_make_prediction(const int numPredictions, const Options& opts, const Manifold& hostM, const Manifold& hostMp,
+                        const ManifoldOnGPU& M, const ManifoldOnGPU& Mp, const af::array& metricOpts,
+                        Eigen::Map<MatrixXd> ystar, Eigen::Map<MatrixXi> rc, Eigen::Map<MatrixXd> coeffs,
+                        std::vector<int>& kUseds, bool keep_going());
+#endif
+
 std::atomic<int> numTasksStarted = 0;
 std::atomic<int> numTasksFinished = 0;
 ThreadPool workerPool(0), taskRunnerPool(0);
 
-std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& generator, Options opts,
-                                                       const std::vector<int>& Es, const std::vector<int>& libraries,
-                                                       int k, int numReps, int crossfold, bool explore, bool full,
-                                                       bool saveFinalPredictions, bool saveFinalCoPredictions,
-                                                       bool saveSMAPCoeffs, bool copredictMode,
-                                                       const std::vector<bool>& usable, const std::string& rngState,
-                                                       IO* io, bool keep_going(), void all_tasks_finished())
+std::vector<std::future<PredictionResult>> launch_task_group(
+  const ManifoldGenerator& generator, Options opts, const std::vector<int>& Es, const std::vector<int>& libraries,
+  int k, int numReps, int crossfold, bool explore, bool full, bool shuffle, bool saveFinalPredictions,
+  bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode, const std::vector<bool>& usable,
+  const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
 {
   static bool initOnce = [&]() {
 #if defined(WITH_ARRAYFIRE)
@@ -63,14 +94,16 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
   workerPool.set_num_workers(opts.nthreads);
 
   // Construct the instance which will (repeatedly) split the data
-  // into either the training manifold or the prediction manifold.
-  TrainPredictSplitter splitter = TrainPredictSplitter(explore, full, crossfold, usable, rngState);
+  // into either the library set or the prediction set.
+  LibraryPredictionSetSplitter splitter(explore, full, shuffle, crossfold, usable, rngState);
 
   int numLibraries = (explore ? 1 : libraries.size());
 
+  opts.explore = explore;
   opts.numTasks = numReps * Es.size() * numLibraries;
   opts.configNum = 0;
   opts.taskNum = 0;
+  opts.saveKUsed = true;
 
   int maxE = Es[Es.size() - 1];
 
@@ -81,11 +114,11 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
     cousable = generator.generate_usable(maxE, true);
   }
 
-  int E, kAdj, library, trainSize;
+  int E, kAdj, library, librarySize;
 
-  std::vector<std::future<Prediction>> futures;
+  std::vector<std::future<PredictionResult>> futures;
 
-  bool newTrainPredictSplit = true;
+  bool newLibraryPredictionSplit = true;
 
   // Note: the 'numReps' either refers to the 'replicate' option
   // used for bootstrap resampling, or the 'crossfold' number of
@@ -93,8 +126,8 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
   // so numReps = max(replicate, crossfold).
   for (int iter = 1; iter <= numReps; iter++) {
     if (explore) {
-      newTrainPredictSplit = true;
-      trainSize = splitter.next_training_size(iter);
+      newLibraryPredictionSplit = true;
+      librarySize = splitter.next_library_size(iter);
     }
 
     for (int i = 0; i < Es.size(); i++) {
@@ -104,11 +137,11 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
       // though in xmap mode it is a user-supplied list which we loop over.
       for (int l = 0; l == 0 || l < libraries.size(); l++) {
         if (!explore) {
-          newTrainPredictSplit = true;
+          newLibraryPredictionSplit = true;
         }
 
         if (explore) {
-          library = trainSize;
+          library = librarySize;
         } else {
           library = libraries[l];
         }
@@ -133,19 +166,19 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
         }
         opts.saveSMAPCoeffs = saveSMAPCoeffs;
 
-        if (newTrainPredictSplit) {
-          splitter.update_train_predict_split(library, iter);
-          newTrainPredictSplit = false;
+        if (newLibraryPredictionSplit) {
+          splitter.update_library_prediction_split(library, iter);
+          newLibraryPredictionSplit = false;
         }
 
         opts.copredict = false;
         opts.k = kAdj;
-        
-        opts.E = E;
         opts.library = library;
 
-        futures.emplace_back(launch_edm_task(generator, opts, E, splitter.trainingRows(), splitter.predictionRows(), io,
-                                             keep_going, all_tasks_finished));
+        futures.emplace_back(taskRunnerPool.enqueue([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
+          return edm_task(generator, opts, E, splitter.libraryRows(), splitter.predictionRows(), io, keep_going,
+                          all_tasks_finished);
+        }));
 
         opts.taskNum += 1;
 
@@ -157,8 +190,11 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
             opts.savePrediction = saveFinalCoPredictions && ((iter == numReps)) && lastConfig;
           }
           opts.saveSMAPCoeffs = false;
+
           futures.emplace_back(
-            launch_edm_task(generator, opts, E, splitter.trainingRows(), cousable, io, keep_going, all_tasks_finished));
+            taskRunnerPool.enqueue([generator, opts, E, splitter, cousable, io, keep_going, all_tasks_finished] {
+              return edm_task(generator, opts, E, splitter.libraryRows(), cousable, io, keep_going, all_tasks_finished);
+            }));
 
           opts.taskNum += 1;
         }
@@ -171,45 +207,10 @@ std::vector<std::future<Prediction>> launch_task_group(const ManifoldGenerator& 
   return futures;
 }
 
-std::future<Prediction> launch_edm_task(const ManifoldGenerator& generator, Options opts, int E,
-                                        const std::vector<bool>& trainingRows, const std::vector<bool>& predictionRows,
-                                        IO* io, bool keep_going(), void all_tasks_finished())
+PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int E, const std::vector<bool>& libraryRows,
+                          const std::vector<bool> predictionRows, IO* io, bool keep_going(), void all_tasks_finished())
 {
-  // Expand the 'metrics' vector now that we know the value of E.
-  std::vector<Metric> metrics;
-
-  // For the Wasserstein distance, it's more convenient to have one 'metric' for each variable (before taking lags).
-  // However, for the L^1 / L^2 distances, it's more convenient to have one 'metric' for each individual
-  // point of each observations, so metrics.size() == M.E_actual().
-  if (opts.distance == Distance::Wasserstein) {
-    // Add a metric for the main variable and for the dt variable.
-    // These are always treated as a continuous values (though perhaps in the future this will change).
-    metrics.push_back(Metric::Diff);
-    if (generator.E_dt(E) > 0) {
-      metrics.push_back(Metric::Diff);
-    }
-
-    // Add in the metrics for the 'extra' variables as they were supplied to us.
-    for (int k = 0; k < generator.numExtras(); k++) {
-      metrics.push_back(opts.metrics[k]);
-    }
-  } else {
-    // Add metrics for the main variable and the dt variable and their lags.
-    // These are always treated as a continuous values (though perhaps in the future this will change).
-    for (int lagNum = 0; lagNum < E + generator.E_dt(E); lagNum++) {
-      metrics.push_back(Metric::Diff);
-    }
-
-    // The user specified how to treat the extra variables.
-    for (int k = 0; k < generator.numExtras(); k++) {
-      int numLags = (k < generator.numExtrasLagged()) ? E : 1;
-      for (int lagNum = 0; lagNum < numLags; lagNum++) {
-        metrics.push_back(opts.metrics[k]);
-      }
-    }
-  }
-
-  opts.metrics = metrics;
+  opts.metrics = expand_metrics(generator, E, opts.distance, opts.metrics);
 
   if (opts.taskNum == 0) {
     numTasksStarted = 0;
@@ -226,7 +227,7 @@ std::future<Prediction> launch_edm_task(const ManifoldGenerator& generator, Opti
     lowLevelInputDump["generator"] = generator;
     lowLevelInputDump["opts"] = opts;
     lowLevelInputDump["E"] = E;
-    lowLevelInputDump["trainingRows"] = trainingRows;
+    lowLevelInputDump["libraryRows"] = libraryRows;
     lowLevelInputDump["predictionRows"] = predictionRows;
 
     std::ofstream o("lowLevelInputDump.json");
@@ -234,23 +235,16 @@ std::future<Prediction> launch_edm_task(const ManifoldGenerator& generator, Opti
   }
 #endif
 
-  // Note, we can't have missing data inside the training manifold when using the S-Map algorithm
+  // Note, we can't have missing data inside the library set when using the S-Map algorithm
   bool skipMissing = (opts.algorithm == Algorithm::SMap);
 
-  Manifold M = generator.create_manifold(E, trainingRows, opts.copredict, false, opts.dtWeight, skipMissing);
-  Manifold Mp = generator.create_manifold(E, predictionRows, opts.copredict, true, opts.dtWeight);
+  Manifold M = generator.create_manifold(E, libraryRows, false, opts.dtWeight, opts.copredict, skipMissing);
+  Manifold Mp = generator.create_manifold(E, predictionRows, true, opts.dtWeight, opts.copredict);
 
-  return taskRunnerPool.enqueue([opts, M, Mp, predictionRows, io, keep_going, all_tasks_finished] {
-    return edm_task(opts, M, Mp, predictionRows, io, keep_going, all_tasks_finished);
-  });
-}
+  bool multiThreaded = opts.nthreads > 1;
 
-Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, const std::vector<bool> predictionRows,
-                    IO* io, bool keep_going(), void all_tasks_finished())
-{
 #if defined(WITH_ARRAYFIRE)
   af::setDevice(0); // TODO potentially can cycle through GPUS if > 1
-#endif
 
   // Char is the internal representation of bool in ArrayFire
   std::vector<char> mopts;
@@ -258,22 +252,22 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
     mopts.push_back(opts.metrics[j] == Metric::Diff);
   }
 
-#if defined(WITH_ARRAYFIRE)
   af::array metricOpts(M.E_actual(), mopts.data());
 
   const ManifoldOnGPU gpuM = M.toGPU(false);
   const ManifoldOnGPU gpuMp = Mp.toGPU(false);
 
-  constexpr bool useAF = true; // Being true will trump mutli-threaded codepath
+  constexpr bool useAF = true;
+  multiThreaded = multiThreaded && !useAF;
 #endif
-  bool multiThreaded = opts.nthreads > 1;
+
   int numThetas = (int)opts.thetas.size();
-  int numPredictions = Mp.nobs();
+  int numPredictions = Mp.numPoints();
   int numCoeffCols = M.E_actual() + 1;
 
-  auto ystar = std::make_unique<double[]>(numThetas * numPredictions);
-  std::fill_n(ystar.get(), numThetas * numPredictions, MISSING_D);
-  Eigen::Map<MatrixXd> ystarView(ystar.get(), numThetas, numPredictions);
+  auto predictions = std::make_unique<double[]>(numThetas * numPredictions);
+  std::fill_n(predictions.get(), numThetas * numPredictions, MISSING_D);
+  Eigen::Map<MatrixXd> predictionsView(predictions.get(), numThetas, numPredictions);
 
   // If we're saving the coefficients (i.e. in xmap mode), then we're not running with multiple 'theta' values.
   auto coeffs = std::make_unique<double[]>(numPredictions * numCoeffCols);
@@ -293,11 +287,7 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
     io->progress_bar(0.0);
   }
 
-#if defined(WITH_ARRAYFIRE)
-  if (multiThreaded && !useAF) {
-#else
   if (multiThreaded) {
-#endif
     std::vector<std::future<void>> results(numPredictions);
 #if WITH_GPU_PROFILING
     workerPool.sync();
@@ -305,7 +295,7 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
 #endif
     for (int i = 0; i < numPredictions; i++) {
       results[i] = workerPool.enqueue(
-        [&, i] { make_prediction(i, opts, M, Mp, ystarView, rcView, coeffsView, &(kUsed[i]), keep_going); });
+        [&, i] { make_prediction(i, opts, M, Mp, predictionsView, rcView, coeffsView, &(kUsed[i]), keep_going); });
     }
     if (opts.numTasks == 1) {
       io->progress_bar(0.0);
@@ -330,8 +320,8 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
       af::sync(0);
       auto start = std::chrono::high_resolution_clock::now();
 #endif
-      af_make_prediction(numPredictions, opts, M, Mp, gpuM, gpuMp, metricOpts, ystarView, rcView, coeffsView, kUsed,
-                         keep_going);
+      af_make_prediction(numPredictions, opts, M, Mp, gpuM, gpuMp, metricOpts, predictionsView, rcView, coeffsView,
+                         kUsed, keep_going);
 #if WITH_GPU_PROFILING
       af::sync(0);
       auto end = std::chrono::high_resolution_clock::now();
@@ -344,10 +334,10 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
         io->progress_bar(0.0);
       }
       for (int i = 0; i < numPredictions; i++) {
-        if (keep_going != nullptr && keep_going() == false) {
+        if (keep_going != nullptr && !keep_going()) {
           break;
         }
-        make_prediction(i, opts, M, Mp, ystarView, rcView, coeffsView, &(kUsed[i]), keep_going);
+        make_prediction(i, opts, M, Mp, predictionsView, rcView, coeffsView, &(kUsed[i]), keep_going);
         if (opts.numTasks == 1) {
           io->progress_bar((i + 1) / ((double)numPredictions));
         }
@@ -357,27 +347,27 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
 #endif
   }
 
-  Prediction pred;
+  PredictionResult pred;
+
+  pred.explore = opts.explore;
 
   // Store the results, so long as we weren't interrupted by a 'break'.
-  if (keep_going == nullptr || keep_going() == true) {
+  if (keep_going == nullptr || keep_going()) {
     // Start by calculating the MAE & rho of prediction, if requested
     for (int t = 0; t < numThetas * opts.calcRhoMAE; t++) {
       PredictionStats stats;
 
-      stats.E = opts.E;
-      stats.library = opts.library;
-      stats.k = opts.k;
+      stats.library = opts.library; // Could store 'M.numPoints()' here for a more accurate version
+      stats.E = M.E_actual();
       stats.theta = opts.thetas[t];
-      
-      // TODO POTENTIAL SPEEDUP: if ystar and y exist on GPU
-      //      this could potentially be faster on GPU for larger nobs
+
+      // POTENTIAL SPEEDUP: if predictions and y exist on GPU this could potentially be faster on GPU
       std::vector<double> y1, y2;
 
-      for (int i = 0; i < Mp.ySize(); i++) {
-        if (Mp.y(i) != MISSING_D && ystarView(t, i) != MISSING_D) {
-          y1.push_back(Mp.y(i));
-          y2.push_back(ystarView(t, i));
+      for (int i = 0; i < Mp.numTargets(); i++) {
+        if (Mp.target(i) != MISSING_D && predictionsView(t, i) != MISSING_D) {
+          y1.push_back(Mp.target(i));
+          y2.push_back(predictionsView(t, i));
         }
       }
 
@@ -397,20 +387,20 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
     // Check if any make_prediction call failed, and if so find the most serious error
     pred.rc = *std::max_element(rc.get(), rc.get() + numThetas * numPredictions);
 
-    // If we're storing the prediction and/or the SMAP coefficients, put them
-    // into the resulting Prediction struct. Otherwise, let them be deleted.
+    // If we're storing the prediction and/or the S-map coefficients, put them
+    // into the resulting PredictionResult struct. Otherwise, let them be deleted.
     if (opts.savePrediction) {
       // Take only the predictions for the largest theta value.
       if (numThetas == 1) {
-        pred.ystar = std::move(ystar);
+        pred.predictions = std::move(predictions);
       } else {
-        pred.ystar = std::make_unique<double[]>(numPredictions);
+        pred.predictions = std::make_unique<double[]>(numPredictions);
         for (int i = 0; i < numPredictions; i++) {
-          pred.ystar[i] = ystarView(numThetas - 1, i);
+          pred.predictions[i] = predictionsView(numThetas - 1, i);
         }
       }
     } else {
-      pred.ystar = nullptr;
+      pred.predictions = nullptr;
     }
 
     if (opts.saveSMAPCoeffs) {
@@ -424,7 +414,8 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
     }
 
     if (opts.saveKUsed) {
-      pred.kUsed = kUsed;
+      pred.kMin = *std::min_element(kUsed.begin(), kUsed.end());
+      pred.kMax = *std::max_element(kUsed.begin(), kUsed.end());
     }
 
     pred.cmdLine = opts.cmdLine;
@@ -450,29 +441,30 @@ Prediction edm_task(const Options opts, const Manifold M, const Manifold Mp, con
   return pred;
 }
 
-// Use a training manifold 'M' to make a prediction about the prediction manifold 'Mp'.
-// Specifically, predict the 'Mp_i'-th value of the prediction manifold 'Mp'.
+// Use a library set 'M' to make a prediction about the prediction set 'Mp'.
+// Specifically, predict the 'Mp_i'-th value of the prediction set 'Mp'.
 //
-// The predicted value is stored in 'ystar', along with any return codes in 'rc'.
-// Optionally, the user may ask to store some S-map intermediate values in 'coeffs'.
+// The predicted value is stored in 'predictionsView', along with any return codes in 'rcView'.
+// Optionally, the user may ask to store some S-map intermediate values in 'coeffsView'.
 //
 // The 'opts' value specifies the kind of prediction to make (e.g. S-map, or simplex method).
 // This function is usually run in a worker thread, and the 'keep_going' callback is frequently called to
 // see whether the user still wants this result, or if they have given up & simply want the execution
 // to terminate.
 //
-// We sometimes let 'M' and 'Mp' be the same manifold, so we train and predict using the same values.
-// In this case, the algorithm may cheat by pulling out the identical trajectory from the training manifold
+// We sometimes let 'M' and 'Mp' be the same set, so we train and predict using the same values.
+// In this case, the algorithm may cheat by pulling out the identical trajectory from the library set
 // and using this as the prediction. As such, we throw away any neighbours which have a distance of 0 from
 // the target point.
-void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp, Eigen::Map<MatrixXd> ystar,
-                     Eigen::Map<MatrixXi> rc, Eigen::Map<MatrixXd> coeffs, int* kUsed, bool keep_going())
+void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,
+                     Eigen::Map<MatrixXd> predictionsView, Eigen::Map<MatrixXi> rcView, Eigen::Map<MatrixXd> coeffsView,
+                     int* kUsed, bool keep_going())
 {
   // An impatient user may want to cancel a long-running EDM command, so we occasionally check using this
   // callback to see whether we ought to keep going with this EDM command. Of course, this adds a tiny inefficiency,
   // but there doesn't seem to be a simple way to easily kill running worker threads across all OSs.
-  if (keep_going != nullptr && keep_going() == false) {
-    rc(0, Mp_i) = BREAK_HIT;
+  if (keep_going != nullptr && !keep_going()) {
+    rcView(0, Mp_i) = BREAK_HIT;
     return;
   }
 
@@ -486,28 +478,30 @@ void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Man
     potentialNN = lp_distances(Mp_i, opts, M, Mp, tryInds);
   }
 
-  if (keep_going != nullptr && keep_going() == false) {
-    rc(0, Mp_i) = BREAK_HIT;
+  if (keep_going != nullptr && !keep_going()) {
+    rcView(0, Mp_i) = BREAK_HIT;
     return;
   }
 
   // Do we have enough distances to find k neighbours?
   int numValidDistances = potentialNN.inds.size();
   int k = opts.k;
-  *kUsed = numValidDistances;
+
   if (k > numValidDistances) {
     if (opts.forceCompute) {
       k = numValidDistances;
     } else {
-      rc(0, Mp_i) = INSUFFICIENT_UNIQUE;
+      rcView(0, Mp_i) = INSUFFICIENT_UNIQUE;
       return;
     }
   }
 
+  *kUsed = k;
+
   if (k == 0) {
     // Whether we throw an error or just silently ignore this prediction
     // depends on whether we are in 'strict' mode or not.
-    rc(0, Mp_i) = opts.forceCompute ? SUCCESS : INSUFFICIENT_UNIQUE;
+    rcView(0, Mp_i) = opts.forceCompute ? SUCCESS : INSUFFICIENT_UNIQUE;
     return;
   }
 
@@ -519,21 +513,21 @@ void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Man
     kNNs = kNearestNeighbours(potentialNN, k);
   }
 
-  if (keep_going != nullptr && keep_going() == false) {
-    rc(0, Mp_i) = BREAK_HIT;
+  if (keep_going != nullptr && !keep_going()) {
+    rcView(0, Mp_i) = BREAK_HIT;
     return;
   }
 
   if (opts.algorithm == Algorithm::Simplex) {
     for (int t = 0; t < opts.thetas.size(); t++) {
-      simplex_prediction(Mp_i, t, opts, M, kNNs.dists, kNNs.inds, ystar, rc, kUsed);
+      simplex_prediction(Mp_i, t, opts, M, kNNs.dists, kNNs.inds, predictionsView, rcView);
     }
   } else if (opts.algorithm == Algorithm::SMap) {
     for (int t = 0; t < opts.thetas.size(); t++) {
-      smap_prediction(Mp_i, t, opts, M, Mp, kNNs.dists, kNNs.inds, ystar, coeffs, rc, kUsed);
+      smap_prediction(Mp_i, t, opts, M, Mp, kNNs.dists, kNNs.inds, predictionsView, coeffsView, rcView);
     }
   } else {
-    rc(0, Mp_i) = INVALID_ALGORITHM;
+    rcView(0, Mp_i) = INVALID_ALGORITHM;
   }
 }
 
@@ -543,7 +537,7 @@ std::vector<int> potential_neighbour_indices(int Mp_i, const Options& opts, cons
 
   std::vector<int> inds;
 
-  for (int i = 0; i < M.nobs(); i++) {
+  for (int i = 0; i < M.numPoints(); i++) {
     if (skipOtherPanels && (M.panel(i) != Mp.panel(Mp_i))) {
       continue;
     }
@@ -621,8 +615,8 @@ DistanceIndexPairs kNearestNeighboursUnstable(const DistanceIndexPairs& potentia
 }
 
 void simplex_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, const std::vector<double>& dists,
-                        const std::vector<int>& kNNInds, Eigen::Map<MatrixXd> ystar, Eigen::Map<MatrixXi> rc,
-                        int* kUsed)
+                        const std::vector<int>& kNNInds, Eigen::Map<MatrixXd> predictionsView,
+                        Eigen::Map<MatrixXi> rcView)
 {
   int k = kNNInds.size();
 
@@ -634,38 +628,31 @@ void simplex_prediction(int Mp_i, int t, const Options& opts, const Manifold& M,
   double sumw = 0.0;
   const double theta = opts.thetas[t];
 
-  int numNonZeroWeights = 0;
   for (int j = 0; j < k; j++) {
     w[j] = exp(-theta * (dists[j] / minDist));
     sumw = sumw + w[j];
-    numNonZeroWeights += (w[j] > 0);
-  }
-
-  // For the sake of debugging, count how many neighbours we end up with.
-  if (opts.saveKUsed) {
-    *kUsed = numNonZeroWeights;
   }
 
   // Make the simplex projection/prediction.
   double r = 0.0;
   for (int j = 0; j < k; j++) {
-    r = r + M.y(kNNInds[j]) * (w[j] / sumw);
+    r = r + M.target(kNNInds[j]) * (w[j] / sumw);
   }
 
   // Store the results & return value.
-  ystar(t, Mp_i) = r;
-  rc(t, Mp_i) = SUCCESS;
+  predictionsView(t, Mp_i) = r;
+  rcView(t, Mp_i) = SUCCESS;
 }
 
 void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, const Manifold& Mp,
-                     const std::vector<double>& dists, const std::vector<int>& kNNInds, Eigen::Map<MatrixXd> ystar,
-                     Eigen::Map<MatrixXd> coeffs, Eigen::Map<MatrixXi> rc, int* kUsed)
+                     const std::vector<double>& dists, const std::vector<int>& kNNInds,
+                     Eigen::Map<MatrixXd> predictionsView, Eigen::Map<MatrixXd> coeffsView, Eigen::Map<MatrixXi> rcView)
 {
   int k = kNNInds.size();
 
   // Pull out the nearest neighbours from the manifold, and
   // simultaneously prepend a column of ones in front of the manifold data.
-#if EIGEN_VERSION_AT_LEAST(3,4,0)
+#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
   MatrixXd X_ls_cj(k, M.E_actual() + 1);
   X_ls_cj << Eigen::VectorXd::Ones(k), M.map()(kNNInds, Eigen::all);
 #else
@@ -681,33 +668,14 @@ void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, co
   Eigen::Map<const Eigen::VectorXd> distsMap(&(dists[0]), dists.size());
   Eigen::VectorXd w = Eigen::exp(-opts.thetas[t] * (distsMap.array() / distsMap.mean()));
 
-  // For the sake of debugging, count how many neighbours we end up with.
-  if (opts.saveKUsed) {
-    int numNonZeroWeights = 0;
-#if EIGEN_VERSION_AT_LEAST(3,4,0)
-    for (double& w_i : w) {
-      if (w_i > 0) {
-        numNonZeroWeights += 1;
-      }
-    }
-#else
-    for (int i = 0; i < w.size(); i++) {
-      if (w[i] > 0) {
-        numNonZeroWeights += 1;
-      }
-    }
-#endif
-    *kUsed = numNonZeroWeights;
-  }
-
   // Scale everything by our weights vector
-#if EIGEN_VERSION_AT_LEAST(3,4,0)
+#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
   X_ls_cj.array().colwise() *= w.array();
-  Eigen::VectorXd y_ls = M.yMap()(kNNInds).array() * w.array();
+  Eigen::VectorXd y_ls = M.targetsMap()(kNNInds).array() * w.array();
 #else
   Eigen::VectorXd y_ls(k);
   for (int i = 0; i < k; i++) {
-    y_ls[i] = M.y(kNNInds[i]) * w[i];
+    y_ls[i] = M.target(kNNInds[i]) * w[i];
   }
 #endif
 
@@ -733,25 +701,25 @@ void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, co
   if (opts.saveSMAPCoeffs && t == opts.thetas.size() - 1) {
     for (int j = 0; j < M.E_actual() + 1; j++) {
       if (std::abs(ics(j)) < 1.0e-11) {
-        coeffs(Mp_i, j) = MISSING_D;
+        coeffsView(Mp_i, j) = MISSING_D;
       } else {
-        coeffs(Mp_i, j) = ics(j);
+        coeffsView(Mp_i, j) = ics(j);
       }
     }
   }
 
-  ystar(t, Mp_i) = r;
-  rc(t, Mp_i) = SUCCESS;
+  predictionsView(t, Mp_i) = r;
+  rcView(t, Mp_i) = SUCCESS;
 }
 
 /////////////////////////////////////////////////////////////// ArrayFire PORTED versions BEGIN HERE
 
 #if defined(WITH_ARRAYFIRE)
 
-// Returns b8 array of shape [mnobs npreds 1 1] when either of skip flags are true
-//        otherwise of shape [mnobs 1 1 1]
-af::array afPotentialNeighbourIndices(const int& npreds, const bool& skipOtherPanels, const bool& skipMissingData,
-                                      const ManifoldOnGPU& M, const ManifoldOnGPU& Mp)
+// Returns b8 array of shape [numLibraryPoints numPredictions 1 1] when either of skip flags are true
+//        otherwise of shape [numLibraryPoints 1 1 1]
+af::array afPotentialNeighbourIndices(const int& numPredictions, const bool& skipOtherPanels,
+                                      const bool& skipMissingData, const ManifoldOnGPU& M, const ManifoldOnGPU& Mp)
 {
   using af::anyTrue;
   using af::array;
@@ -764,28 +732,28 @@ af::array afPotentialNeighbourIndices(const int& npreds, const bool& skipOtherPa
   auto range = nvtxRangeStartA(__FUNCTION__);
 #endif
 
-  const dim_t mnobs = M.nobs;
+  const dim_t numLibraryPoints = M.numPoints;
 
   array result;
   if (skipOtherPanels && skipMissingData) {
-    array npredsMp = Mp.panel(seq(npreds));
-    array panelM = tile(M.panel, 1, npreds);
-    array panelMp = tile(npredsMp.T(), mnobs);
+    array numPredictionsMp = Mp.panel(seq(numPredictions));
+    array panelM = tile(M.panel, 1, numPredictions);
+    array panelMp = tile(numPredictionsMp.T(), numLibraryPoints);
     array mssngM = (M.mdata == M.missing);
     array msngCols = anyTrue(mssngM, 0);
-    array msngFlags = tile(msngCols.T(), 1, npreds);
+    array msngFlags = tile(msngCols.T(), 1, numPredictions);
 
     result = !(msngFlags || (panelM != panelMp));
   } else if (skipOtherPanels) {
-    array npredsMp = Mp.panel(seq(npreds));
-    array panelM = tile(M.panel, 1, npreds);
-    array panelMp = tile(npredsMp.T(), mnobs);
+    array numPredictionsMp = Mp.panel(seq(numPredictions));
+    array panelM = tile(M.panel, 1, numPredictions);
+    array panelMp = tile(numPredictionsMp.T(), numLibraryPoints);
 
     result = !(panelM != panelMp);
   } else if (skipMissingData) {
-    result = tile(!(anyTrue(M.mdata == M.missing, 0).T()), 1, npreds);
+    result = tile(!(anyTrue(M.mdata == M.missing, 0).T()), 1, numPredictions);
   } else {
-    result = af::constant(1.0, M.nobs, npreds, b8);
+    result = af::constant(1.0, M.numPoints, numPredictions, b8);
   }
 #if WITH_GPU_PROFILING
   nvtxRangeEnd(range);
@@ -795,7 +763,7 @@ af::array afPotentialNeighbourIndices(const int& npreds, const bool& skipOtherPa
 
 void afNearestNeighbours(af::array& pValids, af::array& sDists, af::array& yvecs, af::array& smData,
                          const af::array& vDists, const af::array& yvec, const af::array& mdata, const Algorithm algo,
-                         const int eacts, const int mnobs, const int npreds, const int k)
+                         const int eacts, const int numLibraryPoints, const int numPredictions, const int k)
 {
   using af::array;
   using af::dim4;
@@ -808,27 +776,27 @@ void afNearestNeighbours(af::array& pValids, af::array& sDists, af::array& yvecs
   auto searchRange = nvtxRangeStartA("sortData");
 #endif
   array maxs = af::max(pValids * vDists, 0);
-  array pDists = pValids * vDists + (1 - pValids) * tile(maxs + 100, mnobs);
+  array pDists = pValids * vDists + (1 - pValids) * tile(maxs + 100, numLibraryPoints);
 
   array indices;
   topk(sDists, indices, pDists, k, 0, AF_TOPK_MIN);
 
-  yvecs = moddims(yvec(indices), k, npreds);
+  yvecs = moddims(yvec(indices), k, numPredictions);
 
-  array vIdx = indices + iota(dim4(1, npreds), dim4(k)) * mnobs;
+  array vIdx = indices + iota(dim4(1, numPredictions), dim4(k)) * numLibraryPoints;
 
-  pValids = moddims(pValids(vIdx), k, npreds);
+  pValids = moddims(pValids(vIdx), k, numPredictions);
 
   // Manifold data also needs to be reorder for SMap prediction
   if (algo == Algorithm::SMap) {
-    array tmdata = tile(mdata, 1, 1, npreds);
-    array soffs = iota(dim4(1, 1, npreds), dim4(eacts, k)) * (eacts * mnobs);
-    array d0offs = iota(dim4(eacts), dim4(1, k, npreds));
+    array tmdata = tile(mdata, 1, 1, numPredictions);
+    array soffs = iota(dim4(1, 1, numPredictions), dim4(eacts, k)) * (eacts * numLibraryPoints);
+    array d0offs = iota(dim4(eacts), dim4(1, k, numPredictions));
 
-    indices = tile(moddims(indices, 1, k, npreds), eacts) * eacts;
+    indices = tile(moddims(indices, 1, k, numPredictions), eacts) * eacts;
     indices += (soffs + d0offs);
 
-    smData = moddims(tmdata(indices), eacts, k, npreds);
+    smData = moddims(tmdata(indices), eacts, k, numPredictions);
   }
 
 #if WITH_GPU_PROFILING
@@ -836,9 +804,9 @@ void afNearestNeighbours(af::array& pValids, af::array& sDists, af::array& yvecs
 #endif
 }
 
-void afSimplexPrediction(af::array& retcodes, af::array& ystar, af::array& kused, const int npreds, const Options& opts,
-                         const af::array& yvecs, const DistanceIndexPairsOnGPU& pair, const af::array& thetas,
-                         const bool isKNeg)
+void afSimplexPrediction(af::array& retcodes, af::array& ystar, af::array& kused, const int numPredictions,
+                         const Options& opts, const af::array& yvecs, const DistanceIndexPairsOnGPU& pair,
+                         const af::array& thetas, const bool isKNeg)
 {
   using af::array;
   using af::sum;
@@ -852,7 +820,7 @@ void afSimplexPrediction(af::array& retcodes, af::array& ystar, af::array& kused
   const array& dists = pair.dists;
   const int k = valids.dims(0);
   const int tcount = opts.thetas.size();
-  const array thetasT = tile(thetas, k, npreds);
+  const array thetasT = tile(thetas, k, numPredictions);
 
   array weights;
   {
@@ -866,13 +834,13 @@ void afSimplexPrediction(af::array& retcodes, af::array& ystar, af::array& kused
 
     weights = tile(valids, 1, 1, tcount) * af::exp(-thetasT * (tadist / minDist));
   }
-  array r4thetas = tile(yvecs, 1, (isKNeg ? npreds : 1), tcount) * (weights / tile(sum(weights, 0), k));
+  array r4thetas = tile(yvecs, 1, (isKNeg ? numPredictions : 1), tcount) * (weights / tile(sum(weights, 0), k));
 
-  ystar = moddims(sum(r4thetas, 0), npreds, tcount);
-  retcodes = af::constant(SUCCESS, npreds, tcount, s32);
+  ystar = moddims(sum(r4thetas, 0), numPredictions, tcount);
+  retcodes = af::constant(SUCCESS, numPredictions, tcount, s32);
 
   if (opts.saveKUsed) {
-    kused = moddims(af::count(weights > 0, 0), npreds, tcount);
+    kused = moddims(af::count(weights > 0, 0), numPredictions, tcount);
   }
 #if WITH_GPU_PROFILING
   nvtxRangeEnd(range);
@@ -880,8 +848,8 @@ void afSimplexPrediction(af::array& retcodes, af::array& ystar, af::array& kused
 }
 
 template<typename T>
-void afSMapPrediction(af::array& retcodes, af::array& kused, af::array& ystar, af::array& coeffs, const int npreds,
-                      const Options& opts, const ManifoldOnGPU& M, const ManifoldOnGPU& Mp,
+void afSMapPrediction(af::array& retcodes, af::array& kused, af::array& ystar, af::array& coeffs,
+                      const int numPredictions, const Options& opts, const ManifoldOnGPU& M, const ManifoldOnGPU& Mp,
                       const DistanceIndexPairsOnGPU& pair, const af::array& mdata, const af::array& yvecs,
                       const af::array& thetas, const bool useLoops)
 {
@@ -911,21 +879,21 @@ void afSMapPrediction(af::array& retcodes, af::array& kused, af::array& ystar, a
 
   if (useLoops) {
     array meanDists = tile((k * mean(valids * dists, 0) / count(valids, 0)), k);
-    array mdValids = tile(moddims(valids, 1, k, npreds), M.E_actual);
-    array Mp_i_j = Mp.mdata(span, seq(npreds));
+    array mdValids = tile(moddims(valids, 1, k, numPredictions), M.E_actual);
+    array Mp_i_j = Mp.mdata(span, seq(numPredictions));
     array scaleval = ((Mp_i_j != double(MISSING_D)) * Mp_i_j);
 
     // Allocate Output arrays
-    ystar = array(tcount, npreds, cType);
+    ystar = array(tcount, numPredictions, cType);
 
     for (int t = 0; t < tcount; ++t) {
       double theta = opts.thetas[t];
 
       array weights = valids * af::exp(-theta * (dists / meanDists));
-      array y_ls = weights * tile(yvecs, 1, npreds);
+      array y_ls = weights * tile(yvecs, 1, numPredictions);
 
-      array icsOuts = array(MEactualp1, npreds, cType);
-      for (int p = 0; p < npreds; ++p) {
+      array icsOuts = array(MEactualp1, numPredictions, cType);
+      for (int p = 0; p < numPredictions; ++p) {
         array X_ls_cj = constant(1.0, dim4(MEactualp1, k), cType);
 
         X_ls_cj(seq(1, end), span) = mdValids(span, span, p) * mdata;
@@ -949,7 +917,7 @@ void afSMapPrediction(af::array& retcodes, af::array& kused, af::array& ystar, a
       }
     }
   } else {
-    array thetasT = tile(thetas, k, npreds);
+    array thetasT = tile(thetas, k, numPredictions);
     array weights, y_ls;
     {
       array meanDists = (k * mean(valids * dists, 0) / count(valids, 0));
@@ -961,24 +929,24 @@ void afSMapPrediction(af::array& retcodes, af::array& kused, af::array& ystar, a
       y_ls = weights * tile(yvecs, 1, 1, tcount);
     }
 
-    array mdValids = tile(moddims(valids, 1, k, npreds), M.E_actual);
-    array X_ls_cj = constant(1.0, dim4(MEactualp1, k, npreds), cType);
+    array mdValids = tile(moddims(valids, 1, k, numPredictions), M.E_actual);
+    array X_ls_cj = constant(1.0, dim4(MEactualp1, k, numPredictions), cType);
 
     X_ls_cj(seq(1, end), span) = mdValids * mdata;
 
     array X_ls_cj_T = tile(X_ls_cj, 1, 1, 1, tcount);
 
-    X_ls_cj_T *= tile(moddims(weights, 1, k, npreds, tcount), MEactualp1);
+    X_ls_cj_T *= tile(moddims(weights, 1, k, numPredictions, tcount), MEactualp1);
 
-    array icsOuts = matmulTN(pinverse(X_ls_cj_T, 1e-9), moddims(y_ls, k, 1, npreds, tcount));
+    array icsOuts = matmulTN(pinverse(X_ls_cj_T, 1e-9), moddims(y_ls, k, 1, numPredictions, tcount));
 
-    icsOuts = moddims(icsOuts, MEactualp1, npreds, tcount);
-    array Mp_i_j = tile(Mp.mdata(span, seq(npreds)), 1, 1, tcount);
+    icsOuts = moddims(icsOuts, MEactualp1, numPredictions, tcount);
+    array Mp_i_j = tile(Mp.mdata(span, seq(numPredictions)), 1, 1, tcount);
     array r2d = icsOuts(seq(1, end), span, span) * ((Mp_i_j != double(MISSING_D)) * Mp_i_j);
     array r = icsOuts(0, span, span) + sum(r2d, 0);
 
-    ystar = moddims(r, npreds, tcount).T();
-    retcodes = constant(SUCCESS, npreds, tcount);
+    ystar = moddims(r, numPredictions, tcount).T();
+    retcodes = constant(SUCCESS, numPredictions, tcount);
     if (opts.saveSMAPCoeffs) {
       array lastTheta = icsOuts(span, span, tcount - 1);
 
@@ -989,13 +957,13 @@ void afSMapPrediction(af::array& retcodes, af::array& kused, af::array& ystar, a
     }
   }
 
-  retcodes = constant(SUCCESS, npreds, tcount);
+  retcodes = constant(SUCCESS, numPredictions, tcount);
 #if WITH_GPU_PROFILING
   nvtxRangeEnd(range);
 #endif
 }
 
-void af_make_prediction(const int npreds, const Options& opts, const Manifold& hostM, const Manifold& hostMp,
+void af_make_prediction(const int numPredictions, const Options& opts, const Manifold& hostM, const Manifold& hostMp,
                         const ManifoldOnGPU& M, const ManifoldOnGPU& Mp, const af::array& metricOpts,
                         Eigen::Map<MatrixXd> ystar, Eigen::Map<MatrixXi> rc, Eigen::Map<MatrixXd> coeffs,
                         std::vector<int>& kUseds, bool keep_going())
@@ -1014,7 +982,7 @@ void af_make_prediction(const int npreds, const Options& opts, const Manifold& h
     const af_dtype cType = M.mdata.type();
 
     if (opts.algorithm != Algorithm::Simplex && opts.algorithm != Algorithm::SMap) {
-      array retcodes = constant(INVALID_ALGORITHM, npreds, numThetas, s32);
+      array retcodes = constant(INVALID_ALGORITHM, numPredictions, numThetas, s32);
       retcodes.host(rc.data());
       return;
     }
@@ -1027,9 +995,9 @@ void af_make_prediction(const int npreds, const Options& opts, const Manifold& h
 
     array thetas = array(1, 1, opts.thetas.size(), opts.thetas.data()).as(cType);
 
-    auto pValids = afPotentialNeighbourIndices(npreds, skipOtherPanels, skipMissingData, M, Mp);
+    auto pValids = afPotentialNeighbourIndices(numPredictions, skipOtherPanels, skipMissingData, M, Mp);
 
-    auto validDistPair = afLPDistances(npreds, opts, M, Mp, metricOpts);
+    auto validDistPair = afLPDistances(numPredictions, opts, M, Mp, metricOpts);
 
 #if WITH_GPU_PROFILING
     auto kisRange = nvtxRangeStartA("kNearestSelection");
@@ -1044,17 +1012,17 @@ void af_make_prediction(const int npreds, const Options& opts, const Manifold& h
     const bool isKNeg = k < 0;
 
     if (k == 0) {
-      af::array retcodes = af::constant(SUCCESS, npreds, opts.thetas.size(), s32);
+      af::array retcodes = af::constant(SUCCESS, numPredictions, opts.thetas.size(), s32);
       retcodes.host(rc.data());
       return;
     }
 
     if (!isKNeg) {
-      afNearestNeighbours(pValids, sDists, yvecs, smData, validDistPair.dists, M.yvec, M.mdata, opts.algorithm,
-                          M.E_actual, M.nobs, npreds, k);
+      afNearestNeighbours(pValids, sDists, yvecs, smData, validDistPair.dists, M.targets, M.mdata, opts.algorithm,
+                          M.E_actual, M.numPoints, numPredictions, k);
     } else {
       sDists = af::select(pValids, validDistPair.dists, MISSING_D);
-      yvecs = M.yvec;
+      yvecs = M.targets;
       smData = M.mdata;
     }
 #if WITH_GPU_PROFILING
@@ -1063,14 +1031,14 @@ void af_make_prediction(const int npreds, const Options& opts, const Manifold& h
 
     array ystars, dcoeffs;
     if (opts.algorithm == Algorithm::Simplex) {
-      afSimplexPrediction(retcodes, ystars, kused, npreds, opts, yvecs, { pValids, sDists }, thetas, isKNeg);
+      afSimplexPrediction(retcodes, ystars, kused, numPredictions, opts, yvecs, { pValids, sDists }, thetas, isKNeg);
     } else if (opts.algorithm == Algorithm::SMap) {
       if (cType == f32) {
-        afSMapPrediction<float>(retcodes, kused, ystars, dcoeffs, npreds, opts, M, Mp, { pValids, sDists }, smData,
-                                yvecs, thetas, isKNeg);
+        afSMapPrediction<float>(retcodes, kused, ystars, dcoeffs, numPredictions, opts, M, Mp, { pValids, sDists },
+                                smData, yvecs, thetas, isKNeg);
       } else {
-        afSMapPrediction<double>(retcodes, kused, ystars, dcoeffs, npreds, opts, M, Mp, { pValids, sDists }, smData,
-                                 yvecs, thetas, isKNeg);
+        afSMapPrediction<double>(retcodes, kused, ystars, dcoeffs, numPredictions, opts, M, Mp, { pValids, sDists },
+                                 smData, yvecs, thetas, isKNeg);
       }
     }
 
@@ -1098,7 +1066,7 @@ void af_make_prediction(const int npreds, const Options& opts, const Manifold& h
     std::cerr << "ArrayFire threw an exception with message: \n" << std::endl;
     std::cerr << e << std::endl;
 
-    af::array retcodes = af::constant(UNKNOWN_ERROR, npreds, opts.thetas.size(), s32);
+    af::array retcodes = af::constant(UNKNOWN_ERROR, numPredictions, opts.thetas.size(), s32);
     retcodes.host(rc.data());
   }
 }

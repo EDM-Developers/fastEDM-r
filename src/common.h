@@ -74,11 +74,12 @@ struct DistanceIndexPairsOnGPU
 
 struct Options
 {
+  bool explore;
   bool copredict;
   bool forceCompute;
   bool savePrediction;
   bool saveSMAPCoeffs;
-  int k, nthreads;
+  int k, nthreads, library;
   double missingdistance;
   double dtWeight;
   bool panelMode;
@@ -92,7 +93,6 @@ struct Options
   std::vector<Metric> metrics;
   std::string cmdLine;
   bool saveKUsed;
-  int E, library;
 };
 
 void to_json(json& j, const Options& o);
@@ -100,30 +100,29 @@ void from_json(const json& j, Options& o);
 
 struct PredictionStats
 {
-  int E, library, k;
-  double theta;
-  double mae, rho;
+  int library, E;
+  double theta, mae, rho;
 };
 
 void to_json(json& j, const PredictionStats& s);
 void from_json(const json& j, PredictionStats& s);
 
-struct Prediction
+struct PredictionResult
 {
   retcode rc;
   size_t numThetas, numPredictions, numCoeffCols;
-  std::unique_ptr<double[]> ystar;
+  std::unique_ptr<double[]> predictions;
   std::unique_ptr<double[]> coeffs;
   std::vector<PredictionStats> stats;
   std::vector<bool> predictionRows;
-  std::vector<int> kUsed;
+  int kMin, kMax;
   std::string cmdLine;
-  bool copredict;
+  bool explore, copredict;
   int configNum;
 };
 
-void to_json(json& j, const Prediction& p);
-void from_json(const json& j, Prediction& p);
+void to_json(json& j, const PredictionResult& p);
+void from_json(const json& j, PredictionResult& p);
 
 class IO
 {
