@@ -12,24 +12,30 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // run_command
-std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List ropts, int tau, int p, int numReps, int crossfold, bool full, bool dtMode, bool allowMissing, int verbosity);
-RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP libsSEXP, SEXP roptsSEXP, SEXP tauSEXP, SEXP pSEXP, SEXP numRepsSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP dtModeSEXP, SEXP allowMissingSEXP, SEXP verbositySEXP) {
+List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, Nullable<IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveSMAPCoeffs, bool dt, bool allowMissing, int nthreads, int verbosity);
+RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP allowMissingSEXP, SEXP nthreadsSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type es(esSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type libs(libsSEXP);
-    Rcpp::traits::input_parameter< List >::type ropts(roptsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type es(esSEXP);
     Rcpp::traits::input_parameter< int >::type tau(tauSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type thetas(thetasSEXP);
+    Rcpp::traits::input_parameter< Nullable<IntegerVector> >::type libs(libsSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< std::string >::type algorithm(algorithmSEXP);
     Rcpp::traits::input_parameter< int >::type numReps(numRepsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
     Rcpp::traits::input_parameter< int >::type crossfold(crossfoldSEXP);
     Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
-    Rcpp::traits::input_parameter< bool >::type dtMode(dtModeSEXP);
+    Rcpp::traits::input_parameter< bool >::type shuffle(shuffleSEXP);
+    Rcpp::traits::input_parameter< bool >::type saveFinalPredictions(saveFinalPredictionsSEXP);
+    Rcpp::traits::input_parameter< bool >::type saveSMAPCoeffs(saveSMAPCoeffsSEXP);
+    Rcpp::traits::input_parameter< bool >::type dt(dtSEXP);
     Rcpp::traits::input_parameter< bool >::type allowMissing(allowMissingSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
     Rcpp::traits::input_parameter< int >::type verbosity(verbositySEXP);
-    rcpp_result_gen = Rcpp::wrap(run_command(df, es, libs, ropts, tau, p, numReps, crossfold, full, dtMode, allowMissing, verbosity));
+    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveSMAPCoeffs, dt, allowMissing, nthreads, verbosity));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -46,7 +52,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 12},
+    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 18},
     {"_fastEDM_run_json_test", (DL_FUNC) &_fastEDM_run_json_test, 1},
     {NULL, NULL, 0}
 };

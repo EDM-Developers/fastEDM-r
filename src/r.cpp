@@ -24,62 +24,6 @@ public:
   virtual void flush() const { R_FlushConsole(); }
 };
 
-// This is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar). Learn
-// more about Rcpp at:
-//
-//   http://www.rcpp.org/
-//   http://adv-r.had.co.nz/Rcpp.html
-//   http://gallery.rcpp.org/
-//
-
-
-#define rListGet(l, key, def) (l.containsElementNamed(key) ? l[key] : def)
-
-Options parse_options(const List &l) {
-  Options opts;
-  
-  opts.nthreads = rListGet(l, "nthreads", 1);
-
-  opts.copredict = rListGet(l, "copredict", false);
-  opts.forceCompute = rListGet(l, "forceCompute", true);
-  opts.savePrediction = rListGet(l, "savePrediction", true);
-  opts.saveSMAPCoeffs = rListGet(l, "saveSMAPCoeffs", false);
-  
-  opts.k = rListGet(l, "k", 1);
-  opts.missingdistance = rListGet(l, "missingdistance", 0);
-  opts.dtWeight = rListGet(l, "dtWeight", 0);
-  // opts.panelMode = rListGet(l, "panelMode", false);
-  opts.idw = rListGet(l, "idw", 0);
-  if (l.containsElementNamed("thetas")) {
-    opts.thetas = Rcpp::as<std::vector<double>>(l["thetas"]);
-  } else {
-    opts.thetas = { 1.0 };
-  }
-
-  std::string alg = rListGet(l, "algorithm", "simplex");
-  if (alg == "simplex") {
-    opts.algorithm = Algorithm::Simplex;
-  } else if (alg == "smap") {
-    opts.algorithm = Algorithm::SMap;
-  } else {
-    return {}; // TODO
-  }
-
-  opts.calcRhoMAE = rListGet(l, "calcRhoMAE", true);
-  
-  //opts.taskNum = 1;
-  //opts.numTasks = 1;
-  opts.aspectRatio = 0;
-  opts.distance = Distance::Euclidean;
-  opts.metrics = {};
-  opts.cmdLine = "";
-  opts.saveKUsed = false;
-
-  return opts;
-}
-
 bool rcpp_keep_going() {
   // The following two calls cause all kinds of crashes.
   //Rcpp::checkUserInterrupt();
@@ -88,27 +32,63 @@ bool rcpp_keep_going() {
 }
 
 // [[Rcpp::export]]
-std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List ropts,
-                        int tau, int p, int numReps=1, int crossfold=0,
-                        bool full=false, bool dtMode=false, bool allowMissing=false,
-                        int verbosity = 1)
+List run_command(DataFrame df, IntegerVector es,
+                        int tau, NumericVector thetas, Nullable<IntegerVector> libs,
+                        int k = 0, std::string algorithm = "simplex", int numReps = 1,
+                        int p = 1, int crossfold = 0, bool full = false, bool shuffle = false,
+                        bool saveFinalPredictions=false, bool saveSMAPCoeffs=false,
+                        bool dt = false, bool allowMissing = false, int nthreads = 1, int verbosity = 1)
 {
   RConsoleIO io(verbosity);
   
-  Rcout << "Verbosity set to " << verbosity << "\n";
-  
-  std::vector<int> Es = Rcpp::as<std::vector<int>>(es);
-  std::vector<int> libraries = Rcpp::as<std::vector<int>>(libs);
-  
-  Options opts = parse_options(ropts);
+  io.print(fmt::format("Verbosity set to {}\n", verbosity));
 
-  Rcout << "Num threads used is " << opts.nthreads << "\n";
-  Rcout << "CPU has " << num_logical_cores() << " logical cores and " << num_physical_cores() << " physical cores\n";
-  
-  Rcout << "k is " << opts.k << "\n";
-  
-  
-  //io->print(fmt::format("[{}] Starting the Stata command: {}\n", taskGroupNum, opts.cmdLine));
+  Options opts;
+
+  opts.nthreads = nthreads;
+  opts.copredict = false;
+  opts.forceCompute = true;
+  opts.savePrediction = saveFinalPredictions;
+  opts.saveSMAPCoeffs = saveSMAPCoeffs;
+
+  opts.k = k;
+  opts.missingdistance = 0.0;
+  opts.dtWeight = 0.0;
+  opts.panelMode = false;
+  opts.idw = 0;
+
+  if (thetas.size() > 0) {
+      opts.thetas = Rcpp::as<std::vector<double>>(thetas);
+  } else {
+      opts.thetas = { 1.0 };
+  }
+
+
+  std::vector<int> Es = Rcpp::as<std::vector<int>>(es);
+
+  std::vector<int> libraries;
+  if (libs.isNotNull()) {
+    libraries = Rcpp::as<std::vector<int>>(libs);
+  }
+  if (algorithm == "simplex") {
+      opts.algorithm = Algorithm::Simplex;
+  } else if (algorithm == "smap") {
+      opts.algorithm = Algorithm::SMap;
+  } else {
+      return {}; // TODO
+  }
+
+  opts.calcRhoMAE = true; // TODO: When is this off?
+
+  opts.aspectRatio = 0;
+  opts.distance = Distance::Euclidean;
+  opts.metrics = {};
+  opts.cmdLine = "";
+  opts.saveKUsed = true; // TODO: Check again
+
+  io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
+  io.print(fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
+  io.print(fmt::format("k is {}\n", k));
 
   std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
   std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
@@ -125,8 +105,8 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
     xmap = x;
     explore = true;
   }
-  Rcout << "explore mode? " << explore << "\n";
   
+  io.print(fmt::format("explore mode is {}\n", explore));
   
   std::vector<int> panelIDs;
   if (df.containsElementNamed("id")) {
@@ -136,7 +116,6 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
     opts.panelMode = false;
   }
   
-
   std::vector<double> co_x = {};
 
   std::vector<std::vector<double>> extras = {};
@@ -145,7 +124,7 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   bool reldt = false;
 
   const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extras,
-                                    numExtrasLagged, dtMode, reldt, allowMissing);
+                                    numExtrasLagged, dt, reldt, allowMissing);
 
   int maxE = Es[Es.size()-1];
   
@@ -166,23 +145,17 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
 
   int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
   if (numUsable == 0) {
-    Rcout << "Num usable is 0!\n";
+    io.print("Num usable is 0!\n");
     return "";
   }
-
-  int k = opts.k;
-
-  // int numReps = taskGroup["numReps"];
-  // int crossfold = taskGroup["crossfold"];
-  // bool full = taskGroup["full"];
-
-  bool saveFinalPredictions = opts.savePrediction;
-  bool saveSMAPCoeffs = opts.saveSMAPCoeffs;
-
+  
+  if (libraries.size() == 0) {
+    std::vector<bool> usable = generator.generate_usable(maxE);
+    int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
+    libraries = { numUsable };
+  }
 
   bool copredictMode = false; // taskGroup["copredictMode"];
-
-  
   bool saveFinalCoPredictions = false;
   std::vector<bool> coTrainingRows = {}; // = int_to_bool(taskGroup["coTrainingRows"]);
   std::vector<bool> coPredictionRows = {}; // int_to_bool(taskGroup["coPredictionRows"]);
@@ -194,143 +167,98 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   io.print("Starting the command!\n");
   io.flush();
   
-  bool shuffle = false;
-  
   std::vector<std::future<PredictionResult>> futures = launch_task_group(
     generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle,
     saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs,
     copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
   
-  Rcout << "Waiting for " << futures.size() << " results to come back\n";
+  io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));
   io.flush();
-  
-  json results;
-  json summaryTable;
 
-  // Collect the results of this task group before moving on to the next task group
   int rc = 0;
   
-  // futures.size() iterations in loop, update progress every 1 sec
   RcppThread::ProgressBar bar(futures.size(), 1);
-  //RcppThread::parallelFor(0, 100, [&] (int i) {
-  //  std::this_thread::sleep_for(std::chrono::milliseconds(500));
-  //  bar++;
-  //});
   
-  for (int f = 0; f < futures.size(); f++) {
-    const PredictionResult pred = futures[f].get();
-    bar++;
-    io.print(io.get_and_clear_async_buffer());
-    io.flush();
-
-    summaryTable.push_back(pred.stats);
-    if (pred.rc > rc) {
-      rc = pred.rc;
+  int kMin, kMax;
+  
+  std::vector<double> predictionsVec, coeffsVec;
+  DataFrame summary;
+  
+  { 
+    IntegerVector Es, libraries;
+    NumericVector thetas, rhos, maes;
+    
+    auto Rint = [](double v) { return (v != MISSING_D) ? v : NA_INTEGER; };
+    auto Rdouble = [](double v) { return (v != MISSING_D) ? v : NA_REAL; };
+    
+    for (int f = 0; f < futures.size(); f++) {
+      const PredictionResult pred = futures[f].get();
+      if (verbosity > 0) {
+        bar++;  
+      }
+      
+      if (f == 0 || pred.kMin < kMin) {
+        kMin = pred.kMin;
+      }
+      if (f == 0 || pred.kMax > kMax) {
+        kMax = pred.kMax;
+      }
+      
+      //io.print(io.get_and_clear_async_buffer());
+      //io.flush();
+      
+      for (int t = 0; t < pred.stats.size(); t++) {
+        Es.push_back(Rint(pred.stats[t].E));
+        thetas.push_back(Rdouble(pred.stats[t].theta));
+        libraries.push_back(Rint(pred.stats[t].library));
+        rhos.push_back(Rdouble(pred.stats[t].rho));
+        maes.push_back(Rdouble(pred.stats[t].mae));
+      }
+  
+      if (pred.rc > rc) {
+        rc = pred.rc;
+      }
+      
+      if (pred.predictions != nullptr) {
+        predictionsVec = std::vector<double>(pred.predictions.get(),
+                                             pred.predictions.get() + pred.numThetas * pred.numPredictions);
+      }
+      if (pred.coeffs != nullptr) {
+        coeffsVec = std::vector<double>(pred.coeffs.get(),
+                                        pred.coeffs.get() + pred.numPredictions * pred.numCoeffCols);
+      }
     }
     
-    std::vector<double> predictionsVec, coeffsVec;
-    if (pred.predictions != nullptr) {
-      predictionsVec = std::vector<double>(pred.predictions.get(),
-                                           pred.predictions.get() + pred.numThetas * pred.numPredictions);
-      results["predictions"] = predictionsVec;
-    }
-    if (pred.coeffs != nullptr) {
-      coeffsVec = std::vector<double>(pred.coeffs.get(),
-                                      pred.coeffs.get() + pred.numPredictions * pred.numCoeffCols);
-      results["coeffs"] = coeffsVec;
-    }
+    summary = Rcpp::DataFrame::create(_["E"] = Es, _["library"] = libraries,
+                                      _["theta"] = thetas, _["rho"] = rhos,
+                                      _["mae"] = maes);
   }
   
-  results["summaryTable"] = summaryTable;
-  results["rc"] = rc;
+  //Rcpp::NumericVector summaryTable = Rcpp::wrap(summary);
+  //summaryTable.attr("dim") = Rcpp::Dimension(summary.size() / 5, 5);
   
-  Rcout << "Got them all\n rc";
-
-  Rcout << fmt::format("Return code is {}\n", rc);
-  //io->print(fmt::format("Return code is {}\n", rc));
-
-  return results.dump();
+  //results["summaryTable"] = summaryTable;
   
+  //results["rc"] = rc;
+  
+  io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
+  
+  io.print(fmt::format("Return code is {}\n", rc));
+
+  return List::create(_["summary"] = summary,
+                      _["predictions"] = predictionsVec,
+                      _["coeffs"] = coeffsVec,
+                      _["rc"] = rc,
+                      _["kMin"] = kMin,
+                      _["kMax"] = kMax);
 }
-
-/*
-// [[Rcpp::export]]
-void rcpp_launch_command() {
-  
-  int E = 2;
-  int tau = 1;
-  int p = 1;
-  
-  std::vector<double> t = { 1, 2, 3, 4 };
-  std::vector<double> x = { 11, 12, 13, 14 };
-
-  ManifoldGenerator generator(t, x, tau, p);
-  
-  std::vector<bool> usable = generator.generate_usable(E);
-  
-  Options opts;
-  
-  opts.copredict = false;
-  opts.forceCompute = true;
-  opts.savePrediction = true;
-  opts.saveSMAPCoeffs = false;
-  
-  opts.k = 1;
-  opts.nthreads = 1;
-  opts.missingdistance = 0;
-  opts.dtWeight = 0;
-  opts.panelMode = false;
-  opts.idw = 0;
-  opts.thetas = { 1.0 };
-  opts.algorithm = Algorithm::Simplex;
-  opts.taskNum = 1;
-  opts.numTasks = 1;
-  opts.calcRhoMAE = false;
-  opts.aspectRatio = 0;
-  opts.distance = Distance::Euclidean;
-  opts.metrics = {};
-  opts.cmdLine = "edm explore x";
-  opts.saveKUsed = false;
-
-  const std::vector<int> Es = { 2 };
-  const std::vector<int> libraries = { 2 };
-  
-  int k = 1; // TODO: Why is this in opt & here also?
-  
-  int numReps = 1;
-  int crossfold = 0;
-  bool explore = true;
-  bool full = true;
-  bool saveFinalPredictions = true; // TODO: Same as k
-  bool saveSMAPCoeffs = false;
-  bool copredictMode = false;
-  
-  const std::vector<bool> coTrainingRows = {};
-  const std::vector<bool> coPredictionRows = {};
-  const std::string rngState = "";
-  
-  IO* io = nullptr;
-  //bool keep_going() = nullptr;
-  //void all_tasks_finished() = nullptr;
-  
-  std::vector<std::future<Prediction>> res = launch_task_group(
-      generator, opts, Es, libraries, k, numReps, crossfold, explore, full,
-      saveFinalPredictions, saveSMAPCoeffs, copredictMode, usable,
-      coTrainingRows, coPredictionRows, rngState,
-      io, nullptr, nullptr);
-  
-  
-}
-*/
 
 // [[Rcpp::export]]
 std::string run_json_test(std::string fnameIn) {
   
-  //std::string fnameIn("easy.json");
-  
   int nthreads = 1;
-
   int verbosity = 1;
+  
   ConsoleIO io(verbosity);
   
   std::ifstream i(fnameIn);
@@ -340,38 +268,8 @@ std::string run_json_test(std::string fnameIn) {
   json results = run_tests(testInputs, nthreads, &io);
   
   return results.dump();
-  
-  /*  
-  std::vector<double> rhos;
-  
-  for (int r = 0; r < results.size(); r++) {
-    json pJS = results[r];
-    //Rcout << pJS << "\n";
-    Prediction p = pJS;
-
-    for (int s = 0; s < p.stats.size(); s++) {
-      rhos.push_back(p.stats[s].rho);
-    }
-    
-    // Crashes, as p.numPredictions not necessarily the size of p.ystar, bug?
-    / *    
-    if(p.numPredictions > 0) {
-      std::vector<double> preds(p.numPredictions);
-      
-      for (int i = 0; i < p.numPredictions; i++) {
-        preds[i] = p.ystar[i];
-      }
-      
-      return preds;
-    }
-     * /
-  }
-  
-  return rhos;
-  */
 }
 
 /**  R
 run_json_test("easy.json")
-
 */
