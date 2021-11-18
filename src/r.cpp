@@ -31,13 +31,21 @@ bool rcpp_keep_going() {
   return 1;
 }
 
+void replace_nan(std::vector<double>& v) {
+  for (int i = 0; i < v.size(); i++) {
+    if (!std::isnormal(v[i])) {
+      v[i] = MISSING_D;
+    }
+  }
+}
+
 // [[Rcpp::export]]
 List run_command(DataFrame df, IntegerVector es,
                         int tau, NumericVector thetas, Nullable<IntegerVector> libs,
                         int k = 0, std::string algorithm = "simplex", int numReps = 1,
                         int p = 1, int crossfold = 0, bool full = false, bool shuffle = false,
                         bool saveFinalPredictions=false, bool saveSMAPCoeffs=false,
-                        bool dt = false, bool allowMissing = false, int nthreads = 1, int verbosity = 1)
+                        bool dt = false, bool allowMissing = false, int numThreads = 1, int verbosity = 1)
 {
   RConsoleIO io(verbosity);
   
@@ -45,7 +53,7 @@ List run_command(DataFrame df, IntegerVector es,
 
   Options opts;
 
-  opts.nthreads = nthreads;
+  opts.nthreads = numThreads;
   opts.copredict = false;
   opts.forceCompute = true;
   opts.savePrediction = saveFinalPredictions;
@@ -92,6 +100,9 @@ List run_command(DataFrame df, IntegerVector es,
 
   std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
   std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
+  
+  replace_nan(t);
+  replace_nan(x);
 
   //Rcout << "t is " << Rcpp::as<NumericVector>(df["t"]) << "\n";
   //Rcout << "x is " << Rcpp::as<NumericVector>(df["x"]) << "\n";
@@ -100,6 +111,7 @@ List run_command(DataFrame df, IntegerVector es,
   std::vector<double> xmap;
   if (df.containsElementNamed("y")) {
     xmap = Rcpp::as<std::vector<double>>(df["y"]);
+    replace_nan(xmap);
     explore = false;
   } else {
     xmap = x;
@@ -193,9 +205,7 @@ List run_command(DataFrame df, IntegerVector es,
     
     for (int f = 0; f < futures.size(); f++) {
       const PredictionResult pred = futures[f].get();
-      if (verbosity > 0) {
-        bar++;  
-      }
+      bar++;
       
       if (f == 0 || pred.kMin < kMin) {
         kMin = pred.kMin;

@@ -5,18 +5,20 @@
 library(fastEDM)
 library(tictoc)
 
-cat("starting basic test")
+cat("Starting a basic test")
 
 t <- c(1, 2, 3, 4)
 x <- c(11, 12, 13, 14)
 
 tic()
-testEDMTable <- edm(t, x, E=2, library=4, tau=1, p=1)
+res <- edm(t, x, E=2, library=4, tau=1, p=1)
 toc()
 
-cat("basic test finished")
+print(res)
 
-cat("starting chicago test")
+cat("Basic test finished\n\n")
+
+cat("Starting the Chicago crime-temp test\n\n")
 
 library(readr)
 
@@ -28,20 +30,20 @@ libs <- c(seq(10, 200, 5), seq(210, 1000, 10), seq(1020, 2000, 20),
 libs <- seq(10, 4365, 5)
 
 tic()
-chicagoEDM1 <- edm(chicago["t"], chicago["temp"], chicago["crime"],
-                       E=7, library=libs, numReps=10, makePlots=TRUE, verbosity=1, numThreads=80)
+res1 <- edm(chicago["t"], chicago["temp"], chicago["crime"],
+                       E=7, library=libs, numReps=1, makePlots=TRUE, verbosity=0, numThreads=4)
 
-chicagoEDM2 <- edm(chicago["t"], chicago["crime"], chicago["temp"],
-                       E=7, library=libs, numReps=10, makePlots=TRUE, verbosity=1, numThreads=80)
+res2 <- edm(chicago["t"], chicago["crime"], chicago["temp"],
+                       E=7, library=libs, numReps=1, makePlots=TRUE, verbosity=0, numThreads=4)
 toc()
 
-cat("finished chicago test")
+cat("Finished chicago test\n\n")
 
 
 library(ggplot2)
 
-averaged1 <- aggregate(chicagoEDM1[, c("mae", "rho")], list(chicagoEDM1$library), mean)
-averaged2 <- aggregate(chicagoEDM2[, c("mae", "rho")], list(chicagoEDM2$library), mean)
+averaged1 <- aggregate(res1$summary[, c("mae", "rho")], list(res1$summary$library), mean)
+averaged2 <- aggregate(res2$summary[, c("mae", "rho")], list(res2$summary$library), mean)
 colnames(averaged1)[[1]] <- "library"
 colnames(averaged2)[[1]] <- "library"
 
@@ -58,8 +60,8 @@ print(p)
 
 
 p = ggplot() + 
-  geom_point(data = chicagoEDM1, aes(x = library, y = rho), alpha = 0.05, color = 2) +
-  geom_point(data = chicagoEDM2, aes(x = library, y = rho), alpha = 0.05, color = 3) +
+  geom_point(data = res1$summary, aes(x = library, y = rho), alpha = 0.05, color = 2) +
+  geom_point(data = res2$summary, aes(x = library, y = rho), alpha = 0.05, color = 3) +
   xlab("Library") +
   ylab("Rho") +
   geom_smooth(method = "loess", alpha = 0.9)

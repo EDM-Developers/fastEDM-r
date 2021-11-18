@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // run_command
-List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, Nullable<IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveSMAPCoeffs, bool dt, bool allowMissing, int nthreads, int verbosity);
-RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP allowMissingSEXP, SEXP nthreadsSEXP, SEXP verbositySEXP) {
+List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, Nullable<IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveSMAPCoeffs, bool dt, bool allowMissing, int numThreads, int verbosity);
+RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP allowMissingSEXP, SEXP numThreadsSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,9 +33,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type saveSMAPCoeffs(saveSMAPCoeffsSEXP);
     Rcpp::traits::input_parameter< bool >::type dt(dtSEXP);
     Rcpp::traits::input_parameter< bool >::type allowMissing(allowMissingSEXP);
-    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    Rcpp::traits::input_parameter< int >::type numThreads(numThreadsSEXP);
     Rcpp::traits::input_parameter< int >::type verbosity(verbositySEXP);
-    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveSMAPCoeffs, dt, allowMissing, nthreads, verbosity));
+    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveSMAPCoeffs, dt, allowMissing, numThreads, verbosity));
     return rcpp_result_gen;
 END_RCPP
 }
