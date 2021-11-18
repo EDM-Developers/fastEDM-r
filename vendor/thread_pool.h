@@ -63,7 +63,7 @@ inline void ThreadPool::set_num_workers(int threads)
 {
   int numNewThreads = threads - workers.size();
 
-  for (size_t i = 0; i < numNewThreads; ++i)
+  for (int i = 0; i < numNewThreads; ++i)
     workers.emplace_back([this] {
       for (;;) {
         std::function<void()> task;
@@ -103,6 +103,19 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<typename std::res
   }
   condition.notify_one();
   return res;
+}
+
+// the destructor joins all threads
+ThreadPool::~ThreadPool()
+{
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    stop = true;
+  }
+  condition.notify_all();
+  for (std::thread& worker : workers) {
+    worker.join();
+  }
 }
 
 #endif

@@ -1,5 +1,4 @@
 // Adapted from https://github.com/PythonOT/POT
-
 /* This file is a c++ wrapper function for computing the transportation cost
  * between two vectors given a cost matrix.
  *
@@ -14,7 +13,23 @@
  *
  */
 
-#include "EMD_wrapper.h"
+#ifndef EMD_H
+#define EMD_H
+
+#include "network_simplex_simple.h"
+#include <iostream>
+#include <vector>
+
+using namespace lemon;
+typedef unsigned int node_id_type;
+
+enum ProblemType
+{
+  INFEASIBLE,
+  OPTIMAL,
+  UNBOUNDED,
+  MAX_ITER_REACHED
+};
 
 int EMD_wrap(int n1, int n2, double* X, double* Y, double* D, double* cost, int maxIter)
 {
@@ -100,3 +115,5 @@ int EMD_wrap(int n1, int n2, double* X, double* Y, double* D, double* cost, int 
 
   return ret;
 }
+
+#endif

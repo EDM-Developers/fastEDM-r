@@ -7,15 +7,10 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-
 #include <RcppThread.h>
-#define RCPPTHREAD_OVERRIDE_THREAD 1
-
 #include <RcppEigen.h>
 // [[Rcpp::depends(RcppEigen)]]
 
-//#include "common.h"
-//#include "edm.h"
 #include "cli.h"
 #include "cpu.h"
 
@@ -86,8 +81,10 @@ Options parse_options(const List &l) {
 }
 
 bool rcpp_keep_going() {
-  Rcpp::checkUserInterrupt();
-  return !RcppThread::isInterrupted();
+  // The following two calls cause all kinds of crashes.
+  //Rcpp::checkUserInterrupt();
+  //return !RcppThread::isInterrupted();
+  return 1;
 }
 
 // [[Rcpp::export]]
@@ -253,6 +250,7 @@ std::string run_command(DataFrame df, NumericVector es, NumericVector libs, List
   //io->print(fmt::format("Return code is {}\n", rc));
 
   return results.dump();
+  
 }
 
 /*

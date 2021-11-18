@@ -9,19 +9,3 @@ run_json_test <- function(fnameIn) {
     .Call('_fastEDM_run_json_test', PACKAGE = 'fastEDM', fnameIn)
 }
 
-rcppeigen_hello_world <- function() {
-    .Call('_fastEDM_rcppeigen_hello_world', PACKAGE = 'fastEDM')
-}
-
-rcppeigen_outerproduct <- function(x) {
-    .Call('_fastEDM_rcppeigen_outerproduct', PACKAGE = 'fastEDM', x)
-}
-
-rcppeigen_innerproduct <- function(x) {
-    .Call('_fastEDM_rcppeigen_innerproduct', PACKAGE = 'fastEDM', x)
-}
-
-rcppeigen_bothproducts <- function(x) {
-    .Call('_fastEDM_rcppeigen_bothproducts', PACKAGE = 'fastEDM', x)
-}
-
