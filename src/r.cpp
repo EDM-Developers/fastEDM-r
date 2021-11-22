@@ -45,8 +45,11 @@ List run_command(DataFrame df, IntegerVector es,
                         int tau, NumericVector thetas, Nullable<IntegerVector> libs,
                         int k = 0, std::string algorithm = "simplex", int numReps = 1,
                         int p = 1, int crossfold = 0, bool full = false, bool shuffle = false,
-                        bool saveFinalPredictions=false, bool saveSMAPCoeffs=false,
-                        bool dt = false, bool allowMissing = false, double missingDistance = 0.0,
+                        bool saveFinalPredictions = false,
+                        bool saveFinalCoPredictions = false,
+                        bool saveSMAPCoeffs = false,
+                        bool dt = false, Nullable<List> extras = R_NilValue,
+                        bool allowMissing = false, double missingDistance = 0.0,
                         int numThreads = 1, int verbosity = 1)
 {
   RConsoleIO io(verbosity);
@@ -58,7 +61,6 @@ List run_command(DataFrame df, IntegerVector es,
   opts.nthreads = numThreads;
   opts.copredict = false;
   opts.forceCompute = true;
-  opts.savePrediction = saveFinalPredictions;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
   
   opts.missingdistance = missingDistance;
@@ -74,7 +76,6 @@ List run_command(DataFrame df, IntegerVector es,
   } else {
       opts.thetas = { 1.0 };
   }
-
 
   std::vector<int> Es = Rcpp::as<std::vector<int>>(es);
 
@@ -132,31 +133,56 @@ List run_command(DataFrame df, IntegerVector es,
     opts.panelMode = false;
   }
   
-  std::vector<double> co_x = {};
+  io.print(fmt::format("panel data mode is {}\n", opts.panelMode));
+  
+  std::vector<double> co_x;
 
-  std::vector<std::vector<double>> extras = {};
+  if (df.containsElementNamed("co_x")) {
+    co_x = Rcpp::as<std::vector<double>>(df["co_x"]);
+  }
+  
+  std::vector<std::vector<double>> extrasVecs;
+  
+  if (extras.isNotNull()) {
+    List extrasList = Rcpp::as<List>(extras);
+    
+    io.print(fmt::format("Num extras is {}\n", extrasList.size()));
+    for (int e = 0; e < extrasList.size(); e++) {
+      extrasVecs.emplace_back(Rcpp::as<std::vector<double>>(extrasList[e]));
+      replace_nan(extrasVecs[extrasVecs.size()-1]);
+      opts.metrics.push_back(Metric::Diff); // TODO: Handle factor extras
+    }
+  }
+  
+  // for (int e = 0; e < extrasVecs.size(); e++) {
+  //   io.print(fmt::format("Extra[{}] len {}: ", e, extrasVecs[e].size()));
+  //   for (int i = 0; i < extrasVecs[e].size(); i++) {
+  //     io.print(fmt::format("{} ", extrasVecs[e][i]));
+  //   }
+  //   io.print("\n");
+  // }
+    
   int numExtrasLagged = 0;
 
   bool reldt = false;
 
-  const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extras,
+  const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs,
                                     numExtrasLagged, dt, reldt, allowMissing);
 
   int maxE = Es[Es.size()-1];
   
-  /*
-  Manifold M_all = generator.create_manifold(maxE, {}, false, false);
-  
-  Rcout << "M_all size is (" << M_all.nobs() << ", " << M_all.E_actual() << ")\n";
-  
-  for (int i = 0; i < M_all.nobs(); i++) {
-    for (int j = 0; j < M_all.E_actual(); j++){ 
-      Rcout << M_all(i, j) << " ";
-    }
-    Rcout << "\n";
-  }
-  */
-  
+
+  // Manifold M_all = generator.create_manifold(maxE, {}, true);
+  // 
+  // Rcout << "M_all size is (" << M_all.numPoints() << ", " << M_all.E_actual() << ")\n";
+  // 
+  // for (int i = 0; i < M_all.numPoints(); i++) {
+  //   for (int j = 0; j < M_all.E_actual(); j++){ 
+  //     Rcout << M_all(i, j) << " ";
+  //   }
+  //   Rcout << "\n";
+  // }
+
   if (allowMissing && opts.missingdistance == 0) {
     opts.missingdistance = default_missing_distance(x);
   }
@@ -175,11 +201,7 @@ List run_command(DataFrame df, IntegerVector es,
     libraries = { numUsable };
   }
 
-  bool copredictMode = false; // taskGroup["copredictMode"];
-  bool saveFinalCoPredictions = false;
-  std::vector<bool> coTrainingRows = {}; // = int_to_bool(taskGroup["coTrainingRows"]);
-  std::vector<bool> coPredictionRows = {}; // int_to_bool(taskGroup["coPredictionRows"]);
-
+  bool copredictMode = co_x.size() > 0;
   std::string rngState = ""; // taskGroup["rngState"];
 
   //opts.numTasks = numReps * crossfold * libraries.size() * Es.size();
@@ -201,12 +223,15 @@ List run_command(DataFrame df, IntegerVector es,
   
   int kMin, kMax;
   
-  std::vector<double> predictionsVec, coeffsVec;
-  DataFrame summary;
+  std::vector<double> predictionsVec, coPredictionsVec, coeffsVec;
+  DataFrame summary, co_summary = R_NilValue;
   
   { 
     IntegerVector Es, libraries;
     NumericVector thetas, rhos, maes;
+    
+    IntegerVector co_Es, co_libraries;
+    NumericVector co_thetas, co_rhos, co_maes;
     
     auto Rint = [](double v) { return (v != MISSING_D) ? v : NA_INTEGER; };
     auto Rdouble = [](double v) { return (v != MISSING_D) ? v : NA_REAL; };
@@ -225,21 +250,36 @@ List run_command(DataFrame df, IntegerVector es,
       //io.print(io.get_and_clear_async_buffer());
       //io.flush();
       
-      for (int t = 0; t < pred.stats.size(); t++) {
-        Es.push_back(Rint(pred.stats[t].E));
-        thetas.push_back(Rdouble(pred.stats[t].theta));
-        libraries.push_back(Rint(pred.stats[t].library));
-        rhos.push_back(Rdouble(pred.stats[t].rho));
-        maes.push_back(Rdouble(pred.stats[t].mae));
+      if (!pred.copredict) {
+        for (int t = 0; t < pred.stats.size(); t++) {
+          Es.push_back(Rint(pred.stats[t].E));
+          thetas.push_back(Rdouble(pred.stats[t].theta));
+          libraries.push_back(Rint(pred.stats[t].library));
+          rhos.push_back(Rdouble(pred.stats[t].rho));
+          maes.push_back(Rdouble(pred.stats[t].mae));
+        }
+      } else {
+        for (int t = 0; t < pred.stats.size(); t++) {
+          co_Es.push_back(Rint(pred.stats[t].E));
+          co_thetas.push_back(Rdouble(pred.stats[t].theta));
+          co_libraries.push_back(Rint(pred.stats[t].library));
+          co_rhos.push_back(Rdouble(pred.stats[t].rho));
+          co_maes.push_back(Rdouble(pred.stats[t].mae));
+        }
       }
-  
+      
       if (pred.rc > rc) {
         rc = pred.rc;
       }
       
       if (pred.predictions != nullptr) {
-        predictionsVec = std::vector<double>(pred.predictions.get(),
-                                             pred.predictions.get() + pred.numThetas * pred.numPredictions);
+        if (!pred.copredict) {
+          predictionsVec = std::vector<double>(pred.predictions.get(),
+                                               pred.predictions.get() + pred.numThetas * pred.numPredictions);
+        } else {
+          coPredictionsVec = std::vector<double>(pred.predictions.get(),
+                                               pred.predictions.get() + pred.numThetas * pred.numPredictions);
+        }
       }
       if (pred.coeffs != nullptr) {
         coeffsVec = std::vector<double>(pred.coeffs.get(),
@@ -250,6 +290,12 @@ List run_command(DataFrame df, IntegerVector es,
     summary = Rcpp::DataFrame::create(_["E"] = Es, _["library"] = libraries,
                                       _["theta"] = thetas, _["rho"] = rhos,
                                       _["mae"] = maes);
+    
+    if (copredictMode) {
+      co_summary = Rcpp::DataFrame::create(_["E"] = co_Es, _["library"] = co_libraries,
+                                        _["theta"] = co_thetas, _["rho"] = co_rhos,
+                                        _["mae"] = co_maes);
+    }
   }
   
   //Rcpp::NumericVector summaryTable = Rcpp::wrap(summary);
@@ -264,7 +310,9 @@ List run_command(DataFrame df, IntegerVector es,
   io.print(fmt::format("Return code is {}\n", rc));
 
   return List::create(_["summary"] = summary,
+                      _["co_summary"] = co_summary,
                       _["predictions"] = predictionsVec,
+                      _["copredictions"] = coPredictionsVec,
                       _["coeffs"] = coeffsVec,
                       _["rc"] = rc,
                       _["kMin"] = kMin,

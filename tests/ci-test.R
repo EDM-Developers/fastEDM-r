@@ -68,8 +68,12 @@ x2 <- res$predictions
 stopifnot(sum(is.na(x2)) == 0) 
 
 # edm explore x, copredict(teste) copredictvar(y)
-#cat("Command: edm explore x, copredict(teste) copredictvar(y)\n\n")
-#res <- edm(t, x,  copredict(teste) copredictvar(y)
+cat("Command: edm explore x, copredict(teste) copredictvar(y)\n\n")
+res <- edm(t, x, copredict = y, saveCoPredictions=TRUE)
+print(res)
+teste <- res$copredictions
+stopifnot(sum(is.na(teste)) == 0) 
+
 #assert teste!=. if (_n>1 & _n < _N)
 
 # edm explore z.x, p(10)
@@ -128,4 +132,4 @@ print(edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE))
 # edm explore x, e(5) extra(d.y) full allowmissing
 cat("Command: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
 d.y <- c(NA, diff(y))
-print(edm(t, x, E=5, extra=d.y, full, allowMissing=TRUE))
+print(edm(t, x, E=5, extra=list(d.y), full=TRUE, allowMissing=TRUE))
