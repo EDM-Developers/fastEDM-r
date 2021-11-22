@@ -40,6 +40,24 @@ void replace_nan(std::vector<double>& v) {
   }
 }
 
+Rcpp::NumericMatrix fill_in_na(const double* v, int c, std::vector<bool> filter) {
+  Rcpp::NumericMatrix expanded(filter.size(), c);
+  
+  int obsNum = 0;
+  for (int j = 0; j < c; j++) {
+    for (int i = 0; i < filter.size(); i++) {
+      if (filter[i]) {
+        expanded(i, j) = v[obsNum];
+        obsNum += 1;
+      } else {
+        expanded(i, j) = NA_REAL;
+      }
+    }
+  }
+  
+  return expanded;
+}
+
 // [[Rcpp::export]]
 List run_command(DataFrame df, IntegerVector es,
                         int tau, NumericVector thetas, Nullable<IntegerVector> libs,
@@ -223,7 +241,7 @@ List run_command(DataFrame df, IntegerVector es,
   
   int kMin, kMax;
   
-  std::vector<double> predictionsVec, coPredictionsVec, coeffsVec;
+  NumericMatrix predictions, coPredictions, coeffs;
   DataFrame summary, co_summary = R_NilValue;
   
   { 
@@ -274,16 +292,13 @@ List run_command(DataFrame df, IntegerVector es,
       
       if (pred.predictions != nullptr) {
         if (!pred.copredict) {
-          predictionsVec = std::vector<double>(pred.predictions.get(),
-                                               pred.predictions.get() + pred.numThetas * pred.numPredictions);
+          predictions = fill_in_na(pred.predictions.get(), pred.numThetas, pred.predictionRows);
         } else {
-          coPredictionsVec = std::vector<double>(pred.predictions.get(),
-                                               pred.predictions.get() + pred.numThetas * pred.numPredictions);
+          coPredictions = fill_in_na(pred.predictions.get(), pred.numThetas, pred.predictionRows);
         }
       }
       if (pred.coeffs != nullptr) {
-        coeffsVec = std::vector<double>(pred.coeffs.get(),
-                                        pred.coeffs.get() + pred.numPredictions * pred.numCoeffCols);
+        coeffs = fill_in_na(pred.coeffs.get(), pred.numCoeffCols, pred.predictionRows);
       }
     }
     
@@ -298,22 +313,14 @@ List run_command(DataFrame df, IntegerVector es,
     }
   }
   
-  //Rcpp::NumericVector summaryTable = Rcpp::wrap(summary);
-  //summaryTable.attr("dim") = Rcpp::Dimension(summary.size() / 5, 5);
-  
-  //results["summaryTable"] = summaryTable;
-  
-  //results["rc"] = rc;
-  
   io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
-  
   io.print(fmt::format("Return code is {}\n", rc));
 
   return List::create(_["summary"] = summary,
                       _["co_summary"] = co_summary,
-                      _["predictions"] = predictionsVec,
-                      _["copredictions"] = coPredictionsVec,
-                      _["coeffs"] = coeffsVec,
+                      _["predictions"] = predictions,
+                      _["copredictions"] = coPredictions,
+                      _["coeffs"] = coeffs,
                       _["rc"] = rc,
                       _["kMin"] = kMin,
                       _["kMax"] = kMax);
