@@ -25,8 +25,10 @@ logistic_map <- function(obs) {
 
 obs <- 500
 map <- logistic_map(obs)
+
 x <- map$x[300:obs]
 y <- map$y[300:obs]
+
 t <- seq_along(x)
 
 # explore x, e(2/10)
@@ -104,3 +106,26 @@ cat("Command: edm explore x, e(2 3) theta(0 1)\n\n")
 print(edm(t, x, E=c(2, 3), theta=c(0, 1)))
 
 # Test missing data
+
+
+# Tests from the previous 'bigger-test.do' script
+
+obs <- 100
+map <- logistic_map(obs)
+
+x <- map$x
+y <- map$y
+t <- seq_along(x)
+
+# edm explore x, e(2) crossfold(2) k(-1) allowmissing
+cat("Command: edm explore x, e(2) crossfold(2) k(-1) allowmissing\n\n")
+print(edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE))
+
+# edm explore x, e(2) crossfold(10) k(-1) allowmissing
+cat("Command: edm explore x, e(2) crossfold(10) k(-1) allowmissing\n\n")
+print(edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE))
+
+# edm explore x, e(5) extra(d.y) full allowmissing
+cat("Command: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
+d.y <- c(NA, diff(y))
+print(edm(t, x, E=5, extra=d.y, full, allowMissing=TRUE))

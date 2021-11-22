@@ -13,6 +13,7 @@ using namespace Rcpp;
 
 #include "cli.h"
 #include "cpu.h"
+#include "stats.h"
 
 class RConsoleIO : public IO
 {
@@ -45,7 +46,8 @@ List run_command(DataFrame df, IntegerVector es,
                         int k = 0, std::string algorithm = "simplex", int numReps = 1,
                         int p = 1, int crossfold = 0, bool full = false, bool shuffle = false,
                         bool saveFinalPredictions=false, bool saveSMAPCoeffs=false,
-                        bool dt = false, bool allowMissing = false, int numThreads = 1, int verbosity = 1)
+                        bool dt = false, bool allowMissing = false, double missingDistance = 0.0,
+                        int numThreads = 1, int verbosity = 1)
 {
   RConsoleIO io(verbosity);
   
@@ -58,6 +60,8 @@ List run_command(DataFrame df, IntegerVector es,
   opts.forceCompute = true;
   opts.savePrediction = saveFinalPredictions;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
+  
+  opts.missingdistance = missingDistance;
 
   opts.k = k;
   opts.missingdistance = 0.0;
@@ -152,6 +156,10 @@ List run_command(DataFrame df, IntegerVector es,
     Rcout << "\n";
   }
   */
+  
+  if (allowMissing && opts.missingdistance == 0) {
+    opts.missingdistance = default_missing_distance(x);
+  }
   
   std::vector<bool> usable = generator.generate_usable(maxE);
 
