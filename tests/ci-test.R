@@ -135,8 +135,38 @@ cat("Command: edm explore x, e(2 3) theta(0 1)\n\n")
 print(edm(t, x, E=c(2, 3), theta=c(0, 1)))
 
 # Test missing data
+missing.data.ci.test <- read.csv("missing-data-ci-test.csv", header=TRUE)
+t <- missing.data.ci.test$t
+x <- missing.data.ci.test$x
+y <- missing.data.ci.test$y
 
-# TODO
+# edm explore x
+cat("Command: edm explore x\n\n")
+print(edm(t, x))
+
+# edm explore x, dt savemanifold(plugin) dtweight(1)
+cat("Command: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
+print(edm(t, x, dt=TRUE, dtWeight=1))
+# TODO: savemanifold
+
+# edm explore x, allowmissing
+cat("Command: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
+print(edm(t, x, allowMissing=TRUE))
+# TODO: savemanifold
+
+
+# edm explore x, missingdistance(1)
+cat("Command: edm explore x, missingdistance(1)\n\n")
+print(edm(t, x, allowMissing=TRUE, missingDistance=1.0))
+# TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
+# or whether to follow Stata and just let the latter auto-enable the former...
+
+# edm xmap x l.x, allowmissing
+cat("Command: edm xmap x l.x, allowmissing\n\n")
+l.x <- c(NA, head(x, -1))
+print(edm(t, x, l.x, allowMissing=TRUE))
+print(edm(t, l.x, x, allowMissing=TRUE))
+# TODO: These tests are not matching Stata, library too big <--------------------------------------------------
 
 # Tests from the previous 'bigger-test.do' script
 

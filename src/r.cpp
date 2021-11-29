@@ -66,7 +66,8 @@ List run_command(DataFrame df, IntegerVector es,
                         bool saveFinalPredictions = false,
                         bool saveFinalCoPredictions = false,
                         bool saveSMAPCoeffs = false,
-                        bool dt = false, Nullable<List> extras = R_NilValue,
+                        bool dt = false, bool reldt = false, double dtWeight = 0.0,
+                        Nullable<List> extras = R_NilValue,
                         bool allowMissing = false, double missingDistance = 0.0,
                         int numThreads = 1, int verbosity = 1)
 {
@@ -81,11 +82,9 @@ List run_command(DataFrame df, IntegerVector es,
   opts.forceCompute = true;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
   
-  opts.missingdistance = missingDistance;
-
   opts.k = k;
-  opts.missingdistance = 0.0;
-  opts.dtWeight = 0.0;
+  opts.missingdistance = missingDistance;
+  opts.dtWeight = dtWeight;
   opts.panelMode = false;
   opts.idw = 0;
 
@@ -182,8 +181,6 @@ List run_command(DataFrame df, IntegerVector es,
     
   int numExtrasLagged = 0;
 
-  bool reldt = false;
-
   const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs,
                                     numExtrasLagged, dt, reldt, allowMissing);
 
@@ -214,8 +211,6 @@ List run_command(DataFrame df, IntegerVector es,
   }
   
   if (libraries.size() == 0) {
-    std::vector<bool> usable = generator.generate_usable(maxE);
-    int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
     libraries = { numUsable };
   }
 
