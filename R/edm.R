@@ -6,8 +6,7 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                 saveCoPredictions=FALSE, saveSMAPCoeffs=FALSE,
                 extras=NULL, allowMissing=FALSE, missingDistance=0.0,
                 dt=FALSE, reldt=FALSE, dtWeight=0.0, # saveDT=FALSE,
-                numReps=1, verbosity=0, numThreads=1,
-                saveInputs="", makePlots=FALSE) {
+                numReps=1, verbosity=0, numThreads=1, saveInputs="") {
   
   if (length(y) > 0) {
     df <- data.frame(t = t, x = x, y = y)
@@ -21,7 +20,7 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
   
   if (length(copredict) > 0) {
     if (length(copredict) != length(x)) {
-      error("Coprediction vector is not the right size")
+      stop("Coprediction vector is not the right size")
     }
     df["co_x"] <- copredict
   }
@@ -42,16 +41,6 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                      missingDistance=missingDistance,
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
                      numThreads=numThreads, verbosity=verbosity)
- 
-  summaryTable <- res$summary
-  
-  if (makePlots) {
-    averaged <- aggregate(summaryTable[, c("mae", "rho")],
-                          list(summaryTable$library), mean)
-    colnames(averaged)[[1]] <- "library"
-    
-    plot(averaged$library, averaged$rho)
-  }
   
   return(res)
 }

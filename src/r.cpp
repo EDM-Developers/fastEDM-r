@@ -327,7 +327,7 @@ std::string run_json_test(std::string fnameIn) {
   int nthreads = 1;
   int verbosity = 1;
   
-  ConsoleIO io(verbosity);
+  RConsoleIO io(verbosity);
   
   std::ifstream i(fnameIn);
   json testInputs;
