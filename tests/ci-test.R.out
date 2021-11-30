@@ -183,7 +183,7 @@ $copredictions
 $coeffs
                [,1]         [,2]          [,3]
   [1,]           NA           NA            NA
-  [2,]  -23.5620345   46.5623921   45.50977103
+  [2,]  -23.5620345   46.5623921   45.50977104
   [3,]   25.3122981 -111.1931760  108.62370591
   [4,]    3.1553983   46.4661971   -7.57587566
   [5,] -116.7812920  107.8495022   20.76688283
@@ -382,7 +382,7 @@ $coeffs
 [198,]   25.6172359  -30.7152455  -10.05175387
 [199,]   88.2858104  -10.9308162  -93.93006049
 [200,]   36.0005756   82.7736979   43.96309663
-[201,]  -62.5400846 -110.9406206   87.48298723
+[201,]  -62.5400846 -110.9406206   87.48298724
 
 $rc
 [1] 0
@@ -1397,6 +1397,172 @@ $kMin
 
 $kMax
 [1] 4
+
+Command: edm explore x
+
+Computing: [========================================] 100% (done)                         
+$summary
+  E library theta       rho        mae
+1 2      54     1 0.9981401 0.01091792
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 3
+
+$kMax
+[1] 3
+
+Command: edm explore x, dt savemanifold(plugin) dtweight(1)
+
+Computing: [========================================] 100% (done)                         
+$summary
+  E library theta       rho        mae
+1 4      74     1 0.9556877 0.03060271
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 5
+
+$kMax
+[1] 5
+
+Command: edm explore x, dt savemanifold(plugin) dtweight(1)
+
+Computing: [========================================] 100% (done)                         
+$summary
+  E library theta       rho       mae
+1 2      88     1 0.9976578 0.0123611
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 3
+
+$kMax
+[1] 3
+
+Command: edm explore x, missingdistance(1)
+
+Computing: [========================================] 100% (done)                         
+$summary
+  E library theta      rho        mae
+1 2      88     1 0.997654 0.01236876
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 3
+
+$kMax
+[1] 3
+
+Command: edm xmap x l.x, allowmissing
+
+Computing: [========================================] 100% (done)                         
+$summary
+  E library theta       rho        mae
+1 2     176     1 0.9080538 0.03197539
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 3
+
+$kMax
+[1] 3
+
+Computing: [========================================] 100% (done)                         
+$summary
+  E library theta      rho        mae
+1 2     174     1 0.910482 0.04037189
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 3
+
+$kMax
+[1] 3
 
 Command: edm explore x, e(2) crossfold(2) k(-1) allowmissing
 
