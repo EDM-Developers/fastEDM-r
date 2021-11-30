@@ -232,7 +232,7 @@ List run_command(DataFrame df, IntegerVector es,
 
   int rc = 0;
   
-  RcppThread::ProgressBar bar(futures.size(), 1);
+  //RcppThread::ProgressBar bar(futures.size(), 1);
   
   int kMin, kMax;
   
@@ -251,7 +251,7 @@ List run_command(DataFrame df, IntegerVector es,
     
     for (int f = 0; f < futures.size(); f++) {
       const PredictionResult pred = futures[f].get();
-      bar++;
+      //bar++;
       
       if (f == 0 || pred.kMin < kMin) {
         kMin = pred.kMin;
