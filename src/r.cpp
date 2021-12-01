@@ -2,18 +2,19 @@
 #define STRICT_R_HEADERS
 
 // [[Rcpp::plugins(cpp17)]]
+// [[Rcpp::depends(RcppEigen)]]
 
 #include <Rcpp.h>
 using namespace Rcpp;
 
 #include <RcppEigen.h>
-// [[Rcpp::depends(RcppEigen)]]
 
-/* [[Rcpp::depends(RcppThread)]]
-#include <RcppThread.h>
- */
+#ifndef FMT_HEADER_ONLY
+#define FMT_HEADER_ONLY
+#endif
+#include <fmt/format.h>
 
-#include "cli.h"
+#include "edm.h"
 #include "cpu.h"
 #include "stats.h"
 
@@ -313,24 +314,3 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
                       _["copredictions"] = coPredictions, _["coeffs"] = coeffs, _["rc"] = rc, _["kMin"] = kMin,
                       _["kMax"] = kMax);
 }
-
-std::string run_json_test(std::string fnameIn)
-{
-
-  int nthreads = 1;
-  int verbosity = 1;
-
-  RConsoleIO io(verbosity);
-
-  std::ifstream i(fnameIn);
-  json testInputs;
-  i >> testInputs;
-
-  json results = run_tests(testInputs, nthreads, &io);
-
-  return results.dump();
-}
-
-/**  R
-run_json_test("easy.json")
-*/
