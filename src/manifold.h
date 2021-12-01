@@ -33,17 +33,11 @@ struct ManifoldOnGPU
 class ManifoldGenerator
 {
 private:
-  bool _dt;
-  bool _reldt;
-  bool _panel_mode;
-  bool _xmap_mode;
-  bool _allow_missing;
-  int _tau;
-  int _p;
-  int _num_extras, _num_extras_lagged;
-  std::vector<double> _x, _xmap, _co_x;
+  std::vector<double> _t, _x, _xmap, _co_x;
   std::vector<std::vector<double>> _extras;
-
+  std::vector<int> _panelIDs;
+  int _tau, _p, _num_extras, _num_extras_lagged;
+  bool _dt, _reldt, _allow_missing, _panel_mode, _xmap_mode;
   std::vector<int> _observation_number;
 
   void setup_observation_numbers();
@@ -51,8 +45,7 @@ private:
   bool find_observation_num(int target, int& k, int direction, int panel) const;
 
 public:
-  std::vector<double> _t;
-  std::vector<int> _panelIDs;
+
   void fill_in_point(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight, double* point) const;
   double get_target(int i, bool copredictionMode, bool predictionSet, int& targetIndex) const;
 
@@ -70,22 +63,27 @@ public:
                     int numExtrasLagged = 0, bool dt = false, bool reldt = false, bool allowMissing = false)
     : _t(t)
     , _x(x)
-    , _tau(tau)
-    , _p(p)
     , _xmap(xmap)
     , _co_x(co_x)
-    , _panelIDs(panelIDs)
     , _extras(extras)
+    , _panelIDs(panelIDs)
+    , _tau(tau)
+    , _p(p)
     , _num_extras((int)extras.size())
     , _num_extras_lagged(numExtrasLagged)
     , _dt(dt)
     , _reldt(reldt)
     , _allow_missing(allowMissing)
+    , _panel_mode(panelIDs.size() > 0)
+    , _xmap_mode(xmap.size() > 0)
   {
-    _panel_mode = (panelIDs.size() > 0);
-    _xmap_mode = (xmap.size() > 0);
     setup_observation_numbers();
   }
+
+  int numObs() const { return _t.size(); }
+  bool panelMode() const { return _panel_mode; }
+  int panel(int i) const { return _panelIDs[i]; }
+  const std::vector<int>& panelIDs() const { return _panelIDs; }
 
   std::vector<bool> generate_usable(int maxE, bool copredictionMode = false) const;
 
@@ -106,8 +104,6 @@ public:
 
   int numExtrasLagged() const { return _num_extras_lagged; }
   int numExtras() const { return _num_extras; }
-
-  const std::vector<int>& panelIDs() const { return _panelIDs; }
 };
 
 class Manifold
@@ -131,9 +127,7 @@ class Manifold
 
     bool takeEveryPoint = filter.size() == 0;
 
-    bool panelMode = _gen->_panelIDs.size() > 0;
-
-    for (int i = 0; i < _gen->_t.size(); i++) {
+    for (int i = 0; i < _gen->numObs(); i++) {
       if (takeEveryPoint || filter[i]) {
 
         // Throwing away library set points whose targets are missing.
@@ -145,8 +139,8 @@ class Manifold
 
         _targets.push_back(target);
 
-        if (panelMode) {
-          _panelIDs.push_back(_gen->_panelIDs[i]);
+        if (_gen->panelMode()) {
+          _panelIDs.push_back(_gen->panel(i));
         }
         _pointNumToStartIndex.push_back(i);
       }
