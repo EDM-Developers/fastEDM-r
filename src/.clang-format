@@ -1,0 +1,7 @@
+BasedOnStyle: Mozilla
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+ColumnLimit: 120
+BinPackArguments: true
+BinPackParameters: true
+AllowShortBlocksOnASingleLine: true
