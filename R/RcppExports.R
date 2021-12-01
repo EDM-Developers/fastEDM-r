@@ -5,7 +5,3 @@ run_command <- function(df, es, tau, thetas, libs, k = 0L, algorithm = "simplex"
     .Call('_fastEDM_run_command', PACKAGE = 'fastEDM', df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, numThreads, verbosity)
 }
 
-run_json_test <- function(fnameIn) {
-    .Call('_fastEDM_run_json_test', PACKAGE = 'fastEDM', fnameIn)
-}
-

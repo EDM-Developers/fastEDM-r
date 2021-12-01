@@ -2,14 +2,16 @@
 #define STRICT_R_HEADERS
 
 // [[Rcpp::plugins(cpp17)]]
-// [[Rcpp::depends(RcppThread)]]
 
 #include <Rcpp.h>
 using namespace Rcpp;
 
-#include <RcppThread.h>
 #include <RcppEigen.h>
 // [[Rcpp::depends(RcppEigen)]]
+
+/* [[Rcpp::depends(RcppThread)]] 
+#include <RcppThread.h>
+ */
 
 #include "cli.h"
 #include "cpu.h"
@@ -321,7 +323,6 @@ List run_command(DataFrame df, IntegerVector es,
                       _["kMax"] = kMax);
 }
 
-// [[Rcpp::export]]
 std::string run_json_test(std::string fnameIn) {
   
   int nthreads = 1;

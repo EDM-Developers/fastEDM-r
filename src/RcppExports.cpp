@@ -44,21 +44,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// run_json_test
-std::string run_json_test(std::string fnameIn);
-RcppExport SEXP _fastEDM_run_json_test(SEXP fnameInSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type fnameIn(fnameInSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_json_test(fnameIn));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 23},
-    {"_fastEDM_run_json_test", (DL_FUNC) &_fastEDM_run_json_test, 1},
     {NULL, NULL, 0}
 };
 

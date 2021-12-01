@@ -21,15 +21,15 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{fastEDM}
 }
 \references{
-~~ Literature or other references for background information ~~
+Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond Linearity, Stability, and Equilibrium: The edm Package for Empirical Dynamic Modeling and Convergent Cross Mapping in Stata, Stata Journal, 21(1), pp. 220-258
 }
-~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R ~~
-~~ documentation directory ~~
+
 \keyword{ package }
 \seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
+\url{https://jinjingli.github.io/edm/}
 }
 \examples{
-%~~ simple examples of the most important functions ~~
+t <- c(1, 2, 3, 4)
+x <- c(11, 12, 13, 14)
+edm(t, x)
 }
