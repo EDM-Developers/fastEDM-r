@@ -44,8 +44,9 @@
 using MatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using MatrixXi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int E, const std::vector<bool>& libraryRows,
-                          const std::vector<bool> predictionRows, IO* io, bool keep_going(), void all_tasks_finished());
+PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Options opts, int E,
+                          const std::vector<bool>& libraryRows, const std::vector<bool> predictionRows, IO* io,
+                          bool keep_going(), void all_tasks_finished());
 
 void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,
                      Eigen::Map<MatrixXd> predictionsView, Eigen::Map<MatrixXi> rcView, Eigen::Map<MatrixXd> coeffsView,
@@ -71,15 +72,18 @@ void af_make_prediction(const int numPredictions, const Options& opts, const Man
                         std::vector<int>& kUseds, bool keep_going());
 #endif
 
-std::atomic<int> numTasksStarted = 0;
+std::atomic<int> totalNumPredictions = 0;
+std::atomic<int> estimatedTotalNumPredictions = 0;
+
+std::atomic<int> numPredictionsFinished = 0;
 std::atomic<int> numTasksFinished = 0;
 ThreadPool workerPool(0), taskRunnerPool(0);
 
 std::vector<std::future<PredictionResult>> launch_task_group(
-  const ManifoldGenerator& generator, Options opts, const std::vector<int>& Es, const std::vector<int>& libraries,
-  int k, int numReps, int crossfold, bool explore, bool full, bool shuffle, bool saveFinalPredictions,
-  bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode, const std::vector<bool>& usable,
-  const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
+  const std::shared_ptr<ManifoldGenerator> generator, Options opts, const std::vector<int>& Es,
+  const std::vector<int>& libraries, int k, int numReps, int crossfold, bool explore, bool full, bool shuffle,
+  bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode,
+  const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
 {
   static bool initOnce = [&]() {
 #if defined(WITH_ARRAYFIRE)
@@ -111,7 +115,7 @@ std::vector<std::future<PredictionResult>> launch_task_group(
 
   if (copredictMode) {
     opts.numTasks *= 2;
-    cousable = generator.generate_usable(maxE, true);
+    cousable = generator->generate_usable(maxE, true);
   }
 
   int E, kAdj, library, librarySize;
@@ -128,6 +132,10 @@ std::vector<std::future<PredictionResult>> launch_task_group(
     if (explore) {
       newLibraryPredictionSplit = true;
       librarySize = splitter.next_library_size(iter);
+    }
+
+    if (keep_going != nullptr && !keep_going()) {
+      break;
     }
 
     for (int i = 0; i < Es.size(); i++) {
@@ -153,7 +161,7 @@ std::vector<std::future<PredictionResult>> launch_task_group(
           kAdj = -1; // Leave a sentinel value so we know to skip the nearest neighbours calculation
         } else if (k == 0) {
           bool isSMap = opts.algorithm == Algorithm::SMap;
-          int defaultK = generator.E_actual(E) + 1 + isSMap;
+          int defaultK = generator->E_actual(E) + 1 + isSMap;
           kAdj = defaultK < library ? defaultK : library;
         }
 
@@ -207,17 +215,19 @@ std::vector<std::future<PredictionResult>> launch_task_group(
   return futures;
 }
 
-PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int E, const std::vector<bool>& libraryRows,
-                          const std::vector<bool> predictionRows, IO* io, bool keep_going(), void all_tasks_finished())
+PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Options opts, int E,
+                          const std::vector<bool>& libraryRows, const std::vector<bool> predictionRows, IO* io,
+                          bool keep_going(), void all_tasks_finished())
 {
-  opts.metrics = expand_metrics(generator, E, opts.distance, opts.metrics);
+  opts.metrics = expand_metrics(*generator, E, opts.distance, opts.metrics);
 
   if (opts.taskNum == 0) {
-    numTasksStarted = 0;
+    numPredictionsFinished = 0;
     numTasksFinished = 0;
-  }
 
-  numTasksStarted += 1;
+    totalNumPredictions = 0;
+    estimatedTotalNumPredictions = 0;
+  }
 
 #ifdef DUMP_LOW_LEVEL_INPUTS
   // This hack is simply to dump some really low level data structures
@@ -235,11 +245,8 @@ PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int 
   }
 #endif
 
-  // Note, we can't have missing data inside the library set when using the S-Map algorithm
-  bool skipMissing = (opts.algorithm == Algorithm::SMap);
-
-  Manifold M = generator.create_manifold(E, libraryRows, false, opts.dtWeight, opts.copredict, skipMissing);
-  Manifold Mp = generator.create_manifold(E, predictionRows, true, opts.dtWeight, opts.copredict);
+  Manifold M(generator, E, libraryRows, false, opts.dtWeight, opts.copredict, opts.lowMemoryMode);
+  Manifold Mp(generator, E, predictionRows, true, opts.dtWeight, opts.copredict, opts.lowMemoryMode);
 
   bool multiThreaded = opts.nthreads > 1;
 
@@ -265,6 +272,9 @@ PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int 
   int numPredictions = Mp.numPoints();
   int numCoeffCols = M.E_actual() + 1;
 
+  totalNumPredictions += numPredictions;
+  estimatedTotalNumPredictions = (opts.numTasks / (1.0 + opts.taskNum)) * totalNumPredictions;
+
   auto predictions = std::make_unique<double[]>(numThetas * numPredictions);
   std::fill_n(predictions.get(), numThetas * numPredictions, MISSING_D);
   Eigen::Map<MatrixXd> predictionsView(predictions.get(), numThetas, numPredictions);
@@ -283,7 +293,7 @@ PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int 
     kUsed.push_back(-1);
   }
 
-  if (opts.numTasks > 1 && opts.taskNum == 0) {
+  if (io != nullptr && opts.taskNum == 0) {
     io->progress_bar(0.0);
   }
 
@@ -293,17 +303,24 @@ PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int 
     workerPool.sync();
     auto start = std::chrono::high_resolution_clock::now();
 #endif
-    for (int i = 0; i < numPredictions; i++) {
-      results[i] = workerPool.enqueue(
-        [&, i] { make_prediction(i, opts, M, Mp, predictionsView, rcView, coeffsView, &(kUsed[i]), keep_going); });
+    {
+      std::unique_lock<std::mutex> lock(workerPool.queue_mutex);
+
+      for (int i = 0; i < numPredictions; i++) {
+        if (keep_going != nullptr && !keep_going()) {
+          break;
+        }
+
+        results[i] = workerPool.unsafe_enqueue(
+          [&, i] { make_prediction(i, opts, M, Mp, predictionsView, rcView, coeffsView, &(kUsed[i]), keep_going); });
+      }
     }
-    if (opts.numTasks == 1) {
-      io->progress_bar(0.0);
-    }
+
     for (int i = 0; i < numPredictions; i++) {
       results[i].get();
-      if (opts.numTasks == 1) {
-        io->progress_bar((i + 1) / ((double)numPredictions));
+      if (io != nullptr) {
+        numPredictionsFinished += 1;
+        io->progress_bar(numPredictionsFinished / ((double)estimatedTotalNumPredictions));
       }
     }
 #if WITH_GPU_PROFILING
@@ -330,16 +347,16 @@ PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int 
 #endif
     } else {
 #endif
-      if (opts.numTasks == 1) {
-        io->progress_bar(0.0);
-      }
+
       for (int i = 0; i < numPredictions; i++) {
         if (keep_going != nullptr && !keep_going()) {
           break;
         }
         make_prediction(i, opts, M, Mp, predictionsView, rcView, coeffsView, &(kUsed[i]), keep_going);
-        if (opts.numTasks == 1) {
-          io->progress_bar((i + 1) / ((double)numPredictions));
+
+        if (io != nullptr) {
+          numPredictionsFinished += 1;
+          io->progress_bar(numPredictionsFinished / ((double)estimatedTotalNumPredictions));
         }
       }
 #if defined(WITH_ARRAYFIRE)
@@ -424,15 +441,16 @@ PredictionResult edm_task(const ManifoldGenerator& generator, Options opts, int 
     pred.numThetas = numThetas;
     pred.numPredictions = numPredictions;
     pred.numCoeffCols = numCoeffCols;
-
-    if (opts.numTasks > 1) {
-      io->progress_bar((numTasksFinished + 1) / ((double)opts.numTasks));
-    }
   }
 
   numTasksFinished += 1;
 
   if (numTasksFinished == opts.numTasks) {
+
+    if (io != nullptr) {
+      io->progress_bar(1.0);
+    }
+
     if (all_tasks_finished != nullptr) {
       all_tasks_finished();
     }
@@ -468,14 +486,15 @@ void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Man
     return;
   }
 
-  // Create a list of indices which may potentially be the neighbours of Mp(Mp_i,.)
-  std::vector<int> tryInds = potential_neighbour_indices(Mp_i, opts, M, Mp);
-
   DistanceIndexPairs potentialNN;
   if (opts.distance == Distance::Wasserstein) {
-    potentialNN = wasserstein_distances(Mp_i, opts, M, Mp, tryInds);
+    potentialNN = wasserstein_distances(Mp_i, opts, M, Mp);
   } else {
-    potentialNN = lp_distances(Mp_i, opts, M, Mp, tryInds);
+    if (opts.lowMemoryMode) {
+      potentialNN = lazy_lp_distances(Mp_i, opts, M, Mp);
+    } else {
+      potentialNN = eager_lp_distances(Mp_i, opts, M, Mp);
+    }
   }
 
   if (keep_going != nullptr && !keep_going()) {
@@ -512,7 +531,7 @@ void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Man
   }
 
   *kUsed = kNNs.inds.size();
-  
+
   if (keep_going != nullptr && !keep_going()) {
     rcView(0, Mp_i) = BREAK_HIT;
     return;
@@ -529,23 +548,6 @@ void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Man
   } else {
     rcView(0, Mp_i) = INVALID_ALGORITHM;
   }
-}
-
-std::vector<int> potential_neighbour_indices(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
-{
-  bool skipOtherPanels = opts.panelMode && (opts.idw < 0);
-
-  std::vector<int> inds;
-
-  for (int i = 0; i < M.numPoints(); i++) {
-    if (skipOtherPanels && (M.panel(i) != Mp.panel(Mp_i))) {
-      continue;
-    }
-
-    inds.push_back(i);
-  }
-
-  return inds;
 }
 
 // For a given point, find the k nearest neighbours of this point.
@@ -650,34 +652,36 @@ void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, co
 {
   int k = kNNInds.size();
 
-  // Pull out the nearest neighbours from the manifold, and
-  // simultaneously prepend a column of ones in front of the manifold data.
-#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
-  MatrixXd X_ls_cj(k, M.E_actual() + 1);
-  X_ls_cj << Eigen::VectorXd::Ones(k), M.map()(kNNInds, Eigen::all);
-#else
-  MatrixXd X_ls(k, M.E_actual());
-  for (int i = 0; i < k; i++) {
-    X_ls.row(i) = M.map().row(kNNInds[i]);
-  }
-  MatrixXd X_ls_cj(k, M.E_actual() + 1);
-  X_ls_cj << Eigen::VectorXd::Ones(k), X_ls;
-#endif
-
   // Calculate the weight for each neighbour
   Eigen::Map<const Eigen::VectorXd> distsMap(&(dists[0]), dists.size());
   Eigen::VectorXd w = Eigen::exp(-opts.thetas[t] * (distsMap.array() / distsMap.mean()));
 
-  // Scale everything by our weights vector
-#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
-  X_ls_cj.array().colwise() *= w.array();
-  Eigen::VectorXd y_ls = M.targetsMap()(kNNInds).array() * w.array();
-#else
+  // Pull out the nearest neighbours from the manifold, and
+  // simultaneously prepend a column of ones in front of the manifold data.
+  MatrixXd X_ls_cj(k, M.E_actual() + 1);
+
+  if (opts.lowMemoryMode) {
+    for (int i = 0; i < k; i++) {
+      X_ls_cj(i, 0) = w[i];
+      M.lazy_fill_in_point(kNNInds[i], &(X_ls_cj(i, 1)));
+      for (int j = 1; j < M.E_actual() + 1; j++) {
+        X_ls_cj(i, j) *= w[i];
+      }
+    }
+  } else {
+    for (int i = 0; i < k; i++) {
+      X_ls_cj(i, 0) = w[i];
+      for (int j = 1; j < M.E_actual() + 1; j++) {
+        X_ls_cj(i, j) = w[i] * M(kNNInds[i], j - 1);
+      }
+    }
+  }
+
+  // Scale targets by our weights vector
   Eigen::VectorXd y_ls(k);
   for (int i = 0; i < k; i++) {
-    y_ls[i] = M.target(kNNInds[i]) * w[i];
+    y_ls[i] = w[i] * M.target(kNNInds[i]);
   }
-#endif
 
   // The old way to solve this system:
   // Eigen::BDCSVD<MatrixXd> svd(X_ls_cj, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -690,9 +694,18 @@ void smap_prediction(int Mp_i, int t, const Options& opts, const Manifold& M, co
   Eigen::VectorXd ics = svd.solve(X_ls_cj.transpose() * y_ls);
 
   double r = ics(0);
+
+  auto y = std::unique_ptr<double[]>(new double[M.E_actual()], std::default_delete<double[]>());
+
+  if (opts.lowMemoryMode) {
+    Mp.lazy_fill_in_point(Mp_i, y.get());
+  } else {
+    Mp.eager_fill_in_point(Mp_i, y.get());
+  }
+
   for (int j = 0; j < M.E_actual(); j++) {
-    if (Mp(Mp_i, j) != MISSING_D) {
-      r += Mp(Mp_i, j) * ics(j + 1);
+    if (y[j] != MISSING_D) {
+      r += y[j] * ics(j + 1);
     }
   }
 

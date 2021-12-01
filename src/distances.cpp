@@ -24,6 +24,8 @@
 using af::array;
 #endif
 
+using MatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
 std::vector<Metric> expand_metrics(const ManifoldGenerator& generator, int E, Distance distance,
                                    const std::vector<Metric>& metrics)
 {
@@ -64,15 +66,104 @@ std::vector<Metric> expand_metrics(const ManifoldGenerator& generator, int E, Di
   return expandedMetrics;
 }
 
-DistanceIndexPairs lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,
-                                std::vector<int> inpInds)
+DistanceIndexPairs lazy_lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
 {
   std::vector<int> inds;
   std::vector<double> dists;
 
+  inds.reserve(M.numPoints());
+  dists.reserve(M.numPoints());
+
+  // We'll store the points we are comparing in the following two arrays.
+  auto x = std::unique_ptr<double[]>(new double[M.E_actual()], std::default_delete<double[]>());
+  auto y = std::unique_ptr<double[]>(new double[M.E_actual()], std::default_delete<double[]>());
+
+  Mp.lazy_fill_in_point(Mp_i, y.get());
+
+  const bool skipOtherPanels = opts.panelMode && (opts.idw < 0);
+
   // Compare every observation in the M manifold to the
   // Mp_i'th observation in the Mp manifold.
-  for (int i : inpInds) {
+  for (int i = 0; i < M.numPoints(); i++) {
+
+    if (skipOtherPanels && (M.panel(i) != Mp.panel(Mp_i))) {
+      continue;
+    }
+
+    // Calculate the distance between M[i] and Mp[Mp_i]
+    double dist_i = 0.0;
+
+    M.lazy_fill_in_point(i, x.get());
+
+    // If we have panel data and the M[i] / Mp[Mp_j] observations come from different panels
+    // then add the user-supplied penalty/distance for the mismatch.
+    if (opts.panelMode && opts.idw > 0) {
+      dist_i += opts.idw * (M.panel(i) != Mp.panel(Mp_i));
+    }
+
+    for (int j = 0; j < M.E_actual(); j++) {
+      // Get the sub-distance between M[i,j] and Mp[Mp_i, j]
+      double dist_ij;
+
+      // If either of these values is missing, the distance from
+      // M[i,j] to Mp[Mp_i, j] is opts.missingdistance.
+      // However, if the user doesn't specify this, then the entire
+      // M[i] to Mp[Mp_i] distance is set as missing.
+      if ((x[j] == MISSING_D) || (y[j] == MISSING_D)) {
+        if (opts.missingdistance == 0) {
+          dist_i = MISSING_D;
+          break;
+        } else {
+          dist_ij = opts.missingdistance;
+        }
+      } else { // Neither M[i,j] nor Mp[Mp_i, j] is missing.
+        // How do we compare them? Do we treat them like continuous values and subtract them,
+        // or treat them like unordered categorical variables and just check if they're the same?
+        if (opts.metrics[j] == Metric::Diff) {
+          dist_ij = x[j] - y[j];
+        } else { // Metric::CheckSame
+          dist_ij = (x[j] != y[j]);
+        }
+      }
+
+      if (opts.distance == Distance::MeanAbsoluteError) {
+        dist_i += abs(dist_ij) / M.E_actual();
+      } else { // Distance::Euclidean
+        dist_i += dist_ij * dist_ij;
+      }
+    }
+
+    if (dist_i != 0 && dist_i != MISSING_D) {
+      if (opts.distance == Distance::MeanAbsoluteError) {
+        dists.push_back(dist_i);
+      } else { // Distance::Euclidean
+        dists.push_back(sqrt(dist_i));
+      }
+      inds.push_back(i);
+    }
+  }
+
+  return { inds, dists };
+}
+
+DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
+{
+  std::vector<int> inds;
+  std::vector<double> dists;
+
+  inds.reserve(M.numPoints());
+  dists.reserve(M.numPoints());
+
+  const bool skipOtherPanels = opts.panelMode && (opts.idw < 0);
+
+  // Compare every observation in the M manifold to the
+  // Mp_i'th observation in the Mp manifold.
+  for (int i = 0; i < M.numPoints(); i++) {
+
+    if (skipOtherPanels && (M.panel(i) != Mp.panel(Mp_i))) {
+      continue;
+    }
+
     // Calculate the distance between M[i] and Mp[Mp_i]
     double dist_i = 0.0;
 
@@ -167,8 +258,22 @@ std::unique_ptr<double[]> wasserstein_cost_matrix(const Manifold& M, const Manif
 
   bool skipMissing = (opts.missingdistance == 0);
 
-  auto M_i = M.laggedObsMap(i);
-  auto Mp_j = Mp.laggedObsMap(j);
+  // We'll store the points we are comparing in the following two arrays.
+  auto x = std::unique_ptr<double[]>(new double[M.E_actual()], std::default_delete<double[]>());
+  auto y = std::unique_ptr<double[]>(new double[M.E_actual()], std::default_delete<double[]>());
+
+  if (opts.lowMemoryMode) {
+    M.lazy_fill_in_point(i, x.get());
+    Mp.lazy_fill_in_point(j, y.get());
+  } else {
+    M.eager_fill_in_point(i, x.get());
+    Mp.eager_fill_in_point(j, y.get());
+  }
+
+  int numLaggedExtras = M.E_lagged_extras() / M.E();
+
+  auto M_i = Eigen::Map<MatrixXd>(x.get(), 1 + (M.E_dt() > 0) + numLaggedExtras, M.E());
+  auto Mp_j = Eigen::Map<MatrixXd>(y.get(), 1 + (M.E_dt() > 0) + numLaggedExtras, M.E());
 
   auto M_i_missing = (M_i.array() == M.missing()).colwise().any();
   auto Mp_j_missing = (Mp_j.array() == Mp.missing()).colwise().any();
@@ -213,16 +318,18 @@ std::unique_ptr<double[]> wasserstein_cost_matrix(const Manifold& M, const Manif
   double unlaggedDist = 0.0;
   int numUnlaggedExtras = M.E_extras() - M.E_lagged_extras();
   for (int e = 0; e < numUnlaggedExtras; e++) {
-    double x = M.unlagged_extras(i, e), y = Mp.unlagged_extras(j, e);
-    bool eitherMissing = (x == M.missing()) || (y == M.missing());
+    double x_e = x[M_i.size() + e];
+    double y_e = y[Mp_j.size() + e];
+
+    bool eitherMissing = (x_e == M.missing()) || (y_e == M.missing());
 
     if (eitherMissing) {
       unlaggedDist += opts.missingdistance;
     } else {
       if (opts.metrics[timeSeriesDim + e] == Metric::Diff) {
-        unlaggedDist += abs(x - y);
+        unlaggedDist += abs(x_e - y_e);
       } else {
-        unlaggedDist += x != y;
+        unlaggedDist += (x_e != y_e);
       }
     }
   }
@@ -235,8 +342,8 @@ std::unique_ptr<double[]> wasserstein_cost_matrix(const Manifold& M, const Manif
 
   auto flatCostMatrix = std::make_unique<double[]>(len_i * len_j);
   std::fill_n(flatCostMatrix.get(), len_i * len_j, unlaggedDist);
-  Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> costMatrix(flatCostMatrix.get(),
-                                                                                                len_i, len_j);
+  Eigen::Map<MatrixXd> costMatrix(flatCostMatrix.get(), len_i, len_j);
+
   for (int k = 0; k < timeSeriesDim; k++) {
     int n = 0;
     for (int nn = 0; nn < M_i.cols(); nn++) {
@@ -276,6 +383,7 @@ std::unique_ptr<double[]> wasserstein_cost_matrix(const Manifold& M, const Manif
       n += 1;
     }
   }
+
   return flatCostMatrix;
 }
 
@@ -328,15 +436,24 @@ double wasserstein(double* C, int len_i, int len_j)
   return cost;
 }
 
-DistanceIndexPairs wasserstein_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp,
-                                         std::vector<int> inpInds)
+DistanceIndexPairs wasserstein_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
 {
   std::vector<int> inds;
   std::vector<double> dists;
 
+  inds.reserve(M.numPoints());
+  dists.reserve(M.numPoints());
+
+  const bool skipOtherPanels = opts.panelMode && (opts.idw < 0);
+
   // Compare every observation in the M manifold to the
   // Mp_i'th observation in the Mp manifold.
-  for (int i : inpInds) {
+  for (int i = 0; i < M.numPoints(); i++) {
+
+    if (skipOtherPanels && (M.panel(i) != Mp.panel(Mp_i))) {
+      continue;
+    }
+
     int len_i, len_j;
     auto C = wasserstein_cost_matrix(M, Mp, i, Mp_i, opts, len_i, len_j);
 

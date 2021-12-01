@@ -50,22 +50,13 @@ void from_json(const json& j, Options& o)
 
 void to_json(json& j, const PredictionStats& s)
 {
-  j = json{
-    { "mae", s.mae },
-    { "rho", s.rho },
-    { "library", s.library },
-    { "E", s.E },
-    { "theta", s.theta }
-  };
+  j = json{ { "mae", s.mae }, { "rho", s.rho } };
 }
 
 void from_json(const json& j, PredictionStats& s)
 {
   j.at("mae").get_to(s.mae);
   j.at("rho").get_to(s.rho);
-  j.at("library").get_to(s.library);
-  j.at("E").get_to(s.E);
-  j.at("theta").get_to(s.theta);
 }
 
 void to_json(json& j, const PredictionResult& p)

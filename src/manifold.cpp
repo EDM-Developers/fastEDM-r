@@ -112,31 +112,6 @@ bool ManifoldGenerator::find_observation_num(int target, int& k, int direction, 
   return false;
 }
 
-std::vector<int> ManifoldGenerator::get_lagged_indices(int startIndex, int E, int panel) const
-{
-
-  std::vector<int> laggedIndices(E);
-  std::fill_n(laggedIndices.begin(), E, -1);
-
-  // For obs i, which indices correspond to looking back 0, tau, ..., (E-1)*tau observations.
-  laggedIndices[0] = startIndex;
-  int pointStartObsNum = _observation_number[startIndex];
-
-  // Start by going back one index
-  int k = startIndex - 1;
-
-  for (int j = 1; j < E; j++) {
-    // Find the discrete time we're searching for.
-    int targetObsNum = pointStartObsNum - j * _tau;
-
-    if (find_observation_num(targetObsNum, k, -1, panel)) {
-      laggedIndices[j] = k;
-    }
-  }
-
-  return laggedIndices;
-}
-
 #if defined(WITH_ARRAYFIRE)
 ManifoldOnGPU Manifold::toGPU(const bool useFloat) const
 {
@@ -168,84 +143,140 @@ ManifoldOnGPU Manifold::toGPU(const bool useFloat) const
 }
 #endif
 
-Manifold ManifoldGenerator::create_manifold(int E, const std::vector<bool>& filter, bool predictionSet, double dtWeight,
-                                            bool copredictMode, bool skipMissing) const
-{
-  bool takeEveryPoint = filter.size() == 0;
-
-  int numPoints = 0;
-  std::vector<int> pointNumToStartIndex;
-  for (int i = 0; i < _t.size(); i++) {
-    if (takeEveryPoint || filter[i]) {
-      pointNumToStartIndex.push_back(i);
-      numPoints += 1;
-    }
-  }
-
-  std::shared_ptr<double[]> flat(new double[numPoints * E_actual(E)], std::default_delete<double[]>());
-
-  std::vector<double> y;
-  std::vector<int> panelIDs;
-
-  // Fill in the manifold row-by-row (point-by-point)
-  int M_i = 0;
-  double target;
-
-  for (int i = 0; i < numPoints; i++) {
-    double* point = &(flat[M_i * E_actual(E)]);
-    fill_in_point(pointNumToStartIndex[i], E, copredictMode, predictionSet, dtWeight, point, target);
-
-    // Skip this point if we don't want missing values in the resulting manifold
-    if (skipMissing) {
-      bool foundMissing = false;
-      for (int j = 0; j < E_actual(E); j++) {
-        if (point[j] == MISSING_D) {
-          foundMissing = true;
-          break;
-        }
-      }
-
-      if (foundMissing) {
-        continue;
-      }
-    }
-
-    // Skip this point if we need the targets values to be observed (e.g. in the library set).
-    if (!predictionSet && target == MISSING_D) {
-      continue;
-    }
-
-    y.push_back(target);
-    if (_panel_mode) {
-      panelIDs.push_back(_panelIDs[pointNumToStartIndex[i]]);
-    }
-
-    M_i += 1;
-  }
-
-  numPoints = M_i;
-
-  return { flat, y, panelIDs, numPoints, E, E_dt(E), E_extras(E), E * numExtrasLagged(), E_actual(E) };
-}
-
 void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight,
-                                      double* point, double& target) const
+                                      double* point) const
 {
   int panel = _panel_mode ? _panelIDs[i] : -1;
   bool use_co_x = copredictionMode && predictionSet;
 
-  std::vector<int> laggedIndices = get_lagged_indices(i, E, panel);
+  double tPred;
+  if (_dt) {
+    // What is the target of this point in the manifold?
+    int targetIndex = i;
+    double target = get_target(i, copredictionMode, predictionSet, targetIndex);
+    tPred = (targetIndex >= 0) ? _t[targetIndex] : MISSING_D;
+  }
 
-  auto lookup_vec = [&laggedIndices](const std::vector<double>& vec, int j) {
-    if (laggedIndices[j] < 0) {
-      return MISSING_D;
-    } else {
-      return vec[laggedIndices[j]];
+  // For obs i, which indices correspond to looking back 0, tau, ..., (E-1)*tau observations.
+  int laggedIndex = i;
+  int pointStartObsNum = _observation_number[i];
+
+  // Start by going back one index
+  int k = i - 1;
+
+  int prevLaggedIndex = laggedIndex;
+
+  for (int j = 0; j < E; j++) {
+
+    bool foundLaggedObs = (j == 0);
+
+    if (!foundLaggedObs) {
+      // Find the discrete time we're searching for.
+      int targetObsNum = pointStartObsNum - j * _tau;
+
+      if (find_observation_num(targetObsNum, k, -1, panel)) {
+        foundLaggedObs = true;
+        laggedIndex = k;
+      }
     }
-  };
+
+    // Fill in the lagged embedding of x (or co_x) in the first columns
+    if (!foundLaggedObs) {
+      point[j] = MISSING_D;
+    } else if (use_co_x) {
+      point[j] = _co_x[laggedIndex];
+    } else {
+      point[j] = _x[laggedIndex];
+    }
+
+    // Put the lagged embedding of dt in the next columns
+    if (_dt) {
+      if (!foundLaggedObs) {
+        point[j + E] = MISSING_D;
+      } else {
+        double tNow = _t[laggedIndex];
+        if (j == 0 || _reldt) {
+          if (tNow != MISSING_D && tPred != MISSING_D) {
+            point[E + j] = dtWeight * (tPred - tNow);
+          } else {
+            point[E + j] = MISSING_D;
+          }
+        } else {
+          double tNext = _t[prevLaggedIndex];
+          if (tNext != MISSING_D && tNow != MISSING_D) {
+            point[E + j] = dtWeight * (tNext - tNow);
+          } else {
+            point[E + j] = MISSING_D;
+          }
+        }
+      }
+    }
+
+    // Finally put the extras in the last columns
+    for (int k = 0; k < _num_extras; k++) {
+      double extra_k = foundLaggedObs ? _extras[k][laggedIndex] : MISSING_D;
+      if (k < _num_extras_lagged) {
+        // Adding the lagged extras
+        point[E + E_dt(E) + k * E + j] = extra_k;
+      } else if (j == 0) {
+        // Add in any unlagged extras as the end
+        point[E + E_dt(E) + _num_extras_lagged * E + (k - _num_extras_lagged)] = extra_k;
+      }
+    }
+
+    prevLaggedIndex = laggedIndex;
+  }
+}
+
+double ManifoldGenerator::get_dt(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight) const
+{
+  int panel = _panel_mode ? _panelIDs[i] : -1;
+  bool use_co_x = copredictionMode && predictionSet;
+
+  // For obs i, which indices correspond to looking back 0, tau, ..., (E-1)*tau observations.
+  int laggedIndex, prevLaggedIndex = i;
+  int pointStartObsNum = _observation_number[i];
+
+  // Start by going back one index
+  int k = i - 1;
+
+  // Find the discrete time we're searching for.
+  int targetObsNum = pointStartObsNum - _tau;
+
+  if (find_observation_num(targetObsNum, k, -1, panel)) {
+    laggedIndex = k;
+  } else {
+    return MISSING_D;
+  }
+
+  double tNow = _t[laggedIndex];
+  if (_reldt) {
+    // What is the target of this point in the manifold?
+    int targetIndex = i;
+    double target = get_target(i, copredictionMode, predictionSet, targetIndex);
+    double tPred = (targetIndex >= 0) ? _t[targetIndex] : MISSING_D;
+
+    if (tNow != MISSING_D && tPred != MISSING_D) {
+      return dtWeight * (tPred - tNow);
+    } else {
+      return MISSING_D;
+    }
+  } else {
+    double tNext = _t[prevLaggedIndex];
+    if (tNext != MISSING_D && tNow != MISSING_D) {
+      return dtWeight * (tNext - tNow);
+    } else {
+      return MISSING_D;
+    }
+  }
+}
+
+double ManifoldGenerator::get_target(int i, bool copredictionMode, bool predictionSet, int& targetIndex) const
+{
+  int panel = _panel_mode ? _panelIDs[i] : -1;
+  bool use_co_x = copredictionMode && predictionSet;
 
   // What is the target of this point in the manifold?
-  int targetIndex = i;
 
   if (_p != 0) {
     // At what time does the prediction occur?
@@ -255,6 +286,8 @@ void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool 
       targetIndex = -1;
     }
   }
+
+  double target;
 
   if (targetIndex >= 0) {
     if (use_co_x) {
@@ -268,55 +301,11 @@ void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool 
     target = MISSING_D;
   }
 
-  // Fill in the lagged embedding of x (or co_x) in the first columns
-  for (int j = 0; j < E; j++) {
-    if (use_co_x) {
-      point[j] = lookup_vec(_co_x, j);
-    } else {
-      point[j] = lookup_vec(_x, j);
-    }
-  }
-
-  // Put the lagged embedding of dt in the next columns
-  if (_dt) {
-    double tPred = (targetIndex >= 0) ? _t[targetIndex] : MISSING_D;
-
-    for (int j = 0; j < E_dt(E); j++) {
-      double tNow = lookup_vec(_t, j);
-      if (j == 0 || _reldt) {
-        if (tNow != MISSING_D && tPred != MISSING_D) {
-          point[E + j] = dtWeight * (tPred - tNow);
-        } else {
-          point[E + j] = MISSING_D;
-        }
-      } else {
-        double tNext = lookup_vec(_t, j - 1);
-        if (tNext != MISSING_D && tNow != MISSING_D) {
-          point[E + j] = dtWeight * (tNext - tNow);
-        } else {
-          point[E + j] = MISSING_D;
-        }
-      }
-    }
-  }
-
-  // Finally put the extras in the last columns
-  int offset = 0;
-  for (int k = 0; k < _num_extras; k++) {
-    int numLags = (k < _num_extras_lagged) ? E : 1;
-    for (int j = 0; j < numLags; j++) {
-      point[E + E_dt(E) + offset + j] = lookup_vec(_extras[k], j);
-    }
-    offset += numLags;
-  }
+  return target;
 }
 
-bool is_usable(double* point, double target, int E_actual, bool allowMissing, bool targetRequired)
+bool is_usable(double* point, int E_actual, bool allowMissing)
 {
-  if (targetRequired && target == MISSING_D) {
-    return false;
-  }
-
   if (allowMissing) {
     // If we are allowed to have missing values in the points, just
     // need to ensure that we don't allow a 100% missing point.
@@ -348,11 +337,10 @@ std::vector<bool> ManifoldGenerator::generate_usable(int maxE, bool coprediction
 
   int sizeOfPoint = E_actual(maxE);
   auto point = std::make_unique<double[]>(sizeOfPoint);
-  double target;
 
   for (int i = 0; i < _t.size(); i++) {
-    fill_in_point(i, maxE, copredictionMode, copredictionMode, USABLE_DTWEIGHT, point.get(), target);
-    usable[i] = is_usable(point.get(), target, sizeOfPoint, _allow_missing, targetRequired);
+    fill_in_point(i, maxE, copredictionMode, copredictionMode, USABLE_DTWEIGHT, point.get());
+    usable[i] = is_usable(point.get(), sizeOfPoint, _allow_missing);
   }
 
   return usable;

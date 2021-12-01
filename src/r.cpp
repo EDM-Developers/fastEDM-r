@@ -181,8 +181,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
   int numExtrasLagged = 0;
 
-  const ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt,
-                                    allowMissing);
+  ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt, allowMissing);
 
   int maxE = Es[Es.size() - 1];
 
@@ -221,8 +220,11 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   io.print("Starting the command!\n");
   io.flush();
 
+  auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
+  opts.lowMemoryMode = false;
+
   std::vector<std::future<PredictionResult>> futures = launch_task_group(
-    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
+    genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
     saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
 
   io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));

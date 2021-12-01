@@ -85,8 +85,10 @@ json run_tests(json testInputs, int nthreads, IO* io)
     std::vector<bool> usable = int_to_bool(taskGroup["usable"]);
     std::string rngState = taskGroup["rngState"];
 
+    auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
+    opts.lowMemoryMode = false;
     std::vector<std::future<PredictionResult>> futures = launch_task_group(
-      generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
+      genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
       saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io, nullptr, nullptr);
 
     // Collect the results of this task group before moving on to the next task group
