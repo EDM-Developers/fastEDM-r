@@ -1,13 +1,13 @@
 Package: fastEDM
 Type: Package
-Title: Empirical dynamic modeling for causal analysis
+Title: Empirical Dynamic Modeling for Causal Analysis
 Version: 0.1
 Date: 2021-12-01
-Author: Patrick Laub
-Maintainer: Patrick Laub <patrick.laub@gmail.com>
-Description:
- The fastEDM package implements a series of tools that can be used for empirical dynamic modeling.
- The core algorithm is written in C++ to achieve a reasonable execution speed. 
+Authors@R: person("Patrick", "Laub", email = "patrick.laub@gmail.com",
+  role = c("aut", "cre"))
+Description: The fastEDM package implements a series of tools that can be
+ used for empirical dynamic modeling. The core algorithm is written in C++
+ to achieve a reasonable execution speed. 
 License: MIT + file LICENSE
 Imports: Rcpp (>= 1.0.7), RcppEigen
 LinkingTo: Rcpp, RcppEigen
