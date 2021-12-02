@@ -3,3 +3,5 @@
 ^\.github$
 ^junk$
 ^src/\.clang-format$
+^Dockerfile$
+^Icon\r$
