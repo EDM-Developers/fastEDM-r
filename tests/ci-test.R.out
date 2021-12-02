@@ -60,11 +60,61 @@ $kMin
 $kMax
 [1] 5
 
+$summary
+  E library theta       rho        mae
+1 2     200     1 0.9445375 0.04885346
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 5
+
+$kMax
+[1] 5
+
 Command: edm xmap x y, e(6) lib(8)
 
 $summary
   E library theta       rho       mae
 1 6       8     1 0.3362018 0.1699416
+
+$co_summary
+data frame with 0 columns and 0 rows
+
+$predictions
+<0 x 0 matrix>
+
+$copredictions
+<0 x 0 matrix>
+
+$coeffs
+<0 x 0 matrix>
+
+$rc
+[1] 0
+
+$kMin
+[1] 7
+
+$kMax
+[1] 7
+
+$summary
+  E library theta       rho       mae
+1 6       8     1 0.5111569 0.1506949
 
 $co_summary
 data frame with 0 columns and 0 rows

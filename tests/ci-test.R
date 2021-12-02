@@ -40,10 +40,12 @@ print(edm(t, x, E=2:10))
 # edm xmap x y, k(5)
 cat("Command: edm xmap x y, k(5)\n\n")
 print(edm(t, x, y, k=5))
+print(edm(t, y, x, k=5))
 
 #edm xmap x y, e(6) lib(8)
 cat("Command: edm xmap x y, e(6) lib(8)\n\n")
 print(edm(t, x, y, E=6, library=8))
+print(edm(t, y, x, E=6, library=8))
 
 #edm explore x, k(5) crossfold(10)
 cat("Command: edm explore x, k(5) crossfold(10)\n\n")
