@@ -179,9 +179,11 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' t <- c(1, 2, 3, 4)
 #' x <- c(11, 12, 13, 14)
 #' edm(t, x)
+#' }
 edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                 algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
                 shuffle=FALSE, copredict = c(), savePredictions=FALSE,

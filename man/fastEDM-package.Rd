@@ -29,7 +29,9 @@ Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond L
 \url{https://jinjingli.github.io/edm/}
 }
 \examples{
+\dontrun{
 t <- c(1, 2, 3, 4)
 x <- c(11, 12, 13, 14)
 edm(t, x)
+}
 }
