@@ -1,4 +1,4 @@
-# fastEDM <img src="man/figures/logo.png" align="right" width=200 height=240 alt="" />
+# fastEDM <img src="man/figures/logo.png" align="right" height="200" alt="logo" />
 
 ## Installation
 
