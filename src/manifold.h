@@ -45,7 +45,6 @@ private:
   bool find_observation_num(int target, int& k, int direction, int panel) const;
 
 public:
-
   void fill_in_point(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight, double* point) const;
   double get_target(int i, bool copredictionMode, bool predictionSet, int& targetIndex) const;
 
@@ -168,8 +167,8 @@ public:
   Manifold(const std::shared_ptr<ManifoldGenerator> gen, int E, const std::vector<bool>& filter, bool predictionSet,
            double dtWeight = 0.0, bool copredictMode = false, bool lazy = false)
     : _gen(gen)
-    , _copredictMode(copredictMode)
     , _predictionSet(predictionSet)
+    , _copredictMode(copredictMode)
     , _dtWeight(dtWeight)
   {
     init(E, filter, predictionSet, copredictMode, lazy);
@@ -177,8 +176,8 @@ public:
 
   Manifold(const ManifoldGenerator& gen, int E, const std::vector<bool>& filter, bool predictionSet,
            double dtWeight = 0.0, bool copredictMode = false, bool lazy = false)
-    : _copredictMode(copredictMode)
-    , _predictionSet(predictionSet)
+    : _predictionSet(predictionSet)
+    , _copredictMode(copredictMode)
     , _dtWeight(dtWeight)
   {
     _gen = std::shared_ptr<const ManifoldGenerator>(&gen, [](const ManifoldGenerator*) {});

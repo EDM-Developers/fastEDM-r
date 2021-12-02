@@ -230,10 +230,10 @@ public:
     : _graph(graph)
     , //_arc_id(graph),
     _arc_mixing(arc_mixing)
-    , _init_nb_nodes(nbnodes)
     , MAX(std::numeric_limits<Value>::max())
-    , _init_nb_arcs(nb_arcs)
     , INF(std::numeric_limits<Value>::has_infinity ? std::numeric_limits<Value>::infinity() : MAX)
+    , _init_nb_nodes(nbnodes)
+    , _init_nb_arcs(nb_arcs)
   {
     // Reset data structures
     reset();
