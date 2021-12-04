@@ -1,26 +1,28 @@
+
 # fastEDM <img src="man/figures/logo.png" align="right" height="200" alt="logo" />
+
+<!-- badges: start -->
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN status](https://www.r-pkg.org/badges/version/fastEDM)](https://CRAN.R-project.org/package=fastEDM)
+<!-- badges: end -->
+
+The goal of fastEDM is to ...
 
 ## Installation
 
-To install the stable version from CRAN:
-
-```r
-install.packages("fastEDM")
-```
-
-To install the latest development version from GitHub:
+You can install the development version of fastEDM from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("EDM-Developers/fastEDM")
 ```
 
+## Example
 
-## Getting Started
+This is a basic example which shows you how to solve a common problem:
 
-Once installed, load the library and run an example:
-
-```r
+``` r
 library(fastEDM)
-...
+## basic example code
 ```
+
