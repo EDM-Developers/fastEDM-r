@@ -13,3 +13,6 @@ Imports: Rcpp (>= 1.0.7), RcppEigen
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.2
 Encoding: UTF-8
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

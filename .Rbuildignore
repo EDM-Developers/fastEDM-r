@@ -6,3 +6,5 @@
 ^Dockerfile$
 ^Icon\r$
 ^README\.Rmd$
+^tests/ci-test\.R\.out$
+^desktop\.ini$
