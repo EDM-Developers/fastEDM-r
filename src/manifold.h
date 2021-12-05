@@ -12,12 +12,14 @@ const float MISSING_F = 1.0e+30;
 #define EIGEN_DONT_PARALLELIZE
 #include <Eigen/Dense>
 
+#ifdef JSON
 #include <nlohmann/json.hpp>
+using json = nlohmann::json;
+#endif
+
 #if defined(WITH_ARRAYFIRE)
 #include <arrayfire.h>
 #endif
-
-using json = nlohmann::json;
 
 #if defined(WITH_ARRAYFIRE)
 struct ManifoldOnGPU
@@ -51,8 +53,10 @@ public:
   double calculate_time_increment() const;
   int get_observation_num(int i) const { return _observation_number[i]; }
 
+#ifdef JSON
   friend void to_json(json& j, const ManifoldGenerator& g);
   friend void from_json(const json& j, ManifoldGenerator& g);
+#endif
 
   ManifoldGenerator() = default;
 

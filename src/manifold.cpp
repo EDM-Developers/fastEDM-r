@@ -341,6 +341,8 @@ std::vector<bool> ManifoldGenerator::generate_usable(int maxE, bool coprediction
   return usable;
 }
 
+#ifdef JSON 
+
 void to_json(json& j, const ManifoldGenerator& g)
 {
   j = json{ { "_dt", g._dt },
@@ -378,3 +380,5 @@ void from_json(const json& j, ManifoldGenerator& g)
   j.at("_extras").get_to(g._extras);
   j.at("_panelIDs").get_to(g._panelIDs);
 }
+
+#endif

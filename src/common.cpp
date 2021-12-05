@@ -1,5 +1,7 @@
 #include "common.h"
 
+#ifdef JSON
+
 void to_json(json& j, const Options& o)
 {
   j = json{ { "copredict", o.copredict },
@@ -118,3 +120,5 @@ void from_json(const json& j, PredictionResult& p)
     p.coeffs = nullptr;
   }
 }
+
+#endif

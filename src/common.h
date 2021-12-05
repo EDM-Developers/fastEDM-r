@@ -46,18 +46,6 @@ enum class Metric
   CheckSame
 };
 
-// Store these enum classes to JSON as strings
-NLOHMANN_JSON_SERIALIZE_ENUM(Algorithm, { { Algorithm::Simplex, "Simplex" }, { Algorithm::SMap, "SMap" } })
-
-NLOHMANN_JSON_SERIALIZE_ENUM(Distance, { { Distance::MeanAbsoluteError, "MeanAbsoluteError" },
-                                         { Distance::Euclidean, "Euclidean" },
-                                         { Distance::Wasserstein, "Wasserstein" } })
-
-NLOHMANN_JSON_SERIALIZE_ENUM(Metric, {
-                                       { Metric::Diff, "Diff" },
-                                       { Metric::CheckSame, "CheckSame" },
-                                     })
-
 struct DistanceIndexPairs
 {
   std::vector<int> inds;
@@ -96,17 +84,11 @@ struct Options
   bool lowMemoryMode;
 };
 
-void to_json(json& j, const Options& o);
-void from_json(const json& j, Options& o);
-
 struct PredictionStats
 {
   int library, E;
   double theta, mae, rho;
 };
-
-void to_json(json& j, const PredictionStats& s);
-void from_json(const json& j, PredictionStats& s);
 
 struct PredictionResult
 {
@@ -121,9 +103,6 @@ struct PredictionResult
   bool explore, copredict;
   int configNum;
 };
-
-void to_json(json& j, const PredictionResult& p);
-void from_json(const json& j, PredictionResult& p);
 
 class IO
 {
@@ -198,3 +177,28 @@ private:
   int dots, tens;
   double nextMessage;
 };
+
+#ifdef JSON
+
+// Store these enum classes to JSON as strings
+NLOHMANN_JSON_SERIALIZE_ENUM(Algorithm, { { Algorithm::Simplex, "Simplex" }, { Algorithm::SMap, "SMap" } })
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Distance, { { Distance::MeanAbsoluteError, "MeanAbsoluteError" },
+                                         { Distance::Euclidean, "Euclidean" },
+                                         { Distance::Wasserstein, "Wasserstein" } })
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Metric, {
+                                       { Metric::Diff, "Diff" },
+                                       { Metric::CheckSame, "CheckSame" },
+                                     })
+
+void to_json(json& j, const Options& o);
+void from_json(const json& j, Options& o);
+
+void to_json(json& j, const PredictionStats& s);
+void from_json(const json& j, PredictionStats& s);
+
+void to_json(json& j, const PredictionResult& p);
+void from_json(const json& j, PredictionResult& p);
+
+#endif
