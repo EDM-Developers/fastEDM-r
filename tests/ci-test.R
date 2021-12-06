@@ -1,5 +1,5 @@
 
-suppressMessages(library(fastEDM))
+library(fastEDM)
 
 logistic_map <- function(obs) {
   
