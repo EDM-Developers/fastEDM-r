@@ -49,25 +49,25 @@ the estimation may be different if additional variables are incorporated. A erro
 provided if the specified value is out of range. Missing data will limit the maximum E under the
 default deletion method.}
 
-\item{tau}{The tau (or τ) option allows researchers to specify the 'time delay',
-which essentially sorts the data by the multiple τ. This is done by specifying lagged embeddings
-that take the form: t,t-1τ,…,t-(E-1)τ, where the default is tau(1) (i.e., typical lags). However, if
+\item{tau}{The tau (or \eqn{\tau}) option allows researchers to specify the 'time delay',
+which essentially sorts the data by the multiple \eqn{\tau}. This is done by specifying lagged embeddings
+that take the form: t,t-1\eqn{\tau},…,t-(E-1)\eqn{\tau}, where the default is tau(1) (i.e., typical lags). However, if
 tau(2) is set then every-other t is used to reconstruct the attractor and make predictions—this does
 not halve the observed sample size because both odd and even t would be used to construct the set of
 embedding vectors for analysis. This option is helpful when data are oversampled (i.e., spaced too
 closely in time) and therefore very little new information about a dynamic system is added at each
 occasion. However, the tau() setting is also useful if different dynamics occur at different times
 scales, and can be chosen to reflect a researcher’s theory-driven interest in a specific time-scale
-(e.g., daily instead of hourly). Researchers can evaluate whether τ>1 is required by checking for
+(e.g., daily instead of hourly). Researchers can evaluate whether \eqn{\tau}>1 is required by checking for
 large autocorrelations in the observed data (e.g., using Stata’s corrgram function). Of course, such
 a linear measure of association may not work well in nonlinear systems and thus researchers can also
-check performance by examining ρ and MAE at different values of τ.}
+check performance by examining \eqn{\rho} and MAE at different values of \eqn{\tau}.}
 
-\item{theta}{Theta (or θ) is the distance weighting parameter for the
+\item{theta}{Theta (or \eqn{\theta}) is the distance weighting parameter for the
 local neighbours in the manifold. It is used to detect the nonlinearity of the system in the explore
 subcommand for S-mapping. Of course, as noted above, for simplex projection and CCM a weight of
 theta(1) is applied to neighbours based on their distance, which is reflected in the fact that the
-default value of θ is 1. However, this can be altered even for simplex projection or CCM (two cases
+default value of \eqn{\theta} is 1. However, this can be altered even for simplex projection or CCM (two cases
 that we do not cover here). Particularly, values for S-mapping to test for improved predictions as
 they become more local may include the following command: theta(0 .00001 .0001 .001 .005 .01 .05 .1
 .5 1 1.5 2 3 4 6 8 10).}
@@ -77,7 +77,7 @@ the manifold reconstruction. Varying the library size is used to estimate the co
 of the cross-mapping, with a minimum value Lmin = E + 2 and the maximum equal to the total number of
 observations minus sufficient lags (e.g., in the time-series case without missing data this is Lmax
 = T + 1 – E). An error message is given if the L value is beyond the allowed range. To assess the
-rate of convergence (i.e., the rate at which ρ increases as L grows), the full range of library
+rate of convergence (i.e., the rate at which \eqn{\rho} increases as L grows), the full range of library
 sizes at small values of L can be used, such as if E = 2 and T = 100, with the setting then perhaps
 being library(4(1)25 30(5)50 54(15)99). This option is only available with the `xmap` subcommand.}
 
@@ -104,7 +104,7 @@ options are available to save these coefficients for post-processing but, again,
 a regression model and instead should be seen as a manifold.}
 
 \item{p}{This option adjusts the default number of observations ahead
-which we predict. By default, the explore mode predict τ observations ahead and the xmap mode uses p(0).
+which we predict. By default, the explore mode predict \eqn{\tau} observations ahead and the xmap mode uses p(0).
 This parameter can be negative.}
 
 \item{crossfold}{This option asks the program to run a cross-fold validation of the
