@@ -75,7 +75,18 @@ std::atomic<int> estimatedTotalNumPredictions = 0;
 
 std::atomic<int> numPredictionsFinished = 0;
 std::atomic<int> numTasksFinished = 0;
+
+
+#ifdef _WIN32
+// Must leak resource, because windows + R deadlock otherwise. Memory
+// is released on shutdown.
+ThreadPool *workerPoolPtr = new ThreadPool(0);
+ThreadPool *taskRunnerPoolPtr = new ThreadPool(0);
+#else
 ThreadPool workerPool(0), taskRunnerPool(0);
+ThreadPool *workerPoolPtr = &workerPool;
+ThreadPool *taskRunnerPoolPtr = &taskRunnerPool;
+#endif
 
 std::vector<std::future<PredictionResult>> launch_task_group(
   const std::shared_ptr<ManifoldGenerator> generator, Options opts, const std::vector<int>& Es,
@@ -86,14 +97,14 @@ std::vector<std::future<PredictionResult>> launch_task_group(
   static bool initOnce = [&]() {
 #if defined(WITH_ARRAYFIRE)
     af::setMemStepSize(1024 * 1024 * 5);
-    taskRunnerPool.set_num_workers(1); // Avoid oversubscribing to the GPU
+    taskRunnerPoolPtr->set_num_workers(1); // Avoid oversubscribing to the GPU
 #else
-    taskRunnerPool.set_num_workers(1);
+    taskRunnerPoolPtr->set_num_workers(1);
 #endif
     return true;
   }();
 
-  workerPool.set_num_workers(opts.nthreads);
+  workerPoolPtr->set_num_workers(opts.nthreads);
 
   // Construct the instance which will (repeatedly) split the data
   // into either the library set or the prediction set.
@@ -181,7 +192,7 @@ std::vector<std::future<PredictionResult>> launch_task_group(
         opts.k = kAdj;
         opts.library = library;
 
-        futures.emplace_back(taskRunnerPool.enqueue([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
+        futures.emplace_back(taskRunnerPoolPtr->enqueue([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
           return edm_task(generator, opts, E, splitter.libraryRows(), splitter.predictionRows(), io, keep_going,
                           all_tasks_finished);
         }));
@@ -198,7 +209,7 @@ std::vector<std::future<PredictionResult>> launch_task_group(
           opts.saveSMAPCoeffs = false;
 
           futures.emplace_back(
-            taskRunnerPool.enqueue([generator, opts, E, splitter, cousable, io, keep_going, all_tasks_finished] {
+            taskRunnerPoolPtr->enqueue([generator, opts, E, splitter, cousable, io, keep_going, all_tasks_finished] {
               return edm_task(generator, opts, E, splitter.libraryRows(), cousable, io, keep_going, all_tasks_finished);
             }));
 
@@ -298,18 +309,18 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
   if (multiThreaded) {
     std::vector<std::future<void>> results(numPredictions);
 #if WITH_GPU_PROFILING
-    workerPool.sync();
+    workerPoolPtr->sync();
     auto start = std::chrono::high_resolution_clock::now();
 #endif
     {
-      std::unique_lock<std::mutex> lock(workerPool.queue_mutex);
+      std::unique_lock<std::mutex> lock(workerPoolPtr->queue_mutex);
 
       for (int i = 0; i < numPredictions; i++) {
         if (keep_going != nullptr && !keep_going()) {
           break;
         }
 
-        results[i] = workerPool.unsafe_enqueue(
+        results[i] = workerPoolPtr->unsafe_enqueue(
           [&, i] { make_prediction(i, opts, M, Mp, predictionsView, rcView, coeffsView, &(kUsed[i]), keep_going); });
       }
     }
@@ -322,7 +333,7 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
       }
     }
 #if WITH_GPU_PROFILING
-    workerPool.sync();
+    workerPoolPtr->sync();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
     printf("CPU(t=%d): Task(%lu) took %lf seconds for %d predictions \n", opts.nthreads, opts.taskNum, diff.count(),
