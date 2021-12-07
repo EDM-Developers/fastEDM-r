@@ -1,3 +1,4 @@
+Sys.unsetenv("R_TESTS")
 
 library(fastEDM)
 
