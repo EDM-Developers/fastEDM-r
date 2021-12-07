@@ -478,7 +478,7 @@ DistanceIndexPairs wasserstein_distances(int Mp_i, const Options& opts, const Ma
 /////////////////////////////////////////////////////////////// ArrayFire PORTED versions BEGIN HERE
 
 #if defined(WITH_ARRAYFIRE)
-DistanceIndexPairsOnGPU afLPDistances(const int npreds, const Options& opts, const ManifoldOnGPU& M,
+DistanceIndexPairsOnGPU afLPDistances(const int numPredictions, const Options& opts, const ManifoldOnGPU& M,
                                       const ManifoldOnGPU& Mp, const af::array& metricOpts)
 {
   constexpr bool useCustomKernel = true;
@@ -490,18 +490,18 @@ DistanceIndexPairsOnGPU afLPDistances(const int npreds, const Options& opts, con
   const af_dtype cType = M.mdata.type();
 
   if (useCustomKernel) {
-    af::array valids(M.numPoints, npreds, b8);
-    af::array dists(M.numPoints, npreds, cType);
+    af::array valids(M.numPoints, numPredictions, b8);
+    af::array dists(M.numPoints, numPredictions, cType);
     if (cType == f64) {
-      cuLPDistances(valids.device<char>(), dists.device<double>(), npreds, opts.distance == Distance::MeanAbsoluteError,
-                    opts.panelMode, opts.idw, opts.missingdistance, M.E_actual, M.numPoints, M.mdata.device<double>(),
-                    M.panel.device<int>(), Mp.mdata.device<double>(), Mp.panel.device<int>(), metricOpts.device<char>(),
-                    afcu::getStream(0));
+      cuLPDistances(valids.device<char>(), dists.device<double>(), numPredictions,
+                    opts.distance == Distance::MeanAbsoluteError, opts.panelMode, opts.idw, opts.missingdistance,
+                    M.E_actual, M.numPoints, M.mdata.device<double>(), M.panel.device<int>(), Mp.mdata.device<double>(),
+                    Mp.panel.device<int>(), metricOpts.device<char>(), afcu::getStream(0));
     } else if (cType == f32) {
-      cuLPDistances(valids.device<char>(), dists.device<float>(), npreds, opts.distance == Distance::MeanAbsoluteError,
-                    opts.panelMode, opts.idw, opts.missingdistance, M.E_actual, M.numPoints, M.mdata.device<float>(),
-                    M.panel.device<int>(), Mp.mdata.device<float>(), Mp.panel.device<int>(), metricOpts.device<char>(),
-                    afcu::getStream(0));
+      cuLPDistances(valids.device<char>(), dists.device<float>(), numPredictions,
+                    opts.distance == Distance::MeanAbsoluteError, opts.panelMode, opts.idw, opts.missingdistance,
+                    M.E_actual, M.numPoints, M.mdata.device<float>(), M.panel.device<int>(), Mp.mdata.device<float>(),
+                    Mp.panel.device<int>(), metricOpts.device<char>(), afcu::getStream(0));
     }
     valids.unlock();
     dists.unlock();
@@ -524,7 +524,7 @@ DistanceIndexPairsOnGPU afLPDistances(const int npreds, const Options& opts, con
     using af::sum;
     using af::tile;
 
-    // Mp_i goes from 0 to npreds - 1
+    // Mp_i goes from 0 to numPredictions - 1
     // All coloumns of Manifold M are considered valid for batch operation
 
     const bool imdoZero = opts.missingdistance == 0;
@@ -533,11 +533,11 @@ DistanceIndexPairsOnGPU afLPDistances(const int npreds, const Options& opts, con
 
     array anyMCols, distsMat;
     {
-      array predsM = tile(M.mdata, 1, 1, npreds);
-      array predsMp = tile(moddims(Mp.mdata(span, seq(npreds)), eacts, 1, npreds), 1, numLibraryPoints);
+      array predsM = tile(M.mdata, 1, 1, numPredictions);
+      array predsMp = tile(moddims(Mp.mdata(span, seq(numPredictions)), eacts, 1, numPredictions), 1, numLibraryPoints);
       array diffMMp = predsM - predsMp;
       array compMMp = (predsM != predsMp).as(cType);
-      array distMMp = select(tile(metricOpts, 1, numLibraryPoints, npreds), diffMMp, compMMp);
+      array distMMp = select(tile(metricOpts, 1, numLibraryPoints, numPredictions), diffMMp, compMMp);
       array missing = predsM == MISSING_D || predsMp == MISSING_D;
 
       distsMat = (imdoZero ? distMMp : select(missing, opts.missingdistance, distMMp));
@@ -550,10 +550,10 @@ DistanceIndexPairsOnGPU afLPDistances(const int npreds, const Options& opts, con
       }
     }
     if (opts.panelMode && opts.idw > 0) {
-      array npPanelMp = tile(Mp.panel(seq(npreds)).T(), numLibraryPoints);
-      array npPanelM = tile(M.panel, 1, npreds);
+      array npPanelMp = tile(Mp.panel(seq(numPredictions)).T(), numLibraryPoints);
+      array npPanelM = tile(M.panel, 1, numPredictions);
       array penalty = (opts.idw * (npPanelM != npPanelMp));
-      array penalties = tile(moddims(penalty, 1, numLibraryPoints, npreds), eacts);
+      array penalties = tile(moddims(penalty, 1, numLibraryPoints, numPredictions), eacts);
 
       distsMat += penalties;
     }
@@ -562,8 +562,8 @@ DistanceIndexPairsOnGPU afLPDistances(const int npreds, const Options& opts, con
     array valids = (distances != 0.0 && distances != double(MISSING_D));
     array dists = (opts.distance == Distance::MeanAbsoluteError ? distances : af::sqrt(distances));
 
-    valids = moddims(valids, numLibraryPoints, npreds);
-    dists = moddims(dists, numLibraryPoints, npreds);
+    valids = moddims(valids, numLibraryPoints, numPredictions);
+    dists = moddims(dists, numLibraryPoints, numPredictions);
 
 #if WITH_GPU_PROFILING
     nvtxRangeEnd(range);

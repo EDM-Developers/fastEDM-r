@@ -59,10 +59,18 @@ double correlation(const std::vector<double>& y1, const std::vector<double>& y2)
   Eigen::Map<const Eigen::ArrayXd> y2Map(y2.data(), y2.size());
 
   const Eigen::ArrayXd y1Cent = y1Map - y1Map.mean();
-  ;
   const Eigen::ArrayXd y2Cent = y2Map - y2Map.mean();
 
-  return (y1Cent * y2Cent).sum() / (std::sqrt((y1Cent * y1Cent).sum()) * std::sqrt((y2Cent * y2Cent).sum()));
+  // If one or the other doesn't have any variation, then
+  // estimating a correlation doesn't make sense.
+  double y1SD = std::sqrt((y1Cent * y1Cent).sum());
+  double y2SD = std::sqrt((y2Cent * y2Cent).sum());
+
+  if (y1SD < 1e-9 || y2SD < 1e-9) {
+    return MISSING_D;
+  }
+
+  return (y1Cent * y2Cent).sum() / (y1SD * y2SD);
 }
 
 double mean_absolute_error(const std::vector<double>& y1, const std::vector<double>& y2)
