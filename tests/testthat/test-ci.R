@@ -255,6 +255,22 @@ test_that("ci-test", {
   testthat::expect_equal(res1$summary$rho, .99983, tolerance=1e-4)
   testthat::expect_equal(res2$summary$rho, .99864, tolerance=1e-4)
   
+  # edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)
+  #cat("Command: edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)")
+  # res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", E=5)
+  # res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", E=5)
+  # print(res1$summary)
+  # print(res2$summary)
+  # testthat::expect_equal(res1$summary$rho, 1, tolerance=1e-4)
+  # testthat::expect_equal(res2$summary$rho, .77523, tolerance=1e-4)
+  # 
+  # # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
+  # #cat("Command: edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)")
+  # res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", E=5)
+  # #print(res$summary)
+  # testthat::expect_equal(res$summary$rho, .36976, tolerance=1e-4)
+  
+  
   # Tests from the previous 'bigger-test.do' script
   
   obs <- 100
