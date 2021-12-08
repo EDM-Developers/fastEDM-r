@@ -76,16 +76,15 @@ std::atomic<int> estimatedTotalNumPredictions = 0;
 std::atomic<int> numPredictionsFinished = 0;
 std::atomic<int> numTasksFinished = 0;
 
-
 #ifdef _WIN32
 // Must leak resource, because windows + R deadlock otherwise. Memory
 // is released on shutdown.
-ThreadPool *workerPoolPtr = new ThreadPool(0);
-ThreadPool *taskRunnerPoolPtr = new ThreadPool(0);
+ThreadPool* workerPoolPtr = new ThreadPool(0);
+ThreadPool* taskRunnerPoolPtr = new ThreadPool(0);
 #else
 ThreadPool workerPool(0), taskRunnerPool(0);
-ThreadPool *workerPoolPtr = &workerPool;
-ThreadPool *taskRunnerPoolPtr = &taskRunnerPool;
+ThreadPool* workerPoolPtr = &workerPool;
+ThreadPool* taskRunnerPoolPtr = &taskRunnerPool;
 #endif
 
 std::vector<std::future<PredictionResult>> launch_task_group(
@@ -192,10 +191,11 @@ std::vector<std::future<PredictionResult>> launch_task_group(
         opts.k = kAdj;
         opts.library = library;
 
-        futures.emplace_back(taskRunnerPoolPtr->enqueue([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
-          return edm_task(generator, opts, E, splitter.libraryRows(), splitter.predictionRows(), io, keep_going,
-                          all_tasks_finished);
-        }));
+        futures.emplace_back(
+          taskRunnerPoolPtr->enqueue([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
+            return edm_task(generator, opts, E, splitter.libraryRows(), splitter.predictionRows(), io, keep_going,
+                            all_tasks_finished);
+          }));
 
         opts.taskNum += 1;
 
