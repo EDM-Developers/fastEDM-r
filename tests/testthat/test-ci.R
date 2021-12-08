@@ -44,50 +44,50 @@ test_that("ci-test", {
   t <- 299 + seq_along(x)
   
   # explore x, e(2/10)
-  cat("Command: explore x, e(2/10)\n\n")
+  #cat("Command: explore x, e(2/10)\n\n")
   res <- edm(t, x, E=2:10)
-  print(res$summary)
+  #print(res$summary)
   rho <- c(.99893, .99879, .99835, .99763, .99457, .99385, .991, .98972, .98572)
   testthat::expect_equal(res$summary$rho, rho, tolerance=1e-4)
   
   # edm xmap x y, k(5)
-  cat("Command: edm xmap x y, k(5)\n\n")
+  #cat("Command: edm xmap x y, k(5)\n\n")
   res1 <- edm(t, x, y, k=5)
   res2 <- edm(t, y, x, k=5)
-  print(res1$summary)
-  print(res2$summary)
+  #print(res1$summary)
+  #print(res2$summary)
   testthat::expect_equal(res1$summary$rho, .55861, tolerance=1e-4)
   testthat::expect_equal(res2$summary$rho, .94454, tolerance=1e-4)
   
   #edm xmap x y, e(6) lib(8)
-  cat("Command: edm xmap x y, e(6) lib(8)\n\n")
+  #cat("Command: edm xmap x y, e(6) lib(8)\n\n")
   res1 <- edm(t, x, y, E=6, library=8)
   res2 <- edm(t, y, x, E=6, library=8)
-  print(res1$summary)
-  print(res2$summary)
+  #print(res1$summary)
+  #print(res2$summary)
   testthat::expect_equal(res1$summary$rho, .3362, tolerance=1e-4)
   testthat::expect_equal(res2$summary$rho, .51116, tolerance=1e-4)
   
   #edm explore x, k(5) crossfold(10)
-  cat("Command: edm explore x, k(5) crossfold(10)\n\n")
+  #cat("Command: edm explore x, k(5) crossfold(10)\n\n")
   res <- edm(t, x, k=5, crossfold=10)
-  print(res$summary)
+  #print(res$summary)
   testthat::expect_equal(mean(res$summary$rho), .99946, tolerance=1e-3) # This deviates a little more from the Stata
   
   # edm explore x, theta(0.2(0.1)2.0) algorithm(smap)
-  cat("Command: edm explore x, theta(0.2(0.1)2.0) algorithm(smap)\n\n")
+  #cat("Command: edm explore x, theta(0.2(0.1)2.0) algorithm(smap)\n\n")
   res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap")
-  print(res$summary) 
+  #print(res$summary) 
   testthat::expect_equal(res$summary$rho[1], .99874, tolerance=1e-4)
   testthat::expect_equal(res$summary$rho[length(res$summary$rho)], .99882, tolerance=1e-4)
   
   # edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)
-  cat("Command: edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)\n\n")
+  #cat("Command: edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)\n\n")
   res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
   res2 <- edm(t, y, x, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
   beta1 <- res1$coeffs
-  print(res1$summary)
-  print(res2$summary)
+  #print(res1$summary)
+  #print(res2$summary)
   testthat::expect_equal(res1$summary$rho, .66867, tolerance=1e-4)
   testthat::expect_equal(res2$summary$rho, .98487, tolerance=1e-4)
   
@@ -96,10 +96,10 @@ test_that("ci-test", {
   testthat::expect_equal(sum(is.na(tail(beta1, -1))), 0)
   
   # edm xmap y x, predict(x2) direction(oneway)
-  cat("Command: edm xmap y x, predict(x2) direction(oneway)\n\n")
+  #cat("Command: edm xmap y x, predict(x2) direction(oneway)\n\n")
   res <- edm(t, y, x, savePredictions=TRUE)
   x2 <- res$predictions
-  print(res$summary)
+  #print(res$summary)
   testthat::expect_equal(res$summary$rho, .94272, tolerance=1e-4)
   
   # assert x2 != . if _n > 1
@@ -107,11 +107,11 @@ test_that("ci-test", {
   testthat::expect_equal(sum(is.na(tail(x2, -1))), 0)
   
   # edm explore x, copredict(teste) copredictvar(y)
-  cat("Command: edm explore x, copredict(teste) copredictvar(y)\n\n")
+  #cat("Command: edm explore x, copredict(teste) copredictvar(y)\n\n")
   res <- edm(t, x, copredict = y, saveCoPredictions=TRUE)
   teste <- res$copredictions
-  print(res$summary)
-  print(res$co_summary)
+  #print(res$summary)
+  #print(res$co_summary)
   testthat::expect_equal(res$summary$rho, .9989, tolerance=1e-4)
   testthat::expect_equal(res$co_summary$rho, .78002, tolerance=1e-4)
   
@@ -120,23 +120,23 @@ test_that("ci-test", {
   testthat::expect_equal(sum(is.na(tail(teste, -1))), 0)
   
   # edm explore z.x, p(10)
-  cat("Command: edm explore z.x, p(10)\n\n")
+  #cat("Command: edm explore z.x, p(10)\n\n")
   z.x <- (x - mean(x)) / sd(x)
   res <- edm(t, z.x, p=10)
-  print(res$summary)
+  #print(res$summary)
   testthat::expect_equal(res$summary$rho, .90235, tolerance=1e-4)
   
   # edm xmap y x, p(10) direction(oneway)
-  cat("Command: edm xmap y x, p(10) direction(oneway)\n\n")
+  #cat("Command: edm xmap y x, p(10) direction(oneway)\n\n")
   res <- edm(t, y, x, p=10)
-  print(res$summary)
+  #print(res$summary)
   testthat::expect_equal(res$summary$rho, .89554, tolerance=1e-4)
   
   # edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)
-  cat("Command: edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)\n\n")
+  #cat("Command: edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)\n\n")
   res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE)
   testx <- res$copredictions
-  print(res$summary)
+  #print(res$summary)
   testthat::expect_equal(res$summary$rho, .89554, tolerance=1e-4)
   testthat::expect_equal(res$co_summary$rho, .67401, tolerance=1e-4)
   
@@ -144,21 +144,21 @@ test_that("ci-test", {
   stopifnot(sum(is.na(tail(testx, -2))) == 0) 
   
   # edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)
-  cat("Command: edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)\n\n")
+  #cat("Command: edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)\n\n")
   z.x2 <- (x2 - mean(x2, na.rm = TRUE)) / sd(x2, na.rm = TRUE)
   res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE)
   testx2 <- res$copredictions
-  print(res$summary)
+  #print(res$summary)
   
   # assert testx2 != . if _n >= 3
   stopifnot(sum(is.na(testx2[1:2])) == 2)
   stopifnot(sum(is.na(tail(testx2, -2))) == 0)
   
   # edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)
-  cat("Command: edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)\n\n")
+  #cat("Command: edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)\n\n")
   res <- edm(t, y, x, extras=list(u1), p=10,  copredict=z.x2, saveCoPredictions=TRUE)
   testx3 <- res$copredictions
-  print(res$summary)
+  #print(res$summary)
   
   # assert testx3 != . if _n >= 3
   stopifnot(sum(is.na(testx3[1:2])) == 2)
@@ -167,12 +167,13 @@ test_that("ci-test", {
   # Check explore / xmap consistency
   
   # edm xmap l.x x, direction(oneway)
-  cat("Command: edm xmap l.x x, direction(oneway)\n\n")
+  #cat("Command: edm xmap l.x x, direction(oneway)\n\n")
   resXmap <- edm(t, tslag(t, x), x)
   
   # edm explore x, full
-  cat("Command: edm explore x, full\n\n")
+  #cat("Command: edm explore x, full\n\n")
   resExplore <- edm(t, x, full=TRUE)
+  #print(resExplore$summary)
   
   # assert xmap_r[1,1] == explore_r[1,1]
   stopifnot(resXmap$summary["rho"] == resExplore$summary["rho"])
@@ -180,8 +181,9 @@ test_that("ci-test", {
   # Make sure multiple e's and multiple theta's work together
   
   # edm explore x, e(2 3) theta(0 1)
-  cat("Command: edm explore x, e(2 3) theta(0 1)\n\n")
-  print(edm(t, x, E=c(2, 3), theta=c(0, 1)))
+  #cat("Command: edm explore x, e(2 3) theta(0 1)\n\n")
+  res <- edm(t, x, E=c(2, 3), theta=c(0, 1))
+  #print(res$summary)
   
   # Test missing data
   
@@ -197,29 +199,35 @@ test_that("ci-test", {
   y <- df$y
   
   # edm explore x
-  cat("Command: edm explore x\n\n")
-  print(edm(t, x)$summary)
+  #cat("Command: edm explore x\n\n")
+  res <- edm(t, x)
+  #print(res$summary)
   
   # edm explore x, dt savemanifold(plugin) dtweight(1)
-  cat("Command: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
-  print(edm(t, x, dt=TRUE, dtWeight=1)$summary)
+  #cat("Command: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
+  res <- edm(t, x, dt=TRUE, dtWeight=1)
+  #print(res$summary)
   # TODO: savemanifold
   
   # edm explore x, allowmissing
-  cat("Command: edm explore x, allowmissing\n\n")
-  print(edm(t, x, allowMissing=TRUE)$summary)
+  #cat("Command: edm explore x, allowmissing\n\n")
+  res <- edm(t, x, allowMissing=TRUE)
+  #print(res$summary)
   # TODO: savemanifold
   
   # edm explore x, missingdistance(1)
-  cat("Command: edm explore x, missingdistance(1)\n\n")
-  print(edm(t, x, allowMissing=TRUE, missingDistance=1.0)$summary)
+  #cat("Command: edm explore x, missingdistance(1)\n\n")
+  res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0)
+  #print(res$summary)
   # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
   # or whether to follow Stata and just let the latter auto-enable the former...
   
   # edm xmap x l.x, allowmissing
-  cat("Command: edm xmap x l.x, allowmissing\n\n")
-  print(edm(t, x, tslag(t, x), allowMissing=TRUE)$summary)
-  print(edm(t, tslag(t, x), x, allowMissing=TRUE)$summary)
+  #cat("Command: edm xmap x l.x, allowmissing\n\n")
+  res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE)
+  res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE)
+  #print(res1$summary)
+  #print(res2$summary)
   
   # Tests from the previous 'bigger-test.do' script
   
@@ -231,17 +239,17 @@ test_that("ci-test", {
   t <- seq_along(x)
   
   # edm explore x, e(2) crossfold(2) k(-1) allowmissing
-  cat("Command: edm explore x, e(2) crossfold(2) k(-1) allowmissing\n\n")
-  print(edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE))
+  #cat("Command: edm explore x, e(2) crossfold(2) k(-1) allowmissing\n\n")
+  #print(edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE))
   
   # edm explore x, e(2) crossfold(10) k(-1) allowmissing
-  cat("Command: edm explore x, e(2) crossfold(10) k(-1) allowmissing\n\n")
-  print(edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE))
+  #cat("Command: edm explore x, e(2) crossfold(10) k(-1) allowmissing\n\n")
+  #print(edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE))
   
   # edm explore x, e(5) extra(d.y) full allowmissing
-  cat("Command: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
+  #cat("Command: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
   d.y <- c(NA, diff(y))
-  print(edm(t, x, E=5, extra=list(d.y), full=TRUE, allowMissing=TRUE))
+  #print(edm(t, x, E=5, extra=list(d.y), full=TRUE, allowMissing=TRUE))
   
   # Test e-varying extra is the same as specifying the individual lagged extras
   
