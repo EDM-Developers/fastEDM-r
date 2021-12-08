@@ -140,8 +140,9 @@ test_that("ci-test", {
   testthat::expect_equal(res$summary$rho, .89554, tolerance=1e-4)
   testthat::expect_equal(res$co_summary$rho, .67401, tolerance=1e-4)
   
-  stopifnot(sum(is.na(testx[1:2])) == 2)
-  stopifnot(sum(is.na(tail(testx, -2))) == 0) 
+  # assert testx != . if _n >= 3
+  testthat::expect_equal(sum(is.na(testx[1:2])), 2)
+  testthat::expect_equal(sum(is.na(tail(testx, -2))), 0) 
   
   # edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)
   #cat("Command: edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)\n\n")
@@ -149,34 +150,49 @@ test_that("ci-test", {
   res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE)
   testx2 <- res$copredictions
   #print(res$summary)
+  testthat::expect_equal(res$summary$rho, .89554, tolerance=1e-4)
+  testthat::expect_equal(res$co_summary$rho, .93837, tolerance=1e-4)
   
   # assert testx2 != . if _n >= 3
-  stopifnot(sum(is.na(testx2[1:2])) == 2)
-  stopifnot(sum(is.na(tail(testx2, -2))) == 0)
+  testthat::expect_equal(sum(is.na(testx2[1:2])), 2)
+  testthat::expect_equal(sum(is.na(tail(testx2, -2))), 0) 
   
   # edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)
   #cat("Command: edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)\n\n")
   res <- edm(t, y, x, extras=list(u1), p=10,  copredict=z.x2, saveCoPredictions=TRUE)
   testx3 <- res$copredictions
   #print(res$summary)
+  testthat::expect_equal(res$summary$rho, .37011, tolerance=1e-4)
+  testthat::expect_equal(res$co_summary$rho, .9364, tolerance=1e-4)
   
   # assert testx3 != . if _n >= 3
-  stopifnot(sum(is.na(testx3[1:2])) == 2)
-  stopifnot(sum(is.na(tail(testx3, -2))) == 0)
+  testthat::expect_equal(sum(is.na(testx3[1:2])), 2)
+  testthat::expect_equal(sum(is.na(tail(testx3, -2))), 0) 
   
   # Check explore / xmap consistency
   
   # edm xmap l.x x, direction(oneway)
   #cat("Command: edm xmap l.x x, direction(oneway)\n\n")
   resXmap <- edm(t, tslag(t, x), x)
+  #print(resXmap$summary)
+  testthat::expect_equal(resXmap$summary$rho, .99939, tolerance=1e-4)
   
   # edm explore x, full
   #cat("Command: edm explore x, full\n\n")
   resExplore <- edm(t, x, full=TRUE)
   #print(resExplore$summary)
+  testthat::expect_equal(resExplore$summary$rho, .99939, tolerance=1e-4)
   
   # assert xmap_r[1,1] == explore_r[1,1]
-  stopifnot(resXmap$summary["rho"] == resExplore$summary["rho"])
+  testthat::expect_equal(resXmap$summary["rho"], resExplore$summary["rho"])
+  
+  # Check xmap reverse consistency (not necessary to check in this version)
+  res1 <- edm(t, x, y)
+  res2 <- edm(t, y, x)
+  #print(res1$summary)
+  #print(res2$summary)
+  testthat::expect_equal(res1$summary$rho, .54213, tolerance=1e-4)
+  testthat::expect_equal(res2$summary$rho, .94272, tolerance=1e-4)
   
   # Make sure multiple e's and multiple theta's work together
   
@@ -184,9 +200,13 @@ test_that("ci-test", {
   #cat("Command: edm explore x, e(2 3) theta(0 1)\n\n")
   res <- edm(t, x, E=c(2, 3), theta=c(0, 1))
   #print(res$summary)
+  rho <- c(.99863, .99895, .99734, .99872)
+  testthat::expect_equal(res$summary$rho, rho, tolerance=1e-4)
+  
+  # Check that lowmemory flag is working
+  # TODO
   
   # Test missing data
-  
   u <- c(.40321617, .98143454, .33737505, .17918578, .24976152, .29691027, .20499327, .61275607, .19457759, .21902643, .59679411, .27325454, .7832745, .59985177, .83922833, .91918384, .29341243, .68914328, .20482466, .44289448, .50353225, .78469053, .39731964, .1417179, .2297587, .42227099, .84610652, .08079046, .15440883, .56132574, .07844698, .75300325, .01374904, .12845429, .84633796, .9969956, .16866594, .11734659, .53642262, .51599017, .67278131, .96256297, .95954171, .11729408, .56541938, .84330419, .1371089, .38945212, .37677446, .51548277, .51449584, .53923567, .06029199, .58424255, .11279976, .30173961, .56605612, .02343005, .44666614, .83259486, .38594202, .59133444, .54296861, .84755341, .25489783, .54018779, .64907221, .99787491, .86038316, .06460473, .33661689, .0529183, .27751603, .13714739, .53328866, .45544815, .25549471, .21179428, .51436839, .41096275, .11527777, .74136838, .30614234, .7863824, .60394973, .02919326, .52316759, .19693192, .59354107, .26414924, .29072418, .3784841, .93315864, .96052764, .56556703, .52228218, .85167792, .11004516, .79579543, .79621761, .2354088, .93824537, .81922664, .41441068, .49097789, .91274808, .06571458, .45195547, .0709059, .2662836, .53457729, .4265899, .27470816, .51640195, .83499984, .10722623, .49051885, .72424814, .96825454, .98220681, .47936039, .84857664, .94062731, .60951161, .60858524, .45293032, .27575198, .07623614, .44529291, .09089482, .50229062, .80893461, .91586586, .99691506, .35587916, .86148772, .37659892, .24537498, .60092739, .83524085, .66615393, .77105696, .76242014, .99315317, .92303496, .7242071, .75609269, .09389603, .48791731, .9134859, .12996849, .10364283, .68801897, .50264256, .64841714, .84488405, .48749087, .57849803, .8381817, .402748, .66711617, .33963501, .02327878, .26512865, .47665646, .07827067, .61270055, .4072321, .52272033, .19773727, .75079348, .09788921, .18368872, .60296861, .51975047, .24164339, .60783901, .9966368, .80669058, .2479132, .12109083, .50335909, .57944449, .3891651, .53499648, .19121044, .05091697, .80968952, .4719385, .60401948, .99159545, .06252926, .0013005, .83339689, .13339322, .30319281, .56467506, .36715866, .40749152, .89440713, .39817923)
   
   df <- data.frame(t=t, x=x, y=y, u=u)
@@ -202,23 +222,27 @@ test_that("ci-test", {
   #cat("Command: edm explore x\n\n")
   res <- edm(t, x)
   #print(res$summary)
+  testthat::expect_equal(res$summary$rho, .99814, tolerance=1e-4)
   
   # edm explore x, dt savemanifold(plugin) dtweight(1)
   #cat("Command: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
   res <- edm(t, x, dt=TRUE, dtWeight=1)
   #print(res$summary)
+  testthat::expect_equal(res$summary$rho, .95569, tolerance=1e-4)
   # TODO: savemanifold
   
   # edm explore x, allowmissing
   #cat("Command: edm explore x, allowmissing\n\n")
   res <- edm(t, x, allowMissing=TRUE)
   #print(res$summary)
+  testthat::expect_equal(res$summary$rho, .99766, tolerance=1e-4)
   # TODO: savemanifold
   
   # edm explore x, missingdistance(1)
   #cat("Command: edm explore x, missingdistance(1)\n\n")
   res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0)
   #print(res$summary)
+  testthat::expect_equal(res$summary$rho, .99765, tolerance=1e-4)
   # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
   # or whether to follow Stata and just let the latter auto-enable the former...
   
@@ -228,6 +252,8 @@ test_that("ci-test", {
   res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE)
   #print(res1$summary)
   #print(res2$summary)
+  testthat::expect_equal(res1$summary$rho, .99983, tolerance=1e-4)
+  testthat::expect_equal(res2$summary$rho, .99864, tolerance=1e-4)
   
   # Tests from the previous 'bigger-test.do' script
   
