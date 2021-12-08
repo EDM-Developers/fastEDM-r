@@ -9,7 +9,7 @@
 #' @author Patrick Laub <patrick.laub@gmail.com>
 #' @import Rcpp RcppEigen
 #' @importFrom Rcpp evalCpp
-#' @useDynLib fastEDM
+#' @useDynLib fastEDM, .registration = TRUE
 #' @name fastEDM
 #' @references Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond Linearity, Stability, and Equilibrium: The edm Package for Empirical Dynamic Modeling and Convergent Cross Mapping in Stata, Stata Journal, 21(1), pp. 220-258
 #' @seealso{

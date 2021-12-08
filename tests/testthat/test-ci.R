@@ -61,8 +61,8 @@ test_that("ci-test", {
   print(res)
   
   # assert beta1_b2_rep1 != . if _n > 1
-  stopifnot(sum(is.na(beta[1,])) == ncol(beta))
-  stopifnot(sum(is.na(tail(beta, -1))) == 0)
+  expect_equal(sum(is.na(beta[1,])), ncol(beta))
+  expect_equal(sum(is.na(tail(beta, -1))), 0)
   
   # edm xmap y x, predict(x2) direction(oneway)
   cat("Command: edm xmap y x, predict(x2) direction(oneway)\n\n")

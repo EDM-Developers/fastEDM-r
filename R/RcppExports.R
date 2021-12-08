@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 run_command <- function(df, es, tau, thetas, libs, k = 0L, algorithm = "simplex", numReps = 1L, p = 1L, crossfold = 0L, full = FALSE, shuffle = FALSE, saveFinalPredictions = FALSE, saveFinalCoPredictions = FALSE, saveSMAPCoeffs = FALSE, dt = FALSE, reldt = FALSE, dtWeight = 0.0, extras = NULL, allowMissing = FALSE, missingDistance = 0.0, numThreads = 1L, verbosity = 1L) {
-    .Call('_fastEDM_run_command', PACKAGE = 'fastEDM', df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, numThreads, verbosity)
+    .Call(`_fastEDM_run_command`, df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, numThreads, verbosity)
 }
 
