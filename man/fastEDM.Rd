@@ -10,11 +10,10 @@ used for empirical dynamic modeling. The core algorithm is written in C++
 to achieve a reasonable execution speed.
 }
 \examples{
-\dontrun{
- t <- c(1, 2, 3, 4)
- x <- c(11, 12, 13, 14)
- edm(t, x)
-}
+ t <- c(1, 2, 3, 4, 5, 6, 7, 8)
+ x <- c(11, 12, 13, 14, 15, 16, 17, 18)
+ res <- edm(t, x)
+ print(res$summary)
 }
 \references{
 Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond Linearity, Stability, and Equilibrium: The edm Package for Empirical Dynamic Modeling and Convergent Cross Mapping in Stata, Stata Journal, 21(1), pp. 220-258

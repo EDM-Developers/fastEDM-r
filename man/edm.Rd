@@ -178,9 +178,8 @@ A list
 edm
 }
 \examples{
-\dontrun{
-t <- c(1, 2, 3, 4)
-x <- c(11, 12, 13, 14)
-edm(t, x)
-}
+ t <- c(1, 2, 3, 4, 5, 6, 7, 8)
+ x <- c(11, 12, 13, 14, 15, 16, 17, 18)
+ res <- edm(t, x)
+ print(res$summary)
 }

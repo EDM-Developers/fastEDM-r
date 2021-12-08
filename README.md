@@ -32,29 +32,8 @@ library(fastEDM)
 
 t <- c(1, 2, 3, 4, 5, 6, 7, 8)
 x <- c(11, 12, 13, 14, 15, 16, 17, 18)
-edm(t, x)
-#> $summary
+res <- edm(t, x)
+res$summary
 #>   E library theta        rho     mae
 #> 1 2       3     1 -0.9706895 2.62881
-#> 
-#> $co_summary
-#> data frame with 0 columns and 0 rows
-#> 
-#> $predictions
-#> <0 x 0 matrix>
-#> 
-#> $copredictions
-#> <0 x 0 matrix>
-#> 
-#> $coeffs
-#> <0 x 0 matrix>
-#> 
-#> $rc
-#> [1] 0
-#> 
-#> $kMin
-#> [1] 3
-#> 
-#> $kMax
-#> [1] 3
 ```
