@@ -310,7 +310,31 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
   io.print(fmt::format("Return code is {}\n", rc));
 
-  return List::create(_["summary"] = summary, _["co_summary"] = co_summary, _["predictions"] = predictions,
-                      _["copredictions"] = coPredictions, _["coeffs"] = coeffs, _["rc"] = rc, _["kMin"] = kMin,
-                      _["kMax"] = kMax);
+  List res;
+  res["summary"] = summary;
+  res["rc"] = rc;
+  res["kMin"] = kMin;
+  res["kMax"] = kMax;
+  
+  if (copredictMode) {
+    res["co_summary"] = co_summary;
+  }
+  
+  if (saveFinalPredictions) {
+    res["predictions"] = predictions;
+  }
+  
+  if (saveFinalCoPredictions) {
+    res["copredictions"] = coPredictions;
+  }
+  
+  if (saveSMAPCoeffs) {
+    res["coeffs"] = coeffs;
+  }
+  
+  if (allowMissing) {
+    res["missingdistance"] = opts.missingdistance;
+  }
+  
+  return res;
 }
