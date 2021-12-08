@@ -157,6 +157,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
   if (df.containsElementNamed("co_x")) {
     co_x = Rcpp::as<std::vector<double>>(df["co_x"]);
+    replace_nan(co_x);
   }
 
   std::vector<std::vector<double>> extrasVecs;
@@ -238,7 +239,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   int kMin, kMax;
 
   NumericMatrix predictions, coPredictions, coeffs;
-  DataFrame summary, co_summary = R_NilValue;
+  DataFrame summary, co_summary;
 
   {
     IntegerVector Es, libraries;

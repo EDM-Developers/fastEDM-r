@@ -134,7 +134,7 @@ test_that("ci-test", {
   
   # edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)
   cat("Command: edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)\n\n")
-  res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE)  # <---------- co_summary empty here
+  res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE)
   testx <- res$copredictions
   print(res$summary)
   testthat::expect_equal(res$summary$rho, .89554, tolerance=1e-4)
