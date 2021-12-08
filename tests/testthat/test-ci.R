@@ -60,7 +60,7 @@ test_that("ci-test", {
   
   # edm explore x, k(5) crossfold(10)
   res <- edm(t, x, k=5, crossfold=10)
-  expect_equal(mean(res$summary$rho), .99946, tolerance=1e-3) # This deviates a little more from the Stata
+  expect_equal(mean(res$summary$rho), .99946, tolerance=1e-4)
   
   # edm explore x, theta(0.2(0.1)2.0) algorithm(smap)
   res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap")

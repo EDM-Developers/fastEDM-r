@@ -111,8 +111,13 @@ std::vector<std::future<PredictionResult>> launch_task_group(
 
   int numLibraries = (explore ? 1 : libraries.size());
 
+  // Note: the 'numIters' either refers to the 'replicate' option
+  // used for bootstrap resampling, or the 'crossfold' number of
+  // cross-validation folds. Both options can't be used together.
+  int numIters = numReps > crossfold ? numReps : crossfold;
+
   opts.explore = explore;
-  opts.numTasks = numReps * Es.size() * numLibraries;
+  opts.numTasks = numIters * Es.size() * numLibraries;
   opts.configNum = 0;
   opts.taskNum = 0;
   opts.saveKUsed = true;
@@ -132,11 +137,7 @@ std::vector<std::future<PredictionResult>> launch_task_group(
 
   bool newLibraryPredictionSplit = true;
 
-  // Note: the 'numReps' either refers to the 'replicate' option
-  // used for bootstrap resampling, or the 'crossfold' number of
-  // cross-validation folds. Both options can't be used together,
-  // so numReps = max(replicate, crossfold).
-  for (int iter = 1; iter <= numReps; iter++) {
+  for (int iter = 1; iter <= numIters; iter++) {
     if (explore) {
       newLibraryPredictionSplit = true;
       librarySize = splitter.next_library_size(iter);
