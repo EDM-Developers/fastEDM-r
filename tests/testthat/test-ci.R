@@ -218,7 +218,7 @@ test_that("ci-test", {
   res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", E=5)
   res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", E=5)
   expect_equal(res1$summary$rho, 1.0, tolerance=1e-4) 
-  #expect_equal(res2$summary$rho, .77523, tolerance=1e-4) # This one fails <----------------------------
+  expect_equal(res2$summary$rho, .77523, tolerance=1e-4)
 
   # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
   res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", E=5)
@@ -226,11 +226,11 @@ test_that("ci-test", {
   
   # edm explore x, extraembed(u) allowmissing dt crossfold(5)
   res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
-  #expect_equal(mean(res$summary$rho), .92512, tolerance=1e-4) # This one fails <----------------------------
+  expect_equal(mean(res$summary$rho), .92512, tolerance=1e-4)
   
   # edm explore d.x, dt
   res <- edm(t, tsdiff(t, x), dt=TRUE)
-  #expect_equal(res$summary$rho, .89192, tolerance=1e-4)  # This one fails <----------------------------
+  expect_equal(res$summary$rho, .89192, tolerance=1e-4)
   
   # edm explore x, rep(20) ci(95)
   res <- edm(t, x, numReps=20)

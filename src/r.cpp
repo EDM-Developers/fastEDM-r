@@ -201,9 +201,24 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
   int numExtrasLagged = 0;
 
-  ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt, allowMissing);
-
   int maxE = Es[Es.size() - 1];
+
+  if (dt && opts.dtWeight == 0.0) {
+    // If we have to set the default 'dt' weight, then make a manifold with dtweight of 1 then
+    // we can rescale this by the appropriate variances in the future.
+    // TODO: How would we change this for 'reldt'?
+    ManifoldGenerator dtgenerator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, true, false, allowMissing);
+
+    double DT_WEIGHT = 1.0;
+    std::vector<double> dts = dtgenerator.dts(maxE, false, true, DT_WEIGHT);
+
+    opts.dtWeight = default_dt_weight(dts, x);
+    if (opts.dtWeight <= 0) {
+      dt = false;
+    }
+  }
+
+  ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt, allowMissing);
 
   // Manifold M_all = generator.create_manifold(maxE, {}, true);
   //
