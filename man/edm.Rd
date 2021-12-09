@@ -21,6 +21,7 @@ edm(
   copredict = c(),
   savePredictions = FALSE,
   saveCoPredictions = FALSE,
+  saveManifolds = FALSE,
   saveSMAPCoeffs = FALSE,
   extras = NULL,
   allowMissing = FALSE,
@@ -126,10 +127,12 @@ A second prediction is run for each configuration of \eqn{E}, library, etc., usi
 but with a prediction set built from the lagged embedding of this variable.}
 
 \item{savePredictions}{This option allows you to save the edm predictions
-as a variable, which could be useful for plotting and diagnosis.}
+which could be useful for plotting and diagnosis.}
 
-\item{saveCoPredictions}{This option allows you to save the copredictions
-as a variable. You must specify the \code{copredict} option for this to work.}
+\item{saveCoPredictions}{This option allows you to save the copredictions.
+You must specify the \code{copredict} option for this to work.}
+
+\item{saveManifolds}{This option allows you to save the library and prediction manifolds.}
 
 \item{saveSMAPCoeffs}{This option allows S-map coefficients to be stored.}
 

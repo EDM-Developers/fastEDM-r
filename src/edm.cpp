@@ -414,6 +414,16 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
     // Check if any make_prediction call failed, and if so find the most serious error
     pred.rc = *std::max_element(rc.get(), rc.get() + numThetas * numPredictions);
 
+    if (opts.saveManifolds) {
+      pred.M = std::make_unique<Manifold>(generator, E, libraryRows, false,
+                                          opts.dtWeight, opts.copredict, false);
+      pred.Mp = std::make_unique<Manifold>(generator, E, predictionRows, true,
+                                           opts.dtWeight, opts.copredict, false);
+    } else {
+      pred.M = nullptr;
+      pred.Mp = nullptr;
+    }
+    
     // If we're storing the prediction and/or the S-map coefficients, put them
     // into the resulting PredictionResult struct. Otherwise, let them be deleted.
     if (opts.savePrediction) {

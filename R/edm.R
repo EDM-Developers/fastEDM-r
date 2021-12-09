@@ -95,10 +95,12 @@
 #' but with a prediction set built from the lagged embedding of this variable.
 #' 
 #' @param savePredictions This option allows you to save the edm predictions
-#' as a variable, which could be useful for plotting and diagnosis.
+#' which could be useful for plotting and diagnosis.
 #' 
-#' @param saveCoPredictions This option allows you to save the copredictions
-#' as a variable. You must specify the \code{copredict} option for this to work.
+#' @param saveCoPredictions This option allows you to save the copredictions.
+#' You must specify the \code{copredict} option for this to work.
+#' 
+#' @param saveManifolds This option allows you to save the library and prediction manifolds.
 #' 
 #' @param saveSMAPCoeffs  This option allows S-map coefficients to be stored.
 # in variables with
@@ -196,7 +198,7 @@
 edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                 algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
                 shuffle=FALSE, copredict = c(), savePredictions=FALSE,
-                saveCoPredictions=FALSE, saveSMAPCoeffs=FALSE,
+                saveCoPredictions=FALSE, saveManifolds=FALSE, saveSMAPCoeffs=FALSE,
                 extras=NULL, allowMissing=FALSE, missingDistance=0.0,
                 dt=FALSE, reldt=FALSE, dtWeight=0.0, # saveDT=FALSE,
                 numReps=1, verbosity=0, numThreads=1) { #}, saveInputs="") {
@@ -237,6 +239,7 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                      p=p, crossfold=crossfold, full=full, shuffle=shuffle,
                      saveFinalPredictions=savePredictions,
                      saveFinalCoPredictions=saveCoPredictions,
+                     saveManifolds=saveManifolds,
                      saveSMAPCoeffs=saveSMAPCoeffs,
                      extras=extras,  allowMissing=allowMissing,
                      missingDistance=missingDistance,

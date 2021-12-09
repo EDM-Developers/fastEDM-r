@@ -195,14 +195,12 @@ test_that("ci-test", {
   expect_equal(res$summary$rho, .99814, tolerance=1e-4)
   
   # edm explore x, dt savemanifold(plugin) dtweight(1)
-  res <- edm(t, x, dt=TRUE, dtWeight=1)
+  res <- edm(t, x, dt=TRUE, saveManifolds=TRUE, dtWeight=1)
   expect_equal(res$summary$rho, .95569, tolerance=1e-4)
-  # TODO: savemanifold
   
   # edm explore x, allowmissing
   res <- edm(t, x, allowMissing=TRUE)
   expect_equal(res$summary$rho, .99766, tolerance=1e-4)
-  # TODO: savemanifold
   
   # edm explore x, missingdistance(1)
   res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0)

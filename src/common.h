@@ -81,6 +81,7 @@ struct Options
   std::vector<Metric> metrics;
   std::string cmdLine;
   bool saveKUsed;
+  bool saveManifolds;
   bool lowMemoryMode;
 };
 
@@ -96,6 +97,7 @@ struct PredictionResult
   size_t numThetas, numPredictions, numCoeffCols;
   std::unique_ptr<double[]> predictions;
   std::unique_ptr<double[]> coeffs;
+  std::unique_ptr<Manifold> M, Mp;
   std::vector<PredictionStats> stats;
   std::vector<bool> predictionRows;
   int kMin, kMax;

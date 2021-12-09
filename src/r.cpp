@@ -45,32 +45,49 @@ void replace_nan(std::vector<double>& v)
   }
 }
 
-Rcpp::NumericMatrix fill_in_na(const double* v, int c, std::vector<bool> filter)
+Rcpp::NumericMatrix to_R_matrix(const double* v, int r, int c,
+                                std::vector<bool> filter = {},
+                                bool rowMajor = false)
 {
-  Rcpp::NumericMatrix expanded(filter.size(), c);
+  Rcpp::NumericMatrix mat(r, c);
 
   int obsNum = 0;
-  for (int j = 0; j < c; j++) {
-    for (int i = 0; i < filter.size(); i++) {
-      if (filter[i]) {
-        expanded(i, j) = v[obsNum];
+
+  if (rowMajor) {
+    for (int i = 0; i < r; i++) {
+      for (int j = 0; j < c; j++) {
+        if (filter.size() > 0 && !filter[i]) {
+          mat(i, j) = NA_REAL;
+          continue;
+        }
+        mat(i, j) = v[obsNum] != MISSING_D ? v[obsNum] : NA_REAL;
         obsNum += 1;
-      } else {
-        expanded(i, j) = NA_REAL;
+      }
+    }
+  } else {
+    for (int j = 0; j < c; j++) {
+      for (int i = 0; i < r; i++) {
+        if (filter.size() > 0 && !filter[i]) {
+          mat(i, j) = NA_REAL;
+          continue;
+        }
+
+        mat(i, j) = v[obsNum] != MISSING_D ? v[obsNum] : NA_REAL;
+        obsNum += 1;
       }
     }
   }
 
-  return expanded;
+  return mat;
 }
 
 // [[Rcpp::export]]
 List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, Nullable<IntegerVector> libs, int k = 0,
                  std::string algorithm = "simplex", int numReps = 1, int p = 1, int crossfold = 0, bool full = false,
                  bool shuffle = false, bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
-                 bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false, double dtWeight = 0.0,
-                 Nullable<List> extras = R_NilValue, bool allowMissing = false, double missingDistance = 0.0,
-                 int numThreads = 1, int verbosity = 1)
+                 bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
+                 double dtWeight = 0.0, Nullable<List> extras = R_NilValue, bool allowMissing = false,
+                 double missingDistance = 0.0, int numThreads = 1, int verbosity = 1)
 {
   RConsoleIO io(verbosity);
 
@@ -81,6 +98,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   opts.nthreads = numThreads;
   opts.copredict = false;
   opts.forceCompute = true;
+  opts.saveManifolds = saveManifolds;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
 
   opts.k = k;
@@ -240,6 +258,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
   NumericMatrix predictions, coPredictions, coeffs;
   DataFrame summary, co_summary;
+  std::vector<NumericMatrix> Ms, Mps;
 
   {
     IntegerVector Es, libraries;
@@ -289,13 +308,25 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
       if (pred.predictions != nullptr) {
         if (!pred.copredict) {
-          predictions = fill_in_na(pred.predictions.get(), pred.numThetas, pred.predictionRows);
+          predictions = to_R_matrix(pred.predictions.get(),
+                                    pred.predictionRows.size(),
+                                    pred.numThetas,
+                                    pred.predictionRows);
         } else {
-          coPredictions = fill_in_na(pred.predictions.get(), pred.numThetas, pred.predictionRows);
+          coPredictions = to_R_matrix(pred.predictions.get(),
+                                      pred.predictionRows.size(),
+                                      pred.numThetas,
+                                      pred.predictionRows);
         }
       }
       if (pred.coeffs != nullptr) {
-        coeffs = fill_in_na(pred.coeffs.get(), pred.numCoeffCols, pred.predictionRows);
+        coeffs = to_R_matrix(pred.coeffs.get(), pred.predictionRows.size(),
+                             pred.numCoeffCols, pred.predictionRows);
+      }
+      
+      if (saveManifolds) {
+        Ms.push_back(to_R_matrix(pred.M->data(), pred.M->numPoints(), pred.M->E_actual(), {}, true));
+        Mps.push_back(to_R_matrix(pred.Mp->data(), pred.Mp->numPoints(), pred.Mp->E_actual(), {}, true));
       }
     }
 
@@ -327,6 +358,11 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   
   if (saveFinalCoPredictions) {
     res["copredictions"] = coPredictions;
+  }
+  
+  if (saveManifolds) {
+    res["Ms"] = Ms;
+    res["Mps"] = Mps;
   }
   
   if (saveSMAPCoeffs) {
