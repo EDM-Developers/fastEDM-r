@@ -49,6 +49,8 @@ double ManifoldGenerator::calculate_time_increment() const
 
 void ManifoldGenerator::setup_observation_numbers()
 {
+  _observation_number.clear();
+
   if (!_dt) {
     // In normal situations (non-dt)
     double unit = calculate_time_increment();
@@ -235,7 +237,7 @@ void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool 
   }
 }
 
-double ManifoldGenerator::get_dt(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight) const
+double ManifoldGenerator::get_dt(int i, bool copredictionMode, bool predictionSet, double dtWeight) const
 {
   int panel = _panel_mode ? _panelIDs[i] : -1;
 
@@ -363,6 +365,7 @@ void to_json(json& j, const ManifoldGenerator& g)
 {
   j = json{ { "_dt", g._dt },
             { "_reldt", g._reldt },
+            { "_dtWeight", g._dtWeight },
             { "_panel_mode", g._panel_mode },
             { "_xmap_mode", g._xmap_mode },
             { "_tau", g._tau },
@@ -382,6 +385,7 @@ void from_json(const json& j, ManifoldGenerator& g)
 {
   j.at("_dt").get_to(g._dt);
   j.at("_reldt").get_to(g._reldt);
+  j.at("_dtWeight").get_to(g._dtWeight);
   j.at("_panel_mode").get_to(g._panel_mode);
   j.at("_xmap_mode").get_to(g._xmap_mode);
   j.at("_tau").get_to(g._tau);

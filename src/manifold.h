@@ -22,9 +22,7 @@ using json = nlohmann::json;
 
 #if defined(WITH_ARRAYFIRE)
 #include <arrayfire.h>
-#endif
 
-#if defined(WITH_ARRAYFIRE)
 struct ManifoldOnGPU
 {
   af::array mdata;   // shape [_E_actual _numPoints 1 1] - manifold
@@ -35,6 +33,8 @@ struct ManifoldOnGPU
 };
 #endif
 
+#include "stats.h"
+
 class ManifoldGenerator
 {
 private:
@@ -44,10 +44,29 @@ private:
   int _tau, _p, _num_extras, _num_extras_lagged;
   bool _dt, _reldt, _allow_missing, _panel_mode, _xmap_mode;
   std::vector<int> _observation_number;
+  double _dtWeight;
 
   void setup_observation_numbers();
 
   bool find_observation_num(int target, int& k, int direction, int panel) const;
+
+  double default_dt_weight()
+  {
+    auto xObserved = remove_value(_x, MISSING_D);
+    double xSD = standard_deviation(xObserved);
+
+    std::vector<double> dts = this->dts();
+    auto dtObserved = remove_value(dts, MISSING_D);
+    double dtSD = standard_deviation(dtObserved);
+
+    if (dtSD == 0.0) {
+      return -1;
+    } else {
+      return xSD / dtSD;
+    }
+  }
+
+  double get_dt(int i, bool copredictionMode, bool predictionSet, double dtWeight) const;
 
 public:
   void fill_in_point(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight, double* point) const;
@@ -66,7 +85,8 @@ public:
   ManifoldGenerator(const std::vector<double>& t, const std::vector<double>& x, int tau, int p,
                     const std::vector<double>& xmap = {}, const std::vector<double>& co_x = {},
                     const std::vector<int>& panelIDs = {}, const std::vector<std::vector<double>>& extras = {},
-                    int numExtrasLagged = 0, bool dt = false, bool reldt = false, bool allowMissing = false)
+                    int numExtrasLagged = 0, bool dt = false, bool reldt = false, bool allowMissing = false,
+                    double dtWeight = 0)
     : _t(t)
     , _x(x)
     , _xmap(xmap)
@@ -82,10 +102,31 @@ public:
     , _allow_missing(allowMissing)
     , _panel_mode(panelIDs.size() > 0)
     , _xmap_mode(xmap.size() > 0)
+    , _dtWeight(dtWeight)
   {
+    if ((dt || reldt) && dtWeight == 0.0) {
+      // If we have to set the default 'dt' weight, then make a manifold with dtweight of 1 then
+      // we can rescale this by the appropriate variances in the future.
+      _dt = true;
+      _reldt = false;
+      setup_observation_numbers();
+      double defaultDTWeight = default_dt_weight();
+
+      if (defaultDTWeight > 0) {
+        _dt = dt;
+        _reldt = reldt;
+        _dtWeight = defaultDTWeight;
+      } else {
+        _dt = false;
+        _reldt = false;
+        _dtWeight = 0;
+      }
+    }
+
     setup_observation_numbers();
   }
 
+  double dtWeight() const { return _dtWeight; }
   int numObs() const { return _t.size(); }
   bool panelMode() const { return _panel_mode; }
   int panel(int i) const { return _panelIDs[i]; }
@@ -93,13 +134,11 @@ public:
 
   std::vector<bool> generate_usable(int maxE, bool copredictionMode = false) const;
 
-  double get_dt(int i, int E, bool copredictionMode, bool predictionSet, double dtWeight) const;
-
-  std::vector<double> dts(int E, bool copredictionMode, bool predictionSet, double dtWeight) const
+  std::vector<double> dts() const
   {
     std::vector<double> dts;
     for (int i = 0; i < _t.size(); i++) {
-      dts.push_back(get_dt(i, E, copredictionMode, predictionSet, dtWeight));
+      dts.push_back(get_dt(i, false, true, 1.0));
     }
     return dts;
   }
@@ -172,20 +211,20 @@ class Manifold
 
 public:
   Manifold(const std::shared_ptr<ManifoldGenerator> gen, int E, const std::vector<bool>& filter, bool predictionSet,
-           double dtWeight = 0.0, bool copredictMode = false, bool lazy = false)
+           bool copredictMode = false, bool lazy = false)
     : _gen(gen)
     , _predictionSet(predictionSet)
     , _copredictMode(copredictMode)
-    , _dtWeight(dtWeight)
+    , _dtWeight(gen->dtWeight())
   {
     init(E, filter, predictionSet, copredictMode, lazy);
   }
 
   Manifold(const ManifoldGenerator& gen, int E, const std::vector<bool>& filter, bool predictionSet,
-           double dtWeight = 0.0, bool copredictMode = false, bool lazy = false)
+           bool copredictMode = false, bool lazy = false)
     : _predictionSet(predictionSet)
     , _copredictMode(copredictMode)
-    , _dtWeight(dtWeight)
+    , _dtWeight(gen.dtWeight())
   {
     _gen = std::shared_ptr<const ManifoldGenerator>(&gen, [](const ManifoldGenerator*) {});
     init(E, filter, predictionSet, copredictMode, lazy);

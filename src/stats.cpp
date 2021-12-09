@@ -3,6 +3,10 @@
 
 #include <unordered_set>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 double median(std::vector<double> u)
 {
   if (u.size() % 2 == 0) {
@@ -94,25 +98,9 @@ double standard_deviation(const std::vector<double>& vec)
 
 double default_missing_distance(const std::vector<double>& x)
 {
-  const double PI = 3.141592653589793238463;
   auto xObserved = remove_value(x, MISSING_D);
   double xSD = standard_deviation(xObserved);
-  return 2 / sqrt(PI) * xSD;
-}
-
-double default_dt_weight(const std::vector<double>& dts, const std::vector<double>& x)
-{
-  auto xObserved = remove_value(x, MISSING_D);
-  double xSD = standard_deviation(xObserved);
-
-  auto dtObserved = remove_value(dts, MISSING_D);
-  double dtSD = standard_deviation(dtObserved);
-
-  if (dtSD == 0.0) {
-    return -1;
-  } else {
-    return xSD / dtSD;
-  }
+  return 2 / sqrt(M_PI) * xSD;
 }
 
 Metric guess_appropriate_metric(std::vector<double> data, int targetSample = 100)

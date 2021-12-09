@@ -69,7 +69,6 @@ struct Options
   bool saveSMAPCoeffs;
   int k, nthreads, library;
   double missingdistance;
-  double dtWeight;
   bool panelMode;
   double idw;
   std::vector<double> thetas;

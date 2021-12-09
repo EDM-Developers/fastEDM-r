@@ -244,7 +244,7 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
   // purely for the purpose of generating microbenchmarks.
   if (io != nullptr && io->verbosity > 4) {
     json lowLevelInputDump;
-    lowLevelInputDump["generator"] = generator;
+    lowLevelInputDump["generator"] = *generator;
     lowLevelInputDump["opts"] = opts;
     lowLevelInputDump["E"] = E;
     lowLevelInputDump["libraryRows"] = libraryRows;
@@ -255,8 +255,8 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
   }
 #endif
 
-  Manifold M(generator, E, libraryRows, false, opts.dtWeight, opts.copredict, opts.lowMemoryMode);
-  Manifold Mp(generator, E, predictionRows, true, opts.dtWeight, opts.copredict, opts.lowMemoryMode);
+  Manifold M(generator, E, libraryRows, false, opts.copredict, opts.lowMemoryMode);
+  Manifold Mp(generator, E, predictionRows, true, opts.copredict, opts.lowMemoryMode);
 
   bool multiThreaded = opts.nthreads > 1;
 
@@ -415,15 +415,13 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
     pred.rc = *std::max_element(rc.get(), rc.get() + numThetas * numPredictions);
 
     if (opts.saveManifolds) {
-      pred.M = std::make_unique<Manifold>(generator, E, libraryRows, false,
-                                          opts.dtWeight, opts.copredict, false);
-      pred.Mp = std::make_unique<Manifold>(generator, E, predictionRows, true,
-                                           opts.dtWeight, opts.copredict, false);
+      pred.M = std::make_unique<Manifold>(generator, E, libraryRows, false, opts.copredict, false);
+      pred.Mp = std::make_unique<Manifold>(generator, E, predictionRows, true, opts.copredict, false);
     } else {
       pred.M = nullptr;
       pred.Mp = nullptr;
     }
-    
+
     // If we're storing the prediction and/or the S-map coefficients, put them
     // into the resulting PredictionResult struct. Otherwise, let them be deleted.
     if (opts.savePrediction) {
