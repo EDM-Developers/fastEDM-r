@@ -1,12 +1,23 @@
-tslag <- function(ts, xs, lag=1, dt=1) {
-  lx <- rep(NA, length(ts))
-  for (i in seq_along(ts)) {
-    lagged_t <- ts[i]-lag*dt
-    if (!is.na(lagged_t) && lagged_t %in% ts) {
-      lx[i] <- xs[which(ts == lagged_t)]
+tslag <- function(t, x, lag=1, dt=1) {
+  l.x <- rep(NA, length(t))
+  for (i in seq_along(t)) {
+    lagged_t <- t[i]-lag*dt
+    if (!is.na(lagged_t) && lagged_t %in% t) {
+      l.x[i] <- x[which(t == lagged_t)]
     }
   }
-  return(lx)
+  return(l.x)
+}
+
+tsdiff <- function(t, x, lag=1, dt=1) {
+  d.x <- rep(NA, length(t))
+  for (i in seq_along(t)) {
+    lagged_t <- t[i]-lag*dt
+    if (!is.na(x[i]) && !is.na(lagged_t) && lagged_t %in% t) {
+      d.x[i] <- x[i] - x[which(t == lagged_t)]
+    }
+  }
+  return(d.x)
 }
 
 logistic_map <- function(obs) {
@@ -205,20 +216,36 @@ test_that("ci-test", {
   expect_equal(res2$summary$rho, .99864, tolerance=1e-4)
   
   # edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)
-  # res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", E=5)
-  # res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", E=5)
-  # print(res1$summary)
-  # print(res2$summary)
-  # expect_equal(res1$summary$rho, 1, tolerance=1e-4)
-  # expect_equal(res2$summary$rho, .77523, tolerance=1e-4)
-  # 
-  # # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
-  # res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", E=5)
-  # expect_equal(res$summary$rho, .36976, tolerance=1e-4)
+  res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", E=5)
+  res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", E=5)
+  expect_equal(res1$summary$rho, 1.0, tolerance=1e-4) 
+  #expect_equal(res2$summary$rho, .77523, tolerance=1e-4) # This one fails <----------------------------
+
+  # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
+  res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", E=5)
+  #expect_equal(res$summary$rho, .36976, tolerance=1e-4) # This one fails <----------------------------
   
+  # edm explore x, extraembed(u) allowmissing dt crossfold(5)
+  res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
+  #expect_equal(mean(res$summary$rho), .92512, tolerance=1e-4) # This one fails <----------------------------
+  
+  # edm explore d.x, dt
+  res <- edm(t, tsdiff(t, x), dt=TRUE)
+  #expect_equal(res$summary$rho, .89192, tolerance=1e-4)  # This one fails <----------------------------
+  
+  # edm explore x, rep(20) ci(95)
+  res <- edm(t, x, numReps=20)
+  #expect_equal(mean(res$summary$rho), 123, tolerance=1e-4)
+  #TODO: ci flag
+  
+  # edm xmap x y, lib(50) rep(20) ci(95)
+  res1 <- edm(t, x, y, library=50, numReps=20)
+  res2 <- edm(t, y, x, library=50, numReps=20)
+  #expect_equal(mean(res1$summary$rho), 123, tolerance=1e-4)
+  #expect_equal(mean(res2$summary$rho), 123, tolerance=1e-4)
+  #TODO: ci flag
   
   # Tests from the previous 'bigger-test.do' script
-  
   obs <- 100
   map <- logistic_map(obs)
   
@@ -227,14 +254,16 @@ test_that("ci-test", {
   t <- seq_along(x)
   
   # edm explore x, e(2) crossfold(2) k(-1) allowmissing
+  res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE)
+  expect_equal(mean(res$summary$rho), .98175, tolerance=1e-4)
   
   # edm explore x, e(2) crossfold(10) k(-1) allowmissing
+  res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE)
+  expect_equal(mean(res$summary$rho), .98325, tolerance=1e-4)
   
   # edm explore x, e(5) extra(d.y) full allowmissing
-  d.y <- c(NA, diff(y))
-  
-  # Test e-varying extra is the same as specifying the individual lagged extras
+  res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE)
+  expect_equal(res$summary$rho, .95266, tolerance=1e-4)
   
   # TODO
-  
 })
