@@ -53,13 +53,14 @@ void ManifoldGenerator::setup_observation_numbers()
     // In normal situations (non-dt)
     double unit = calculate_time_increment();
     double minT = *std::min_element(_t.begin(), _t.end());
+    // Note, missing values are huge (1e100 or so) so minT won't be affected by missing times.
 
     // Create a time index which is a discrete count of the number of 'unit' time units.
     for (int i = 0; i < _t.size(); i++) {
       if (_t[i] != MISSING_D) {
         _observation_number.push_back(std::round((_t[i] - minT) / unit));
       } else {
-        _observation_number.push_back(-1);
+        _observation_number.push_back(MISSING_I);
       }
     }
   } else {
@@ -70,7 +71,7 @@ void ManifoldGenerator::setup_observation_numbers()
         _observation_number.push_back(countUp);
         countUp += 1;
       } else {
-        _observation_number.push_back(-1);
+        _observation_number.push_back(MISSING_I);
       }
     }
   }
@@ -95,7 +96,7 @@ bool ManifoldGenerator::find_observation_num(int target, int& k, int direction, 
     }
 
     // Skip over garbage rows which don't have a time recorded.
-    if (_observation_number[k] < 0) {
+    if (_observation_number[k] == MISSING_I) {
       k += direction;
       continue;
     }
