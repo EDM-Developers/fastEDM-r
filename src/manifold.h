@@ -1,8 +1,11 @@
 #pragma once
 
-/* global variable placeholder for missing values */
+/* Placeholders for missing values */
+#include <limits> // std::numeric_limits
+
 const double MISSING_D = 1.0e+100;
 const float MISSING_F = 1.0e+30;
+constexpr int MISSING_I = std::numeric_limits<int>::min();
 
 #include <memory>
 #include <utility>

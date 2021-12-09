@@ -80,8 +80,15 @@ bool ManifoldGenerator::find_observation_num(int target, int& k, int direction, 
 {
   // Loop either forward or back until we find the right index or give up.
   while (k >= 0 && k < _observation_number.size()) {
-    // If in panel mode, make sure we don't wander over a panel boundary.
+
     if (_panel_mode) {
+      // Skip over garbage rows which don't have a panel id recorded.
+      if (_panelIDs[k] == MISSING_I) {
+        k += direction;
+        continue;
+      }
+
+      // If in panel mode, make sure we don't wander over a panel boundary.
       if (panel != _panelIDs[k]) {
         return false;
       }
@@ -334,6 +341,14 @@ std::vector<bool> ManifoldGenerator::generate_usable(int maxE, bool coprediction
   auto point = std::make_unique<double[]>(sizeOfPoint);
 
   for (int i = 0; i < _t.size(); i++) {
+    if (_t[i] == MISSING_D) {
+      usable[i] = false;
+      continue;
+    }
+    if (_panel_mode && _panelIDs[i] == MISSING_I) {
+      usable[i] = false;
+      continue;
+    }
     fill_in_point(i, maxE, copredictionMode, copredictionMode, USABLE_DTWEIGHT, point.get());
     usable[i] = is_usable(point.get(), sizeOfPoint, _allow_missing);
   }
