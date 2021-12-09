@@ -188,6 +188,7 @@ test_that("ci-test", {
   t <- df$t
   x <- df$x
   y <- df$y
+  u <- df$u
   
   # edm explore x
   res <- edm(t, x)

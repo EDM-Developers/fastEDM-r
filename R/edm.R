@@ -218,6 +218,14 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
     df["co_x"] <- copredict
   }
   
+  if (!is.null(extras)) {
+    for (extra in extras) {
+      if (length(extra) != length(x)) {
+        stop("An extra variable is not the right size")
+      }
+    }
+  }
+  
   if (numReps > 1) {
     shuffle = TRUE
   }
