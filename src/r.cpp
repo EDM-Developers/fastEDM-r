@@ -112,8 +112,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 {
   RConsoleIO io(verbosity);
 
-  io.print(fmt::format("Verbosity set to {}\n", verbosity));
-
   Options opts;
 
   opts.nthreads = numThreads;
@@ -147,25 +145,20 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   }
 
   opts.calcRhoMAE = true; // TODO: When is this off?
-
   opts.aspectRatio = 0;
   opts.distance = Distance::Euclidean;
   opts.metrics = {};
   opts.cmdLine = "";
-  opts.saveKUsed = true; // TODO: Check again
+  opts.saveKUsed = true;
 
   io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
   io.print(fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
-  io.print(fmt::format("k is {}\n", k));
 
   std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
   std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
 
   replace_nan(t);
   replace_nan(x);
-
-  // Rcout << "t is " << Rcpp::as<Rcpp::NumericVector>(df["t"]) << "\n";
-  // Rcout << "x is " << Rcpp::as<Rcpp::NumericVector>(df["x"]) << "\n";
 
   bool explore;
   std::vector<double> xmap;
@@ -177,8 +170,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     explore = true;
   }
 
-  io.print(fmt::format("explore mode is {}\n", explore));
-
   std::vector<int> panelIDs;
   if (df.containsElementNamed("id")) {
     panelIDs = Rcpp::as<std::vector<int>>(df["id"]);
@@ -186,8 +177,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   } else {
     opts.panelMode = false;
   }
-
-  io.print(fmt::format("panel data mode is {}\n", opts.panelMode));
 
   std::vector<double> co_x;
 
@@ -201,7 +190,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   if (extras.isNotNull()) {
     Rcpp::List extrasList = Rcpp::as<Rcpp::List>(extras);
 
-    io.print(fmt::format("Num extras is {}\n", extrasList.size()));
     for (int e = 0; e < extrasList.size(); e++) {
       extrasVecs.emplace_back(Rcpp::as<std::vector<double>>(extrasList[e]));
       replace_nan(extrasVecs[extrasVecs.size() - 1]);
@@ -209,30 +197,11 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     }
   }
 
-  // for (int e = 0; e < extrasVecs.size(); e++) {
-  //   io.print(fmt::format("Extra[{}] len {}: ", e, extrasVecs[e].size()));
-  //   for (int i = 0; i < extrasVecs[e].size(); i++) {
-  //     io.print(fmt::format("{} ", extrasVecs[e][i]));
-  //   }
-  //   io.print("\n");
-  // }
-
   int numExtrasLagged = 0;
 
   ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs,
                               numExtrasLagged, dt, reldt, allowMissing,
                               dtWeight);
-
-  // Manifold M_all = generator.create_manifold(maxE, {}, true);
-  //
-  // Rcout << "M_all size is (" << M_all.numPoints() << ", " << M_all.E_actual() << ")\n";
-  //
-  // for (int i = 0; i < M_all.numPoints(); i++) {
-  //   for (int j = 0; j < M_all.E_actual(); j++){
-  //     Rcout << M_all(i, j) << " ";
-  //   }
-  //   Rcout << "\n";
-  // }
 
   if (allowMissing && opts.missingdistance == 0) {
     opts.missingdistance = default_missing_distance(x);
@@ -252,17 +221,13 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   }
 
   bool copredictMode = co_x.size() > 0;
-  std::string rngState = ""; // taskGroup["rngState"];
-
+  std::string rngState = "";
 
 #ifdef JSON
   // If requested, save the inputs to a local file for testing
   if (!saveInputs.empty()) {
-    // if (io.verbosity
-    //   io.print(fmt::format("Saving inputs to '{}.json'\n", saveInputsFilename));
-    //   io.flush();
-    // }
-
+    // Fill in some uninitialised Option members just so we aren't saving
+    // noise to the JSON file (these will be overwritten inside edm.cpp).
     opts.numTasks = numReps * crossfold * Es.size() * (libraries.size() > 0 ? libraries.size() : 1);
     opts.aspectRatio = 1.0;
     opts.k = k;
