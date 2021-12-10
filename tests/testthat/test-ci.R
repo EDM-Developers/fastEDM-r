@@ -41,6 +41,11 @@ logistic_map <- function(obs) {
   return(list(x=x, y=y))
 }
 
+expect_approx_equal <- function (x, y) {
+  absErr = max(abs(x - y))
+  testthat::expect_true(absErr < 1e-4)
+}
+
 test_that("ci-test", {
   obs <- 500
   map <- logistic_map(obs)
@@ -55,35 +60,35 @@ test_that("ci-test", {
   # explore x, e(2/10)
   res <- edm(t, x, E=2:10)
   rho <- c(.99893, .99879, .99835, .99763, .99457, .99385, .991, .98972, .98572)
-  expect_equal(res$summary$rho, rho, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, rho)
   
   # edm xmap x y, k(5)
   res1 <- edm(t, x, y, k=5)
   res2 <- edm(t, y, x, k=5)
-  expect_equal(res1$summary$rho, .55861, tolerance=1e-4)
-  expect_equal(res2$summary$rho, .94454, tolerance=1e-4)
+  expect_approx_equal(res1$summary$rho, .55861)
+  expect_approx_equal(res2$summary$rho, .94454)
   
   # edm xmap x y, e(6) lib(8)
   res1 <- edm(t, x, y, E=6, library=8)
   res2 <- edm(t, y, x, E=6, library=8)
-  expect_equal(res1$summary$rho, .3362, tolerance=1e-4)
-  expect_equal(res2$summary$rho, .51116, tolerance=1e-4)
+  expect_approx_equal(res1$summary$rho, .3362)
+  expect_approx_equal(res2$summary$rho, .51116)
   
   # edm explore x, k(5) crossfold(10)
   res <- edm(t, x, k=5, crossfold=10)
-  expect_equal(mean(res$summary$rho), .99946, tolerance=1e-4)
+  expect_approx_equal(mean(res$summary$rho), .99946)
   
   # edm explore x, theta(0.2(0.1)2.0) algorithm(smap)
   res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap")
-  expect_equal(res$summary$rho[1], .99874, tolerance=1e-4)
-  expect_equal(res$summary$rho[length(res$summary$rho)], .99882, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho[1], .99874)
+  expect_approx_equal(res$summary$rho[length(res$summary$rho)], .99882)
   
   # edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)
   res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
   res2 <- edm(t, y, x, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
   beta1 <- res1$coeffs
-  expect_equal(res1$summary$rho, .66867, tolerance=1e-4)
-  expect_equal(res2$summary$rho, .98487, tolerance=1e-4)
+  expect_approx_equal(res1$summary$rho, .66867)
+  expect_approx_equal(res2$summary$rho, .98487)
   
   # assert beta1_b2_rep1 != . if _n > 1
   expect_equal(sum(is.na(beta1[1,])), ncol(beta1))
@@ -92,7 +97,7 @@ test_that("ci-test", {
   # edm xmap y x, predict(x2) direction(oneway)
   res <- edm(t, y, x, savePredictions=TRUE)
   x2 <- res$predictions
-  expect_equal(res$summary$rho, .94272, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .94272)
   
   # assert x2 != . if _n > 1
   expect_equal(is.na(x2[1]), TRUE)
@@ -101,27 +106,27 @@ test_that("ci-test", {
   # edm explore x, copredict(teste) copredictvar(y)
   res <- edm(t, x, copredict = y, saveCoPredictions=TRUE)
   teste <- res$copredictions
-  expect_equal(res$summary$rho, .9989, tolerance=1e-4)
-  expect_equal(res$co_summary$rho, .78002, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .9989)
+  expect_approx_equal(res$co_summary$rho, .78002)
   
   # assert teste != . if _n > 1
   expect_equal(is.na(teste[1]), TRUE)
   expect_equal(sum(is.na(tail(teste, -1))), 0)
   
   # edm explore z.x, p(10)
-  z.x <- (x - mean(x)) / sd(x)
+  z.x <- (x - mean(x)) / sd(x) # This is slightly different to Stata ('touse' perhaps)
   res <- edm(t, z.x, p=10)
-  expect_equal(res$summary$rho, .90235, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .90235)
   
   # edm xmap y x, p(10) direction(oneway)
   res <- edm(t, y, x, p=10)
-  expect_equal(res$summary$rho, .89554, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .89554)
   
   # edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)
   res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE)
   testx <- res$copredictions
-  expect_equal(res$summary$rho, .89554, tolerance=1e-4)
-  expect_equal(res$co_summary$rho, .67401, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .89554)
+  expect_approx_equal(res$co_summary$rho, .67401)
   
   # assert testx != . if _n >= 3
   expect_equal(sum(is.na(testx[1:2])), 2)
@@ -131,18 +136,18 @@ test_that("ci-test", {
   z.x2 <- (x2 - mean(x2, na.rm = TRUE)) / sd(x2, na.rm = TRUE)
   res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE)
   testx2 <- res$copredictions
-  expect_equal(res$summary$rho, .89554, tolerance=1e-4)
-  expect_equal(res$co_summary$rho, .93837, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .89554)
+  expect_approx_equal(res$co_summary$rho, .93837)
   
   # assert testx2 != . if _n >= 3
   expect_equal(sum(is.na(testx2[1:2])), 2)
   expect_equal(sum(is.na(tail(testx2, -2))), 0)
   
   # edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)
-  res <- edm(t, y, x, extras=list(u1), p=10,  copredict=z.x2, saveCoPredictions=TRUE)
+  res <- edm(t, y, x, extras=list(u1), p=10, copredict=z.x2, saveCoPredictions=TRUE)
   testx3 <- res$copredictions
-  expect_equal(res$summary$rho, .37011, tolerance=1e-4)
-  expect_equal(res$co_summary$rho, .9364, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .37011)
+  expect_approx_equal(res$co_summary$rho, .9364)
   
   # assert testx3 != . if _n >= 3
   expect_equal(sum(is.na(testx3[1:2])), 2)
@@ -152,27 +157,27 @@ test_that("ci-test", {
   
   # edm xmap l.x x, direction(oneway)
   resXmap <- edm(t, tslag(t, x), x)
-  expect_equal(resXmap$summary$rho, .99939, tolerance=1e-4)
+  expect_approx_equal(resXmap$summary$rho, .99939)
   
   # edm explore x, full
   resExplore <- edm(t, x, full=TRUE)
-  expect_equal(resExplore$summary$rho, .99939, tolerance=1e-4)
+  expect_approx_equal(resExplore$summary$rho, .99939)
   
   # assert xmap_r[1,1] == explore_r[1,1]
-  expect_equal(resXmap$summary["rho"], resExplore$summary["rho"])
+  expect_approx_equal(resXmap$summary["rho"], resExplore$summary["rho"])
   
   # Check xmap reverse consistency (not necessary to check in this version)
   res1 <- edm(t, x, y)
   res2 <- edm(t, y, x)
-  expect_equal(res1$summary$rho, .54213, tolerance=1e-4)
-  expect_equal(res2$summary$rho, .94272, tolerance=1e-4)
+  expect_approx_equal(res1$summary$rho, .54213)
+  expect_approx_equal(res2$summary$rho, .94272)
   
   # Make sure multiple e's and multiple theta's work together
   
   # edm explore x, e(2 3) theta(0 1)
   res <- edm(t, x, E=c(2, 3), theta=c(0, 1))
   rho <- c(.99863, .99895, .99734, .99872)
-  expect_equal(res$summary$rho, rho, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, rho)
   
   # Check that lowmemory flag is working
   # TODO
@@ -192,56 +197,56 @@ test_that("ci-test", {
   
   # edm explore x
   res <- edm(t, x)
-  expect_equal(res$summary$rho, .99814, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .99814)
   
   # edm explore x, dt savemanifold(plugin) dtweight(1)
   res <- edm(t, x, dt=TRUE, saveManifolds=TRUE, dtWeight=1)
-  expect_equal(res$summary$rho, .95569, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .95569)
   
   # edm explore x, allowmissing
   res <- edm(t, x, allowMissing=TRUE)
-  expect_equal(res$summary$rho, .99766, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .99766)
   
   # edm explore x, missingdistance(1)
   res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0)
-  expect_equal(res$summary$rho, .99765, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .99765)
   # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
   # or whether to follow Stata and just let the latter auto-enable the former...
   
   # edm xmap x l.x, allowmissing
   res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE)
   res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE)
-  expect_equal(res1$summary$rho, .99983, tolerance=1e-4)
-  expect_equal(res2$summary$rho, .99864, tolerance=1e-4)
+  expect_approx_equal(res1$summary$rho, .99983)
+  expect_approx_equal(res2$summary$rho, .99864)
   
   # edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)
-  res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", E=5)
-  res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", E=5)
-  expect_equal(res1$summary$rho, 1.0, tolerance=1e-4) 
-  expect_equal(res2$summary$rho, .77523, tolerance=1e-4)
+  res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
+  res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
+  expect_approx_equal(res1$summary$rho, 1.0) 
+  expect_approx_equal(res2$summary$rho, .77523)
 
   # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
-  res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", E=5)
-  expect_equal(res$summary$rho, .36976, tolerance=1e-3) # This one is a little different to Stata <--------
+  res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
+  expect_approx_equal(res$summary$rho, .36976)
   
   # edm explore x, extraembed(u) allowmissing dt crossfold(5)
   res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
-  expect_equal(mean(res$summary$rho), .92512, tolerance=1e-4)
+  expect_approx_equal(mean(res$summary$rho), .92512)
   
   # edm explore d.x, dt
   res <- edm(t, tsdiff(t, x), dt=TRUE)
-  expect_equal(res$summary$rho, .89192, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .89192)
   
   # edm explore x, rep(20) ci(95)
   res <- edm(t, x, numReps=20)
-  #expect_equal(mean(res$summary$rho), 123, tolerance=1e-4)
+  #expect_approx_equal(mean(res$summary$rho), 123)
   #TODO: ci flag
   
   # edm xmap x y, lib(50) rep(20) ci(95)
   res1 <- edm(t, x, y, library=50, numReps=20)
   res2 <- edm(t, y, x, library=50, numReps=20)
-  #expect_equal(mean(res1$summary$rho), 123, tolerance=1e-4)
-  #expect_equal(mean(res2$summary$rho), 123, tolerance=1e-4)
+  #expect_approx_equal(mean(res1$summary$rho), 123)
+  #expect_approx_equal(mean(res2$summary$rho), 123)
   #TODO: ci flag
   
   # Tests from the previous 'bigger-test.do' script
@@ -254,15 +259,15 @@ test_that("ci-test", {
   
   # edm explore x, e(2) crossfold(2) k(-1) allowmissing
   res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE)
-  expect_equal(mean(res$summary$rho), .98175, tolerance=1e-4)
+  expect_approx_equal(mean(res$summary$rho), .98175)
   
   # edm explore x, e(2) crossfold(10) k(-1) allowmissing
   res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE)
-  expect_equal(mean(res$summary$rho), .98325, tolerance=1e-4)
+  expect_approx_equal(mean(res$summary$rho), .98325)
   
   # edm explore x, e(5) extra(d.y) full allowmissing
   res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE)
-  expect_equal(res$summary$rho, .95266, tolerance=1e-4)
+  expect_approx_equal(res$summary$rho, .95266)
   
   # TODO
 })
