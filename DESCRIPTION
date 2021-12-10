@@ -9,8 +9,12 @@ Description: The fastEDM package implements a series of tools that can be
  used for empirical dynamic modeling. The core algorithm is written in C++
  to achieve a reasonable execution speed. 
 License: MIT + file LICENSE
-Imports: Rcpp (>= 1.0.7), RcppEigen
-LinkingTo: Rcpp, RcppEigen
+Imports:
+    Rcpp (>= 1.0.7),
+    RcppEigen,
+    RcppJson
+LinkingTo: Rcpp, RcppEigen, RcppJson
+Remotes: nfultz/RcppJson
 RoxygenNote: 7.1.2
 Encoding: UTF-8
 Suggests: 

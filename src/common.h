@@ -181,17 +181,14 @@ private:
 
 #ifdef JSON
 
-// Store these enum classes to JSON as strings
-NLOHMANN_JSON_SERIALIZE_ENUM(Algorithm, { { Algorithm::Simplex, "Simplex" }, { Algorithm::SMap, "SMap" } })
+void to_json(json& j, const Algorithm& a);
+void from_json(const json& j, Algorithm& a);
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Distance, { { Distance::MeanAbsoluteError, "MeanAbsoluteError" },
-                                         { Distance::Euclidean, "Euclidean" },
-                                         { Distance::Wasserstein, "Wasserstein" } })
+void to_json(json& j, const Distance& d);
+void from_json(const json& j, Distance& d);
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Metric, {
-                                       { Metric::Diff, "Diff" },
-                                       { Metric::CheckSame, "CheckSame" },
-                                     })
+void to_json(json& j, const Metric& m);
+void from_json(const json& j, Metric& m);
 
 void to_json(json& j, const Options& o);
 void from_json(const json& j, Options& o);

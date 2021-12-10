@@ -2,6 +2,63 @@
 
 #ifdef JSON
 
+void to_json(json& j, const Algorithm& a)
+{
+  if (a == Algorithm::Simplex) {
+    j = "Simplex";
+  } else {
+    j = "SMap";
+  }
+}
+void from_json(const json& j, Algorithm& a)
+{
+  if (j == "Simplex") {
+    a = Algorithm::Simplex;
+  } else {
+    a = Algorithm::SMap;
+  }
+}
+
+void to_json(json& j, const Distance& d)
+{
+  if (d == Distance::MeanAbsoluteError) {
+    j = "MeanAbsoluteError";
+  } else if (d == Distance::Euclidean) {
+    j = "Euclidean";
+  } else {
+    j = "Wasserstein";
+  }
+}
+
+void from_json(const json& j, Distance& d)
+{
+  if (j == "MeanAbsoluteError") {
+    d = Distance::MeanAbsoluteError;
+  } else if (j == "Euclidean") {
+    d = Distance::Euclidean;
+  } else {
+    d = Distance::Wasserstein;
+  }
+}
+
+void to_json(json& j, const Metric& m)
+{
+  if (m == Metric::Diff) {
+    j = "Diff";
+  } else {
+    j = "CheckSame";
+  }
+}
+
+void from_json(const json& j, Metric& m)
+{
+  if (j == "Diff") {
+    m = Metric::Diff;
+  } else {
+    m = Metric::CheckSame;
+  }
+}
+
 void to_json(json& j, const Options& o)
 {
   j = json{ { "copredict", o.copredict },

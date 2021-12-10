@@ -3,6 +3,7 @@
 
 // [[Rcpp::plugins(cpp17)]]
 // [[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::depends(RcppJson)]]
 
 #include <Rcpp.h>
 #include <RcppEigen.h>
@@ -15,6 +16,29 @@
 #include "cpu.h"
 #include "edm.h"
 #include "stats.h"
+
+std::vector<int> bool_to_int(std::vector<bool> bv)
+{
+  std::vector<int> iv;
+  std::copy(bv.begin(), bv.end(), std::back_inserter(iv));
+  return iv;
+}
+
+void append_to_dumpfile(std::string fName, const json& taskGroup)
+{
+  json allTaskGroups;
+
+  std::ifstream i(fName);
+  if (i.is_open()) {
+    i >> allTaskGroups;
+  }
+
+  allTaskGroups.push_back(taskGroup);
+
+  // Add "o << std::setw(4) << allTaskGroups" to pretty-print the saved JSON
+  std::ofstream o(fName);
+  o << allTaskGroups << std::endl;
+}
 
 class RConsoleIO : public IO
 {
@@ -233,6 +257,42 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   std::string rngState = ""; // taskGroup["rngState"];
 
   // opts.numTasks = numReps * crossfold * libraries.size() * Es.size();
+
+#ifdef JSON
+  // If requested, save the inputs to a local file for testing
+  std::string saveInputsFilename = "ci-test";
+  if (!saveInputsFilename.empty()) {
+    // if (io.verbosity
+    //   io.print(fmt::format("Saving inputs to '{}.json'\n", saveInputsFilename));
+    //   io.flush();
+    // }
+    //
+    json taskGroup;
+    taskGroup["generator"] = generator;
+    taskGroup["opts"] = opts;
+    taskGroup["Es"] = Es;
+    taskGroup["libraries"] = libraries;
+    taskGroup["k"] = k;
+    taskGroup["numReps"] = numReps;
+    taskGroup["crossfold"] = crossfold;
+    taskGroup["explore"] = explore;
+    taskGroup["full"] = full;
+    taskGroup["shuffle"] = shuffle;
+    taskGroup["saveFinalPredictions"] = saveFinalPredictions;
+    taskGroup["saveFinalCoPredictions"] = saveFinalCoPredictions;
+    taskGroup["saveSMAPCoeffs"] = saveSMAPCoeffs;
+    taskGroup["copredictMode"] = copredictMode;
+    taskGroup["usable"] = bool_to_int(usable);
+    taskGroup["rngState"] = rngState;
+
+    append_to_dumpfile(saveInputsFilename + ".json", taskGroup);
+
+    // If we just want to save the input file and not actually run the command,
+    // then uncomment the following two lines to end early.
+    // SF_scal_save(FINISHED_SCALAR, 1.0);
+    // return SUCCESS; // Let Stata give the error here.
+  }
+#endif
 
   io.print("Starting the command!\n");
   io.flush();
