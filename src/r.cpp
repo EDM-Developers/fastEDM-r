@@ -120,8 +120,6 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   opts.forceCompute = true;
   opts.saveManifolds = saveManifolds;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
-
-  opts.k = k;
   opts.missingdistance = missingDistance;
 
   opts.panelMode = false;
@@ -175,7 +173,6 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
     replace_nan(xmap);
     explore = false;
   } else {
-    xmap = x;
     explore = true;
   }
 
@@ -249,14 +246,13 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
     return "";
   }
 
-  if (libraries.size() == 0) {
+  if (!explore && libraries.size() == 0) {
     libraries = { numUsable };
   }
 
   bool copredictMode = co_x.size() > 0;
   std::string rngState = ""; // taskGroup["rngState"];
 
-  // opts.numTasks = numReps * crossfold * libraries.size() * Es.size();
 
 #ifdef JSON
   // If requested, save the inputs to a local file for testing
@@ -266,7 +262,11 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
     //   io.print(fmt::format("Saving inputs to '{}.json'\n", saveInputsFilename));
     //   io.flush();
     // }
-    //
+
+    opts.numTasks = numReps * crossfold * Es.size() * (libraries.size() > 0 ? libraries.size() : 1);
+    opts.aspectRatio = 1.0;
+    opts.k = k;
+
     json taskGroup;
     taskGroup["generator"] = generator;
     taskGroup["opts"] = opts;
