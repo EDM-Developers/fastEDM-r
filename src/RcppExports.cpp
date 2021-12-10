@@ -12,16 +12,16 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // run_command
-List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, Nullable<IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveManifolds, bool saveSMAPCoeffs, bool dt, bool reldt, double dtWeight, Nullable<List> extras, bool allowMissing, double missingDistance, int numThreads, int verbosity);
+Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas, Rcpp::Nullable<Rcpp::IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveManifolds, bool saveSMAPCoeffs, bool dt, bool reldt, double dtWeight, Rcpp::Nullable<Rcpp::List> extras, bool allowMissing, double missingDistance, int numThreads, int verbosity);
 RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveFinalCoPredictionsSEXP, SEXP saveManifoldsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP reldtSEXP, SEXP dtWeightSEXP, SEXP extrasSEXP, SEXP allowMissingSEXP, SEXP missingDistanceSEXP, SEXP numThreadsSEXP, SEXP verbositySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type es(esSEXP);
+    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type es(esSEXP);
     Rcpp::traits::input_parameter< int >::type tau(tauSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type thetas(thetasSEXP);
-    Rcpp::traits::input_parameter< Nullable<IntegerVector> >::type libs(libsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type thetas(thetasSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::IntegerVector> >::type libs(libsSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
     Rcpp::traits::input_parameter< std::string >::type algorithm(algorithmSEXP);
     Rcpp::traits::input_parameter< int >::type numReps(numRepsSEXP);
@@ -36,7 +36,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type dt(dtSEXP);
     Rcpp::traits::input_parameter< bool >::type reldt(reldtSEXP);
     Rcpp::traits::input_parameter< double >::type dtWeight(dtWeightSEXP);
-    Rcpp::traits::input_parameter< Nullable<List> >::type extras(extrasSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::List> >::type extras(extrasSEXP);
     Rcpp::traits::input_parameter< bool >::type allowMissing(allowMissingSEXP);
     Rcpp::traits::input_parameter< double >::type missingDistance(missingDistanceSEXP);
     Rcpp::traits::input_parameter< int >::type numThreads(numThreadsSEXP);

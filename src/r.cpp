@@ -5,8 +5,6 @@
 // [[Rcpp::depends(RcppEigen)]]
 
 #include <Rcpp.h>
-using namespace Rcpp;
-
 #include <RcppEigen.h>
 
 #ifndef FMT_HEADER_ONLY
@@ -14,8 +12,8 @@ using namespace Rcpp;
 #endif
 #include <fmt/format.h>
 
-#include "edm.h"
 #include "cpu.h"
+#include "edm.h"
 #include "stats.h"
 
 class RConsoleIO : public IO
@@ -45,9 +43,7 @@ void replace_nan(std::vector<double>& v)
   }
 }
 
-Rcpp::NumericMatrix to_R_matrix(const double* v, int r, int c,
-                                std::vector<bool> filter = {},
-                                bool rowMajor = false)
+Rcpp::NumericMatrix to_R_matrix(const double* v, int r, int c, std::vector<bool> filter = {}, bool rowMajor = false)
 {
   Rcpp::NumericMatrix mat(r, c);
 
@@ -103,7 +99,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
   opts.k = k;
   opts.missingdistance = missingDistance;
-  
+
   opts.panelMode = false;
   opts.idw = 0;
 
@@ -145,8 +141,8 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   replace_nan(t);
   replace_nan(x);
 
-  // Rcout << "t is " << Rcpp::as<NumericVector>(df["t"]) << "\n";
-  // Rcout << "x is " << Rcpp::as<NumericVector>(df["x"]) << "\n";
+  // Rcout << "t is " << Rcpp::as<Rcpp::NumericVector>(df["t"]) << "\n";
+  // Rcout << "x is " << Rcpp::as<Rcpp::NumericVector>(df["x"]) << "\n";
 
   bool explore;
   std::vector<double> xmap;
@@ -181,7 +177,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
   std::vector<std::vector<double>> extrasVecs;
 
   if (extras.isNotNull()) {
-    List extrasList = Rcpp::as<List>(extras);
+    Rcpp::List extrasList = Rcpp::as<Rcpp::List>(extras);
 
     io.print(fmt::format("Num extras is {}\n", extrasList.size()));
     for (int e = 0; e < extrasList.size(); e++) {
@@ -257,16 +253,16 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
   int kMin, kMax;
 
-  NumericMatrix predictions, coPredictions, coeffs;
-  DataFrame summary, co_summary;
-  std::vector<NumericMatrix> Ms, Mps;
+  Rcpp::NumericMatrix predictions, coPredictions, coeffs;
+  Rcpp::DataFrame summary, co_summary;
+  std::vector<Rcpp::NumericMatrix> Ms, Mps;
 
   {
-    IntegerVector Es, libraries;
-    NumericVector thetas, rhos, maes;
+    Rcpp::IntegerVector Es, libraries;
+    Rcpp::NumericVector thetas, rhos, maes;
 
-    IntegerVector co_Es, co_libraries;
-    NumericVector co_thetas, co_rhos, co_maes;
+    Rcpp::IntegerVector co_Es, co_libraries;
+    Rcpp::NumericVector co_thetas, co_rhos, co_maes;
 
     auto Rint = [](double v) { return (v != MISSING_D) ? v : NA_INTEGER; };
     auto Rdouble = [](double v) { return (v != MISSING_D) ? v : NA_REAL; };
@@ -309,74 +305,70 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
       if (pred.predictions != nullptr) {
         if (!pred.copredict) {
-          predictions = to_R_matrix(pred.predictions.get(),
-                                    pred.predictionRows.size(),
-                                    pred.numThetas,
-                                    pred.predictionRows);
+          predictions =
+            to_R_matrix(pred.predictions.get(), pred.predictionRows.size(), pred.numThetas, pred.predictionRows);
         } else {
-          coPredictions = to_R_matrix(pred.predictions.get(),
-                                      pred.predictionRows.size(),
-                                      pred.numThetas,
-                                      pred.predictionRows);
+          coPredictions =
+            to_R_matrix(pred.predictions.get(), pred.predictionRows.size(), pred.numThetas, pred.predictionRows);
         }
       }
       if (pred.coeffs != nullptr) {
-        coeffs = to_R_matrix(pred.coeffs.get(), pred.predictionRows.size(),
-                             pred.numCoeffCols, pred.predictionRows);
+        coeffs = to_R_matrix(pred.coeffs.get(), pred.predictionRows.size(), pred.numCoeffCols, pred.predictionRows);
       }
-      
+
       if (saveManifolds) {
         Ms.push_back(to_R_matrix(pred.M->data(), pred.M->numPoints(), pred.M->E_actual(), {}, true));
         Mps.push_back(to_R_matrix(pred.Mp->data(), pred.Mp->numPoints(), pred.Mp->E_actual(), {}, true));
       }
     }
 
-    summary = Rcpp::DataFrame::create(_["E"] = Es, _["library"] = libraries, _["theta"] = thetas, _["rho"] = rhos,
-                                      _["mae"] = maes);
+    summary = Rcpp::DataFrame::create(Rcpp::_["E"] = Es, Rcpp::_["library"] = libraries, Rcpp::_["theta"] = thetas,
+                                      Rcpp::_["rho"] = rhos, Rcpp::_["mae"] = maes);
 
     if (copredictMode) {
-      co_summary = Rcpp::DataFrame::create(_["E"] = co_Es, _["library"] = co_libraries, _["theta"] = co_thetas,
-                                           _["rho"] = co_rhos, _["mae"] = co_maes);
+      co_summary =
+        Rcpp::DataFrame::create(Rcpp::_["E"] = co_Es, Rcpp::_["library"] = co_libraries, Rcpp::_["theta"] = co_thetas,
+                                Rcpp::_["rho"] = co_rhos, Rcpp::_["mae"] = co_maes);
     }
   }
 
   io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
   io.print(fmt::format("Return code is {}\n", rc));
 
-  List res;
+  Rcpp::List res;
   res["summary"] = summary;
   res["rc"] = rc;
   res["kMin"] = kMin;
   res["kMax"] = kMax;
-  
+
   if (copredictMode) {
     res["co_summary"] = co_summary;
   }
-  
+
   if (saveFinalPredictions) {
     res["predictions"] = predictions;
   }
-  
+
   if (saveFinalCoPredictions) {
     res["copredictions"] = coPredictions;
   }
-  
+
   if (saveManifolds) {
     res["Ms"] = Ms;
     res["Mps"] = Mps;
   }
-  
+
   if (saveSMAPCoeffs) {
     res["coeffs"] = coeffs;
   }
-  
+
   if (allowMissing) {
     res["missingdistance"] = opts.missingdistance;
   }
-  
+
   if (dt || reldt) {
     res["dtWeight"] = generator.dtWeight();
   }
-  
+
   return res;
 }
