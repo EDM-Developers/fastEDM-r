@@ -6,8 +6,7 @@ src/*.o
 src/*.so
 src/*.dll
 
-tests/*.json
-tests/*.log
+tests/testthat*.json
 junk/
 build
 bin

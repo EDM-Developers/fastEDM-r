@@ -31,7 +31,8 @@ edm(
   dtWeight = 0,
   numReps = 1,
   verbosity = 0,
-  numThreads = 1
+  numThreads = 1,
+  saveInputs = ""
 )
 }
 \arguments{
@@ -173,6 +174,9 @@ inference using confidence intervals in EDM (Tsonis et al., 2015; van Nes et al.
 \item{verbosity}{The level of detail in the output.}
 
 \item{numThreads}{The number of threads to use for the prediction task.}
+
+\item{saveInputs}{Save (append) all the inputs into a JSON file. This is 
+added purely for our (the developers') ease of debugging.}
 }
 \value{
 A list

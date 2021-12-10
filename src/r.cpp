@@ -102,12 +102,13 @@ Rcpp::NumericMatrix to_R_matrix(const double* v, int r, int c, std::vector<bool>
 }
 
 // [[Rcpp::export]]
-List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, Nullable<IntegerVector> libs, int k = 0,
-                 std::string algorithm = "simplex", int numReps = 1, int p = 1, int crossfold = 0, bool full = false,
-                 bool shuffle = false, bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
-                 bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
-                 double dtWeight = 0.0, Nullable<List> extras = R_NilValue, bool allowMissing = false,
-                 double missingDistance = 0.0, int numThreads = 1, int verbosity = 1)
+Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas,
+                       Rcpp::Nullable<Rcpp::IntegerVector> libs, int k = 0, std::string algorithm = "simplex",
+                       int numReps = 1, int p = 1, int crossfold = 0, bool full = false, bool shuffle = false,
+                       bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
+                       bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
+                       double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
+                       double missingDistance = 0.0, int numThreads = 1, int verbosity = 1, std::string saveInputs = "")
 {
   RConsoleIO io(verbosity);
 
@@ -256,8 +257,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
 
 #ifdef JSON
   // If requested, save the inputs to a local file for testing
-  std::string saveInputsFilename = "ci-test";
-  if (!saveInputsFilename.empty()) {
+  if (!saveInputs.empty()) {
     // if (io.verbosity
     //   io.print(fmt::format("Saving inputs to '{}.json'\n", saveInputsFilename));
     //   io.flush();
@@ -285,7 +285,7 @@ List run_command(DataFrame df, IntegerVector es, int tau, NumericVector thetas, 
     taskGroup["usable"] = bool_to_int(usable);
     taskGroup["rngState"] = rngState;
 
-    append_to_dumpfile(saveInputsFilename + ".json", taskGroup);
+    append_to_dumpfile(saveInputs, taskGroup);
 
     // If we just want to save the input file and not actually run the command,
     // then uncomment the following two lines to end early.

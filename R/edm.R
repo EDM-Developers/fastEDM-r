@@ -185,7 +185,11 @@
 # of results or finding percentile-based with the pctile command.
 #' 
 #' @param verbosity The level of detail in the output.
+#' 
 #' @param numThreads The number of threads to use for the prediction task.
+#' 
+#' @param saveInputs Save (append) all the inputs into a JSON file. This is 
+#' added purely for our (the developers') ease of debugging.
 #'
 #' @return A list
 #' @export
@@ -198,10 +202,10 @@
 edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                 algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
                 shuffle=FALSE, copredict = c(), savePredictions=FALSE,
-                saveCoPredictions=FALSE, saveManifolds=FALSE, saveSMAPCoeffs=FALSE,
-                extras=NULL, allowMissing=FALSE, missingDistance=0.0,
-                dt=FALSE, reldt=FALSE, dtWeight=0.0, # saveDT=FALSE,
-                numReps=1, verbosity=0, numThreads=1) { #}, saveInputs="") {
+                saveCoPredictions=FALSE, saveManifolds=FALSE,
+                saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
+                missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
+                numReps=1, verbosity=0, numThreads=1, saveInputs="") {
   
   if (length(y) > 0) {
     df <- data.frame(t = t, x = x, y = y)
@@ -244,7 +248,8 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                      extras=extras,  allowMissing=allowMissing,
                      missingDistance=missingDistance,
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
-                     numThreads=numThreads, verbosity=verbosity)
+                     numThreads=numThreads, verbosity=verbosity,
+                     saveInputs=saveInputs)
   
   return(res)
 }
