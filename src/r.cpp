@@ -108,7 +108,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
-                       double missingDistance = 0.0, int numThreads = 1, int verbosity = 1, std::string saveInputs = "")
+                       double missingDistance = 0.0, int numThreads = 1, double panelWeight = 0.0, int verbosity = 1, std::string saveInputs = "")
 {
   RConsoleIO io(verbosity);
 
@@ -120,9 +120,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   opts.saveManifolds = saveManifolds;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
   opts.missingdistance = missingDistance;
-
-  opts.panelMode = false;
-  opts.idw = 0;
 
   if (thetas.size() > 0) {
     opts.thetas = Rcpp::as<std::vector<double>>(thetas);
@@ -169,10 +166,12 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   } else {
     explore = true;
   }
-
+  
+  opts.idw = panelWeight;
+  
   std::vector<int> panelIDs;
-  if (df.containsElementNamed("id")) {
-    panelIDs = Rcpp::as<std::vector<int>>(df["id"]);
+  if (df.containsElementNamed("panel")) {
+    panelIDs = Rcpp::as<std::vector<int>>(df["panel"]);
     opts.panelMode = true;
   } else {
     opts.panelMode = false;

@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // run_command
-Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas, Rcpp::Nullable<Rcpp::IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveManifolds, bool saveSMAPCoeffs, bool dt, bool reldt, double dtWeight, Rcpp::Nullable<Rcpp::List> extras, bool allowMissing, double missingDistance, int numThreads, int verbosity, std::string saveInputs);
-RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveFinalCoPredictionsSEXP, SEXP saveManifoldsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP reldtSEXP, SEXP dtWeightSEXP, SEXP extrasSEXP, SEXP allowMissingSEXP, SEXP missingDistanceSEXP, SEXP numThreadsSEXP, SEXP verbositySEXP, SEXP saveInputsSEXP) {
+Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas, Rcpp::Nullable<Rcpp::IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveManifolds, bool saveSMAPCoeffs, bool dt, bool reldt, double dtWeight, Rcpp::Nullable<Rcpp::List> extras, bool allowMissing, double missingDistance, int numThreads, double panelWeight, int verbosity, std::string saveInputs);
+RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveFinalCoPredictionsSEXP, SEXP saveManifoldsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP reldtSEXP, SEXP dtWeightSEXP, SEXP extrasSEXP, SEXP allowMissingSEXP, SEXP missingDistanceSEXP, SEXP numThreadsSEXP, SEXP panelWeightSEXP, SEXP verbositySEXP, SEXP saveInputsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,15 +40,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type allowMissing(allowMissingSEXP);
     Rcpp::traits::input_parameter< double >::type missingDistance(missingDistanceSEXP);
     Rcpp::traits::input_parameter< int >::type numThreads(numThreadsSEXP);
+    Rcpp::traits::input_parameter< double >::type panelWeight(panelWeightSEXP);
     Rcpp::traits::input_parameter< int >::type verbosity(verbositySEXP);
     Rcpp::traits::input_parameter< std::string >::type saveInputs(saveInputsSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveFinalCoPredictions, saveManifolds, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, numThreads, verbosity, saveInputs));
+    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveFinalCoPredictions, saveManifolds, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, numThreads, panelWeight, verbosity, saveInputs));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 25},
+    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 26},
     {NULL, NULL, 0}
 };
 

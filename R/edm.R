@@ -6,6 +6,9 @@
 #' 
 #' @param y The second variable in the causal analysis
 #' 
+#' @param panel If the data is panel data, then this variable specifies the
+#' panel ID of each observation.
+#' 
 #' @param E This option specifies the number of dimensions \eqn{E} used for the
 #' main variable in the manifold reconstruction. If a list of numbers is provided, the command will
 #' compute results for all numbers specified. The xmap subcommand only supports a single integer as the
@@ -184,6 +187,14 @@
 # all estimates for post-processing using typical Stata commands such as svmat, allowing the graphing
 # of results or finding percentile-based with the pctile command.
 #' 
+#' @param panelWeight This specifies a penalty that is added to the distances between points in the
+#' manifold which correspond to observations from different panels. By default \code{panelWeight} is 0,
+#' so the data from all panels is mixed together and treatly equally. If \code{panelWeight=1} is set
+#' (or any other negative value), then the weight is treated as \eqn{\infty} so neighbours will never
+#' be selected which cross the boundaries between panels. Setting \code{panelWeight=1} with
+#' \code{k=1} means we may use a different number of neighbors for different predictions (i.e.
+#' if the panels are unbalanced).
+#' 
 #' @param verbosity The level of detail in the output.
 #' 
 #' @param numThreads The number of threads to use for the prediction task.
@@ -199,27 +210,39 @@
 #'  x <- c(11, 12, 13, 14, 15, 16, 17, 18)
 #'  res <- edm(t, x)
 #'  print(res$summary)
-edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
+edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                 algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
                 shuffle=FALSE, copredict = c(), savePredictions=FALSE,
                 saveCoPredictions=FALSE, saveManifolds=FALSE,
                 saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
                 missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
-                numReps=1, verbosity=0, numThreads=1, saveInputs="") {
+                numReps=1, panelWeight=0, verbosity=0, numThreads=1,
+                saveInputs="") {
+  
+  if (length(t) != length(x)) {
+    stop("The time and x variables should be the same length")
+  }
+  
+  df <- data.frame(t = t, x = x)
+  colnames(df) <- c("t", "x")
   
   if (length(y) > 0) {
-    df <- data.frame(t = t, x = x, y = y)
-    colnames(df) <- c("t", "x", "y")
-    explore <- FALSE
-  } else {
-    df <- data.frame(t = t, x = x)
-    colnames(df) <- c("t", "x")
-    explore <- TRUE
+    if (length(t) != length(y)) {
+      stop("The y variable is the wrong length")
+    }
+    df["y"] <- y
+  }
+  
+  if (length(panel) > 0) {
+    if (length(t) != length(panel)) {
+      stop("The panel id variable is the wrong length")
+    }
+    df["panel"] <- panel
   }
   
   if (length(copredict) > 0) {
-    if (length(copredict) != length(x)) {
-      stop("Coprediction vector is not the right size")
+    if (length(t) != length(copredict)) {
+      stop("Coprediction vector is the wrong length")
     }
     df["co_x"] <- copredict
   }
@@ -236,6 +259,7 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
     shuffle = TRUE
   }
   
+  explore <- length(y) == 0
   p <- if (!is.null(p)) { p } else { explore }
   
   res <- run_command(df, E, tau, theta, library,
@@ -248,8 +272,8 @@ edm <- function(t, x, y = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                      extras=extras,  allowMissing=allowMissing,
                      missingDistance=missingDistance,
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
-                     numThreads=numThreads, verbosity=verbosity,
-                     saveInputs=saveInputs)
+                     numThreads=numThreads, panelWeight=panelWeight,
+                     verbosity=verbosity, saveInputs=saveInputs)
   
   return(res)
 }

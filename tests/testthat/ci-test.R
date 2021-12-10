@@ -61,37 +61,37 @@ u1 <- c(-1.027216, 1.527376, .5907618, 1.070512, 2.139774, -.5876155, .1418234, 
 t <- 299 + seq_along(x)
 
 # explore x, e(2/10)
-cat("Command: explore x, e(2/10)\n\n")
+cat("\n\nCommand: explore x, e(2/10)\n\n")
 res <- edm(t, x, E=2:10, saveInputs=SAVE_INPUTS)
 print(res$summary)
 rho <- c(.99893, .99879, .99835, .99763, .99457, .99385, .991, .98972, .98572)
 
 # edm xmap x y, k(5)
-cat("Command: edm xmap x y, k(5)\n\n")
+cat("\n\nCommand: edm xmap x y, k(5)\n\n")
 res1 <- edm(t, x, y, k=5, saveInputs=SAVE_INPUTS)
 res2 <- edm(t, y, x, k=5, saveInputs=SAVE_INPUTS)
 print(res1$summary)
 print(res2$summary)
 
 # edm xmap x y, e(6) lib(8)
-cat("Command: edm xmap x y, e(6) lib(8)\n\n")
+cat("\n\nCommand: edm xmap x y, e(6) lib(8)\n\n")
 res1 <- edm(t, x, y, E=6, library=8, saveInputs=SAVE_INPUTS)
 res2 <- edm(t, y, x, E=6, library=8, saveInputs=SAVE_INPUTS)
 print(res1$summary)
 print(res2$summary)
 
 # edm explore x, k(5) crossfold(10)
-cat("Command: edm explore x, k(5) crossfold(10)\n\n")
+cat("\n\nCommand: edm explore x, k(5) crossfold(10)\n\n")
 res <- edm(t, x, k=5, crossfold=10, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm explore x, theta(0.2(0.1)2.0) algorithm(smap)
-cat("Command: edm explore x, theta(0.2(0.1)2.0) algorithm(smap)\n\n")
+cat("\n\nCommand: edm explore x, theta(0.2(0.1)2.0) algorithm(smap)\n\n")
 res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap", saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)
-cat("Command: edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)\n\n")
+cat("\n\nCommand: edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)\n\n")
 res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE, saveInputs=SAVE_INPUTS)
 res2 <- edm(t, y, x, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE, saveInputs=SAVE_INPUTS)
 beta1 <- res1$coeffs
@@ -101,7 +101,7 @@ print(res2$summary)
 # assert beta1_b2_rep1 != . if _n > 1
 
 # edm xmap y x, predict(x2) direction(oneway)
-cat("Command: edm xmap y x, predict(x2) direction(oneway)\n\n")
+cat("\n\nCommand: edm xmap y x, predict(x2) direction(oneway)\n\n")
 res <- edm(t, y, x, savePredictions=TRUE, saveInputs=SAVE_INPUTS)
 x2 <- res$predictions
 print(res$summary)
@@ -109,7 +109,7 @@ print(res$summary)
 # assert x2 != . if _n > 1
 
 # edm explore x, copredict(teste) copredictvar(y)
-cat("Command: edm explore x, copredict(teste) copredictvar(y)\n\n")
+cat("\n\nCommand: edm explore x, copredict(teste) copredictvar(y)\n\n")
 res <- edm(t, x, copredict = y, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
 teste <- res$copredictions
 print(res$summary)
@@ -118,18 +118,18 @@ print(res$co_summary)
 # assert teste != . if _n > 1
 
 # edm explore z.x, p(10)
-cat("Command: edm explore z.x, p(10)\n\n")
+cat("\n\nCommand: edm explore z.x, p(10)\n\n")
 z.x <- (x - mean(x)) / sd(x)
 res <- edm(t, z.x, p=10, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm xmap y x, p(10) direction(oneway)
-cat("Command: edm xmap y x, p(10) direction(oneway)\n\n")
+cat("\n\nCommand: edm xmap y x, p(10) direction(oneway)\n\n")
 res <- edm(t, y, x, p=10, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)
-cat("Command: edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)\n\n")
+cat("\n\nCommand: edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)\n\n")
 res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
 testx <- res$copredictions
 print(res$summary)
@@ -137,7 +137,7 @@ print(res$summary)
 # assert testx != . if _n >= 3
 
 # edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)
-cat("Command: edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)\n\n")
+cat("\n\nCommand: edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)\n\n")
 z.x2 <- (x2 - mean(x2, na.rm = TRUE)) / sd(x2, na.rm = TRUE)
 res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
 testx2 <- res$copredictions
@@ -146,7 +146,7 @@ print(res$summary)
 # assert testx2 != . if _n >= 3
 
 # edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)
-cat("Command: edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)\n\n")
+cat("\n\nCommand: edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)\n\n")
 res <- edm(t, y, x, extras=list(u1), p=10,  copredict=z.x2, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
 testx3 <- res$copredictions
 print(res$summary)
@@ -156,12 +156,12 @@ print(res$summary)
 # Check explore / xmap consistency
 
 # edm xmap l.x x, direction(oneway)
-cat("Command: edm xmap l.x x, direction(oneway)\n\n")
+cat("\n\nCommand: edm xmap l.x x, direction(oneway)\n\n")
 resXmap <- edm(t, tslag(t, x), x, saveInputs=SAVE_INPUTS)
 print(resXmap$summary)
 
 # edm explore x, full
-cat("Command: edm explore x, full\n\n")
+cat("\n\nCommand: edm explore x, full\n\n")
 resExplore <- edm(t, x, full=TRUE, saveInputs=SAVE_INPUTS)
 print(resExplore$summary)
 
@@ -176,7 +176,7 @@ print(res2$summary)
 # Make sure multiple e's and multiple theta's work together
 
 # edm explore x, e(2 3) theta(0 1)
-cat("Command: edm explore x, e(2 3) theta(0 1)\n\n")
+cat("\n\nCommand: edm explore x, e(2 3) theta(0 1)\n\n")
 res <- edm(t, x, E=c(2, 3), theta=c(0, 1), saveInputs=SAVE_INPUTS)
 print(res$summary)
 rho <- c(.99863, .99895, .99734, .99872)
@@ -198,43 +198,43 @@ y <- df$y
 u <- df$u
 
 # edm explore x
-cat("Command: edm explore x\n\n")
+cat("\n\nCommand: edm explore x\n\n")
 res <- edm(t, x)
 print(res$summary)
 
 # edm explore x, dt savemanifold(plugin) dtweight(1)
-cat("Command: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
+cat("\n\nCommand: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
 res <- edm(t, x, dt=TRUE, saveManifolds=TRUE, dtWeight=1, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm explore x, allowmissing
-cat("Command: edm explore x, allowmissing\n\n")
+cat("\n\nCommand: edm explore x, allowmissing\n\n")
 res <- edm(t, x, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm explore x, missingdistance(1)
-cat("Command: edm explore x, missingdistance(1)\n\n")
+cat("\n\nCommand: edm explore x, missingdistance(1)\n\n")
 res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0, saveInputs=SAVE_INPUTS)
 print(res$summary)
 # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
 # or whether to follow Stata and just let the latter auto-enable the former...
 
 # edm xmap x l.x, allowmissing
-cat("Command: edm xmap x l.x, allowmissing\n\n")
+cat("\n\nCommand: edm xmap x l.x, allowmissing\n\n")
 res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE, saveInputs=SAVE_INPUTS)
 res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
 print(res1$summary)
 print(res2$summary)
 
 # edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)
-cat("Command: edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)")
+cat("\n\nCommand: edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)")
 res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5, saveInputs=SAVE_INPUTS)
 res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5, saveInputs=SAVE_INPUTS)
 print(res1$summary)
 print(res2$summary)
 
 # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
-cat("Command: edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)")
+cat("\n\nCommand: edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)")
 res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
@@ -251,6 +251,7 @@ print(res$summary)
 res <- edm(t, x, numReps=20, saveInputs=SAVE_INPUTS)
 print(res$summary)
 print(mean(res$summary$rho))
+
 #TODO: ci flag
 
 # edm xmap x y, lib(50) rep(20) ci(95)
@@ -273,20 +274,73 @@ y <- map$y
 t <- seq_along(x)
 
 # edm explore x, e(2) crossfold(2) k(-1) allowmissing
-cat("Command: edm explore x, e(2) crossfold(2) k(-1) allowmissing\n\n")
+cat("\n\nCommand: edm explore x, e(2) crossfold(2) k(-1) allowmissing\n\n")
 res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm explore x, e(2) crossfold(10) k(-1) allowmissing
-cat("Command: edm explore x, e(2) crossfold(10) k(-1) allowmissing\n\n")
+cat("\n\nCommand: edm explore x, e(2) crossfold(10) k(-1) allowmissing\n\n")
 res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
 # edm explore x, e(5) extra(d.y) full allowmissing
-cat("Command: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
+cat("\n\nCommand: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
 res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
 print(res$summary)
 
-# Test e-varying extra is the same as specifying the individual lagged extras
+# Panel data
+obs <- 100
+map <- logistic_map(obs)
 
-# TODO
+x <- map$x
+y <- map$y
+t <- seq_along(x)
+panel <- (seq_along(x) > obs / 3) * 1.0
+
+# edm explore x, e(40)
+cat("\n\nCommand: edm explore x, e(40)\n\n")
+res <- edm(t, x, panel=panel, E=40)
+print(res$summary)
+
+# edm explore x, e(40) allowmissing
+cat("\n\nCommand: edm explore x, e(40) allowmissing\n\n")
+res <- edm(t, x, panel=panel, E=40, allowMissing=TRUE)
+print(res$summary)
+
+# edm explore x, e(40) idw(-1)
+cat("\n\nCommand: edm explore x, e(40) idw(-1)\n\n")
+res <- edm(t, x, panel=panel, E=40, panelWeight=-1)
+print(res$summary)
+
+# edm explore x, e(40) idw(-1) allowmissing
+cat("\n\nCommand: edm explore x, e(40) idw(-1) allowmissing\n\n")
+res <- edm(t, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+print(res$summary)
+
+# edm xmap x y, e(40)
+cat("\n\nCommand: edm xmap x y, e(40)\n\n")
+res1 <- edm(t, x, y, panel=panel, E=40)
+res2 <- edm(t, y, x, panel=panel, E=40)
+print(res1$summary)
+print(res2$summary)
+
+# edm xmap x y, e(40) allowmissing
+cat("\n\nCommand: edm xmap x y, e(40) allowmissing\n\n")
+res1 <- edm(t, x, y, panel=panel, E=40, allowMissing=TRUE)
+res2 <- edm(t, y, x, panel=panel, E=40, allowMissing=TRUE)
+print(res1$summary)
+print(res2$summary)
+
+# edm xmap x y, e(40) idw(-1)
+cat("\n\nCommand: edm xmap x y, e(40) idw(-1)\n\n")
+res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1)
+res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1)
+print(res1$summary)
+print(res2$summary)
+
+# edm xmap x y, e(40) idw(-1) allowmissing
+cat("\n\nCommand: edm xmap x y, e(40) idw(-1) allowmissing\n\n")
+res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+print(res1$summary)
+print(res2$summary)

@@ -8,6 +8,7 @@ edm(
   t,
   x,
   y = c(),
+  panel = c(),
   E = 2,
   tau = 1,
   theta = 1,
@@ -30,6 +31,7 @@ edm(
   reldt = FALSE,
   dtWeight = 0,
   numReps = 1,
+  panelWeight = 0,
   verbosity = 0,
   numThreads = 1,
   saveInputs = ""
@@ -41,6 +43,9 @@ edm(
 \item{x}{The first variable in the causal analysis}
 
 \item{y}{The second variable in the causal analysis}
+
+\item{panel}{If the data is panel data, then this variable specifies the
+panel ID of each observation.}
 
 \item{E}{This option specifies the number of dimensions \eqn{E} used for the
 main variable in the manifold reconstruction. If a list of numbers is provided, the command will
@@ -170,6 +175,14 @@ variable.}
 This is akin to a nonparametric bootstrap without replacement, and is commonly used for
 inference using confidence intervals in EDM (Tsonis et al., 2015; van Nes et al., 2015; Ye et al.,
 2015b).}
+
+\item{panelWeight}{This specifies a penalty that is added to the distances between points in the
+manifold which correspond to observations from different panels. By default \code{panelWeight} is 0,
+so the data from all panels is mixed together and treatly equally. If \code{panelWeight=1} is set
+(or any other negative value), then the weight is treated as \eqn{\infty} so neighbours will never
+be selected which cross the boundaries between panels. Setting \code{panelWeight=1} with
+\code{k=1} means we may use a different number of neighbors for different predictions (i.e.
+if the panels are unbalanced).}
 
 \item{verbosity}{The level of detail in the output.}
 

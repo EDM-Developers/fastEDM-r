@@ -261,7 +261,6 @@ test_that("Missing data manifolds", {
 })
 
 test_that("From 'bigger-test.do' script", {
-  # Tests from the previous 'bigger-test.do' script
   obs <- 100
   map <- logistic_map(obs)
   
@@ -282,4 +281,55 @@ test_that("From 'bigger-test.do' script", {
   expect_approx_equal(res$summary$rho, .95266)
   
   # TODO
+})
+
+
+test_that("Panel data", {
+  obs <- 100
+  map <- logistic_map(obs)
+
+  x <- map$x
+  y <- map$y
+  t <- seq_along(x)
+  panel <- (seq_along(x) > obs / 3) * 1.0
+
+  # edm explore x, e(40)
+  res <- edm(t, x, panel=panel, E=40)
+  expect_approx_equal(res$summary$rho, .86964)
+
+  # edm explore x, e(40) allowmissing
+  res <- edm(t, x, panel=panel, E=40, allowMissing=TRUE)
+  expect_approx_equal(res$summary$rho, .92115)
+
+  # edm explore x, e(40) idw(-1)
+  res <- edm(t, x, panel=panel, E=40, panelWeight=-1)
+  expect_approx_equal(res$summary$rho, .86964)
+
+  # edm explore x, e(40) idw(-1) allowmissing
+  res <- edm(t, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+  expect_approx_equal(res$summary$rho, .91768)
+  
+  # edm xmap x y, e(40)
+  res1 <- edm(t, x, y, panel=panel, E=40)
+  res2 <- edm(t, y, x, panel=panel, E=40)
+  expect_approx_equal(res1$summary$rho, .76444)
+  expect_approx_equal(res2$summary$rho, .83836)
+
+  # edm xmap x y, e(40) allowmissing
+  res1 <- edm(t, x, y, panel=panel, E=40, allowMissing=TRUE)
+  res2 <- edm(t, y, x, panel=panel, E=40, allowMissing=TRUE)
+  expect_approx_equal(res1$summary$rho, .63174)
+  expect_approx_equal(res2$summary$rho, .81394)
+
+  # edm xmap x y, e(40) idw(-1)
+  res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1)
+  res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1)
+  expect_approx_equal(res1$summary$rho, .76444)
+  expect_approx_equal(res2$summary$rho, .83836)
+
+  # edm xmap x y, e(40) idw(-1) allowmissing
+  res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+  res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+  expect_approx_equal(res1$summary$rho, .55937)
+  expect_approx_equal(res2$summary$rho, .75815)
 })
