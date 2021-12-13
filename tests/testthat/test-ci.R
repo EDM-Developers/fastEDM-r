@@ -244,7 +244,7 @@ test_that("Missing data manifolds", {
   
   # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
   # or whether to follow Stata and just let the latter auto-enable the former...
-  
+
   # edm xmap x l.x, allowmissing
   res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE)
   res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE)
@@ -269,15 +269,16 @@ test_that("Missing data manifolds", {
   
   # edm explore x, rep(20) ci(95)
   res <- edm(t, x, numReps=20)
-  #expect_approx_equal(mean(res$summary$rho), 123)
-  #TODO: ci flag
+  meanRho <- mean(res$summary$rho)
+  expect_true(.99225 <= meanRho && meanRho <= .9981) # 95% CI
   
   # edm xmap x y, lib(50) rep(20) ci(95)
   res1 <- edm(t, x, y, library=50, numReps=20)
   res2 <- edm(t, y, x, library=50, numReps=20)
-  #expect_approx_equal(mean(res1$summary$rho), 123)
-  #expect_approx_equal(mean(res2$summary$rho), 123)
-  #TODO: ci flag
+  meanRho1 <- mean(res1$summary$rho)
+  meanRho2 <- mean(res2$summary$rho)
+  expect_true(.35556 <= meanRho1 && meanRho1 <= .40613) # 95% CI
+  expect_true(.82245 <= meanRho2 && meanRho2 <= .85151) # 95% CI
 })
 
 test_that("From 'bigger-test.do' script", {
