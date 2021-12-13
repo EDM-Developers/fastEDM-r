@@ -298,6 +298,12 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
       // or so instead of after each future is completed.
       isInterrupted = RcppThread::isInterrupted();
 
+      if (isInterrupted) {
+        Rcpp::List res;
+        res["rc"] = 1;
+        return res;
+      }
+      
       const PredictionResult pred = futures[f].get();
       if (verbosity > 0) {
         bar++;
@@ -361,17 +367,11 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     }
   }
 
-  Rcpp::List res;
-  res["rc"] = rc;
-
-  if (isInterrupted) {
-    res["rc"] = 1;
-    return res;
-  }
-
   io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
   io.print(fmt::format("Return code is {}\n", rc));
 
+  Rcpp::List res;
+  res["rc"] = rc;
   res["summary"] = summary;
   res["kMin"] = kMin;
   res["kMax"] = kMax;
