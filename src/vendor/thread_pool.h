@@ -48,6 +48,8 @@ public:
 
   std::mutex queue_mutex;
 
+  bool is_stopped() const { return stop; }
+
 private:
   // need to keep track of threads so we can join them
   std::vector<std::thread> workers;
@@ -83,6 +85,11 @@ inline void ThreadPool::set_num_workers(int threads)
 {
   if (threads < workers.size()) {
     kill_all_workers();
+  }
+
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    stop = false;
   }
 
   int numNewThreads = threads - workers.size();
