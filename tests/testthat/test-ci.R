@@ -66,6 +66,18 @@ check_edm_results <- function(res1, res2, rho1, rho2) {
   check_edm_result(res2, rho2)
 }
 
+check_noisy_edm_result <- function(res, rhoLowerCI, rhoUpperCI) {
+  testthat::expect_equal(res$rc, 0)
+
+  validInput <- length(res$summary$rho) == sum(is.finite(res$summary$rho))
+  testthat::expect_true(validInput)
+
+  if (validInput) {
+    meanRho <- mean(res$summary$rho)
+    testthat::expect_true(rhoLowerCI <= meanRho && meanRho <= rhoUpperCI)
+  }
+}
+
 test_that("Simple manifolds", {
   obs <- 500
   map <- logistic_map(obs)
@@ -269,16 +281,13 @@ test_that("Missing data manifolds", {
   
   # edm explore x, rep(20) ci(95)
   res <- edm(t, x, numReps=20)
-  meanRho <- mean(res$summary$rho)
-  expect_true(.99225 <= meanRho && meanRho <= .9981) # 95% CI
+  check_noisy_edm_result(res, .99225, .9981)
   
   # edm xmap x y, lib(50) rep(20) ci(95)
   res1 <- edm(t, x, y, library=50, numReps=20)
   res2 <- edm(t, y, x, library=50, numReps=20)
-  meanRho1 <- mean(res1$summary$rho)
-  meanRho2 <- mean(res2$summary$rho)
-  expect_true(.35556 <= meanRho1 && meanRho1 <= .40613) # 95% CI
-  expect_true(.82245 <= meanRho2 && meanRho2 <= .85151) # 95% CI
+  check_noisy_edm_result(res1, .35556, .40613)
+  check_noisy_edm_result(res2, .82245, .85151)
 })
 
 test_that("From 'bigger-test.do' script", {
