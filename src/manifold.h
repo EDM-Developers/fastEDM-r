@@ -143,7 +143,7 @@ public:
     return dts;
   }
 
-  int E_dt(int E) const { return _dt * E; }
+  int E_dt(int E) const { return (_dt || _reldt) * E; }
   int E_extras(int E) const { return _num_extras + _num_extras_lagged * (E - 1); }
   int E_actual(int E) const { return E + E_dt(E) + E_extras(E); }
 

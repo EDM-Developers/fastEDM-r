@@ -51,7 +51,7 @@ void ManifoldGenerator::setup_observation_numbers()
 {
   _observation_number.clear();
 
-  if (!_dt) {
+  if (!(_dt || _reldt)) {
     // In normal situations (non-dt)
     double unit = calculate_time_increment();
     double minT = *std::min_element(_t.begin(), _t.end());
@@ -160,7 +160,7 @@ void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool 
   bool use_co_x = copredictionMode && predictionSet;
 
   double tPred;
-  if (_dt) {
+  if (_dt || _reldt) {
     int targetIndex = i;
     get_target(i, copredictionMode, predictionSet, targetIndex);
     tPred = (targetIndex >= 0) ? _t[targetIndex] : MISSING_D;
@@ -199,7 +199,7 @@ void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool 
     }
 
     // Put the lagged embedding of dt in the next columns
-    if (_dt) {
+    if (_dt || _reldt) {
       if (!foundLaggedObs) {
         point[j + E] = MISSING_D;
       } else {
