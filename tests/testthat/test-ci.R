@@ -53,6 +53,19 @@ expect_approx_equal <- function (x, y) {
   }
 }
 
+check_edm_result <- function(res, rho, co_rho=NULL) {
+  testthat::expect_equal(res$rc, 0)
+  expect_approx_equal(res$summary$rho, rho)
+  if (!is.null(co_rho)) {
+    expect_approx_equal(res$co_summary$rho, co_rho)
+  }
+}
+
+check_edm_results <- function(res1, res2, rho1, rho2) {
+  check_edm_result(res1, rho1)
+  check_edm_result(res2, rho2)
+}
+
 test_that("Simple manifolds", {
   obs <- 500
   map <- logistic_map(obs)
@@ -67,19 +80,17 @@ test_that("Simple manifolds", {
   # explore x, e(2/10)
   res <- edm(t, x, E=2:10)
   rho <- c(.99893, .99879, .99835, .99763, .99457, .99385, .991, .98972, .98572)
-  expect_approx_equal(res$summary$rho, rho)
+  check_edm_result(res, rho)
   
   # edm xmap x y, k(5)
   res1 <- edm(t, x, y, k=5)
   res2 <- edm(t, y, x, k=5)
-  expect_approx_equal(res1$summary$rho, .55861)
-  expect_approx_equal(res2$summary$rho, .94454)
+  check_edm_results(res1, res2, .55861, .94454)
   
   # edm xmap x y, e(6) lib(8)
   res1 <- edm(t, x, y, E=6, library=8)
   res2 <- edm(t, y, x, E=6, library=8)
-  expect_approx_equal(res1$summary$rho, .3362)
-  expect_approx_equal(res2$summary$rho, .51116)
+  check_edm_results(res1, res2, .3362, .51116)
   
   # edm explore x, k(5) crossfold(10)
   res <- edm(t, x, k=5, crossfold=10)
@@ -94,8 +105,7 @@ test_that("Simple manifolds", {
   res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
   res2 <- edm(t, y, x, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
   beta1 <- res1$coeffs
-  expect_approx_equal(res1$summary$rho, .66867)
-  expect_approx_equal(res2$summary$rho, .98487)
+  check_edm_results(res1, res2, .66867, .98487)
   
   # assert beta1_b2_rep1 != . if _n > 1
   expect_equal(sum(is.na(beta1[1,])), ncol(beta1))
@@ -104,7 +114,7 @@ test_that("Simple manifolds", {
   # edm xmap y x, predict(x2) direction(oneway)
   res <- edm(t, y, x, savePredictions=TRUE)
   x2 <- res$predictions
-  expect_approx_equal(res$summary$rho, .94272)
+  check_edm_result(res, .94272)
   
   # assert x2 != . if _n > 1
   expect_equal(is.na(x2[1]), TRUE)
@@ -113,8 +123,7 @@ test_that("Simple manifolds", {
   # edm explore x, copredict(teste) copredictvar(y)
   res <- edm(t, x, copredict = y, saveCoPredictions=TRUE)
   teste <- res$copredictions
-  expect_approx_equal(res$summary$rho, .9989)
-  expect_approx_equal(res$co_summary$rho, .78002)
+  check_edm_result(res, .9989, co_rho=.78002)
   
   # assert teste != . if _n > 1
   expect_equal(is.na(teste[1]), TRUE)
@@ -123,17 +132,16 @@ test_that("Simple manifolds", {
   # edm explore z.x, p(10)
   z.x <- (x - mean(x)) / sd(x) # This is slightly different to Stata ('touse' perhaps)
   res <- edm(t, z.x, p=10)
-  expect_approx_equal(res$summary$rho, .90235)
+  check_edm_result(res, .90235)
   
   # edm xmap y x, p(10) direction(oneway)
   res <- edm(t, y, x, p=10)
-  expect_approx_equal(res$summary$rho, .89554)
+  check_edm_result(res, .89554)
   
   # edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)
   res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE)
   testx <- res$copredictions
-  expect_approx_equal(res$summary$rho, .89554)
-  expect_approx_equal(res$co_summary$rho, .67401)
+  check_edm_result(res, .89554, co_rho=.67401)
   
   # assert testx != . if _n >= 3
   expect_equal(sum(is.na(testx[1:2])), 2)
@@ -143,8 +151,7 @@ test_that("Simple manifolds", {
   z.x2 <- (x2 - mean(x2, na.rm = TRUE)) / sd(x2, na.rm = TRUE)
   res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE)
   testx2 <- res$copredictions
-  expect_approx_equal(res$summary$rho, .89554)
-  expect_approx_equal(res$co_summary$rho, .93837)
+  check_edm_result(res, .89554, co_rho=.93837)
   
   # assert testx2 != . if _n >= 3
   expect_equal(sum(is.na(testx2[1:2])), 2)
@@ -153,8 +160,7 @@ test_that("Simple manifolds", {
   # edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)
   res <- edm(t, y, x, extras=list(u1), p=10, copredict=z.x2, saveCoPredictions=TRUE)
   testx3 <- res$copredictions
-  expect_approx_equal(res$summary$rho, .37011)
-  expect_approx_equal(res$co_summary$rho, .9364)
+  check_edm_result(res, .37011, co_rho=.9364)
   
   # assert testx3 != . if _n >= 3
   expect_equal(sum(is.na(testx3[1:2])), 2)
@@ -164,11 +170,11 @@ test_that("Simple manifolds", {
   
   # edm xmap l.x x, direction(oneway)
   resXmap <- edm(t, tslag(t, x), x)
-  expect_approx_equal(resXmap$summary$rho, .99939)
+  check_edm_result(resXmap, .99939)
   
   # edm explore x, full
   resExplore <- edm(t, x, full=TRUE)
-  expect_approx_equal(resExplore$summary$rho, .99939)
+  check_edm_result(resExplore, .99939)
   
   # assert xmap_r[1,1] == explore_r[1,1]
   expect_approx_equal(resXmap$summary$rho, resExplore$summary$rho)
@@ -176,24 +182,26 @@ test_that("Simple manifolds", {
   # Check xmap reverse consistency (not necessary to check in this version)
   res1 <- edm(t, x, y)
   res2 <- edm(t, y, x)
-  expect_approx_equal(res1$summary$rho, .54213)
-  expect_approx_equal(res2$summary$rho, .94272)
+  check_edm_results(res1, res2, .54213, .94272)
   
   # Make sure multiple e's and multiple theta's work together
   
   # edm explore x, e(2 3) theta(0 1)
   res <- edm(t, x, E=c(2, 3), theta=c(0, 1))
   rho <- c(.99863, .99895, .99734, .99872)
-  expect_approx_equal(res$summary$rho, rho)
-  
+  check_edm_result(res, rho)
+
   # Check that lowmemory flag is working
   res <- edm(t, x, lowMemory=TRUE)
+  check_edm_result(res, .9989)
   
   # Check that verbosity > 0 is working
   capture.output(res <- edm(t, x, verbosity=1))
+  check_edm_result(res, .9989)
   
   # Check that numThreads > 1 is working
   res <- edm(t, x, numThreads=4)
+  check_edm_result(res, .9989)
 })
 
 test_that("Missing data manifolds", {
@@ -220,37 +228,36 @@ test_that("Missing data manifolds", {
   
   # edm explore x
   res <- edm(t, x)
-  expect_approx_equal(res$summary$rho, .99814)
+  check_edm_result(res, .99814)
   
   # edm explore x, dt savemanifold(plugin) dtweight(1)
   res <- edm(t, x, dt=TRUE, saveManifolds=TRUE, dtWeight=1)
-  expect_approx_equal(res$summary$rho, .95569)
+  check_edm_result(res, .95569)
   
   # edm explore x, allowmissing
   res <- edm(t, x, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .99766)
+  check_edm_result(res, .99766)
   
   # edm explore x, missingdistance(1)
   res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0)
-  expect_approx_equal(res$summary$rho, .99765)
+  check_edm_result(res, .99765)
+  
   # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
   # or whether to follow Stata and just let the latter auto-enable the former...
   
   # edm xmap x l.x, allowmissing
   res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE)
   res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE)
-  expect_approx_equal(res1$summary$rho, .99983)
-  expect_approx_equal(res2$summary$rho, .99864)
+  check_edm_results(res1, res2, .99983, .99864)
   
   # edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)
   res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
   res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
-  expect_approx_equal(res1$summary$rho, 1.0) 
-  expect_approx_equal(res2$summary$rho, .77523)
-
+  check_edm_results(res1, res2, 1.0, .77523)
+  
   # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
   res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
-  expect_approx_equal(res$summary$rho, .36976)
+  check_edm_result(res, .36976)
   
   # edm explore x, extraembed(u) allowmissing dt crossfold(5)
   res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
@@ -258,7 +265,7 @@ test_that("Missing data manifolds", {
   
   # edm explore d.x, dt
   res <- edm(t, tsdiff(t, x), dt=TRUE)
-  expect_approx_equal(res$summary$rho, .89192)
+  check_edm_result(res, .89192)
   
   # edm explore x, rep(20) ci(95)
   res <- edm(t, x, numReps=20)
@@ -284,6 +291,7 @@ test_that("From 'bigger-test.do' script", {
   # edm explore x, e(2) crossfold(2) k(-1) allowmissing
   res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE)
   expect_approx_equal(mean(res$summary$rho), .98175)
+  # TODO: Make the crossfold option just output one correlation
   
   # edm explore x, e(2) crossfold(10) k(-1) allowmissing
   res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE)
@@ -291,7 +299,7 @@ test_that("From 'bigger-test.do' script", {
   
   # edm explore x, e(5) extra(d.y) full allowmissing
   res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .95266)
+  check_edm_result(res, .95266)
 })
 
 
@@ -306,43 +314,39 @@ test_that("Panel data", {
 
   # edm explore x, e(40)
   res <- edm(t, x, panel=panel, E=40)
-  expect_approx_equal(res$summary$rho, .86964)
+  check_edm_result(res, .86964)
 
   # edm explore x, e(40) allowmissing
   res <- edm(t, x, panel=panel, E=40, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .92115)
+  check_edm_result(res, .92115)
 
   # edm explore x, e(40) idw(-1)
   res <- edm(t, x, panel=panel, E=40, panelWeight=-1)
-  expect_approx_equal(res$summary$rho, .86964)
+  check_edm_result(res, .86964)
 
   # edm explore x, e(40) idw(-1) allowmissing
   res <- edm(t, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .91768)
+  check_edm_result(res, .91768)
   
   # edm xmap x y, e(40)
   res1 <- edm(t, x, y, panel=panel, E=40)
   res2 <- edm(t, y, x, panel=panel, E=40)
-  expect_approx_equal(res1$summary$rho, .76444)
-  expect_approx_equal(res2$summary$rho, .83836)
+  check_edm_results(res1, res2, .76444, .83836)
 
   # edm xmap x y, e(40) allowmissing
   res1 <- edm(t, x, y, panel=panel, E=40, allowMissing=TRUE)
   res2 <- edm(t, y, x, panel=panel, E=40, allowMissing=TRUE)
-  expect_approx_equal(res1$summary$rho, .63174)
-  expect_approx_equal(res2$summary$rho, .81394)
+  check_edm_results(res1, res2, .63174, .81394)
 
   # edm xmap x y, e(40) idw(-1)
   res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1)
   res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1)
-  expect_approx_equal(res1$summary$rho, .76444)
-  expect_approx_equal(res2$summary$rho, .83836)
+  check_edm_results(res1, res2, .76444, .83836)
 
   # edm xmap x y, e(40) idw(-1) allowmissing
   res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
   res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
-  expect_approx_equal(res1$summary$rho, .55937)
-  expect_approx_equal(res2$summary$rho, .75815)
+  check_edm_results(res1, res2, .55937, .75815)
 })
 
 
@@ -365,40 +369,39 @@ test_that("Panel data with missing observations", {
   
   # edm explore x, e(5)
   res <- edm(t, x, panel=panel, E=5)
-  expect_approx_equal(res$summary$rho, .95118)
+  check_edm_result(res, .95118)
   
   # edm explore x, e(5) allowmissing
   res <- edm(t, x, panel=panel, E=5, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .95905)
+  check_edm_result(res, .95905)
   
   # edm explore x, e(5) idw(-1)
   res <- edm(t, x, panel=panel, E=5, panelWeight=-1)
-  expect_approx_equal(res$summary$rho, .92472)
+  check_edm_result(res, .92472)
   
   # edm explore x, e(5) idw(-1) allowmissing
   res <- edm(t, x, panel=panel, E=5, panelWeight=-1, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .93052)
+  check_edm_result(res, .93052)
   
   # edm explore x, e(5) idw(-1) k(-1)
   res <- edm(t, x, panel=panel, E=5, panelWeight=-1, k=-1)
-  expect_approx_equal(res$summary$rho, .92472)
+  check_edm_result(res, .92472)
   
   # See if the relative dt flags work
   
   # edm explore x, e(5) reldt
   res <- edm(t, x, panel=panel, E=5, reldt=TRUE)
-  expect_approx_equal(res$summary$rho, .90239)
+  check_edm_result(res, .90239)
   
   # edm explore x, e(5) reldt allowmissing
   res <- edm(t, x, panel=panel, E=5, reldt=TRUE, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .9085)
+  check_edm_result(res, .9085)
 
   # edm explore x, e(5) idw(-1) reldt
   res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE)
-  expect_approx_equal(res$summary$rho, .78473)
+  check_edm_result(res, .78473)
 
   # edm explore x, e(5) idw(-1) reldt allowmissing
   res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE, allowMissing=TRUE)
-  expect_approx_equal(res$summary$rho, .75709)
-  
+  check_edm_result(res, .75709)
 })
