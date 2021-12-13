@@ -279,8 +279,6 @@ test_that("From 'bigger-test.do' script", {
   # edm explore x, e(5) extra(d.y) full allowmissing
   res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE)
   expect_approx_equal(res$summary$rho, .95266)
-  
-  # TODO
 })
 
 
@@ -332,4 +330,62 @@ test_that("Panel data", {
   res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
   expect_approx_equal(res1$summary$rho, .55937)
   expect_approx_equal(res2$summary$rho, .75815)
+})
+
+
+test_that("Panel data with missing observations", {
+  obs <- 100
+  map <- logistic_map(obs)
+  
+  x <- map$x
+  y <- map$y
+  t <- seq_along(x)
+  panel <- (seq_along(x) > obs / 3) * 1.0
+  
+  # Drop some rows of the dataset & make sure the plugin can handle this
+  # (i.e. can it replicate a kind of 'tsfill' hehaviour).
+  
+  # drop if mod(t,7) == 0 
+  x <- x[t %% 7 != 0]
+  panel <- panel[t %% 7 != 0]
+  t <- t[t %% 7 != 0]
+  
+  # edm explore x, e(5)
+  res <- edm(t, x, panel=panel, E=5)
+  expect_approx_equal(res$summary$rho, .95118)
+  
+  # edm explore x, e(5) allowmissing
+  res <- edm(t, x, panel=panel, E=5, allowMissing=TRUE)
+  expect_approx_equal(res$summary$rho, .95905)
+  
+  # edm explore x, e(5) idw(-1)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=-1)
+  expect_approx_equal(res$summary$rho, .92472)
+  
+  # edm explore x, e(5) idw(-1) allowmissing
+  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, allowMissing=TRUE)
+  expect_approx_equal(res$summary$rho, .93052)
+  
+  # edm explore x, e(5) idw(-1) k(-1)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, k=-1)
+  expect_approx_equal(res$summary$rho, .92472)
+  
+  # See if the relative dt flags work
+  
+  # edm explore x, e(5) reldt
+  res <- edm(t, x, panel=panel, E=5, reldt=TRUE)
+  expect_approx_equal(res$summary$rho, .90239)
+  
+  # edm explore x, e(5) reldt allowmissing
+  res <- edm(t, x, panel=panel, E=5, reldt=TRUE, allowMissing=TRUE)
+  expect_approx_equal(res$summary$rho, .9085)
+
+  # edm explore x, e(5) idw(-1) reldt
+  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE)
+  expect_approx_equal(res$summary$rho, .78473)
+
+  # edm explore x, e(5) idw(-1) reldt allowmissing
+  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE, allowMissing=TRUE)
+  expect_approx_equal(res$summary$rho, .75709)
+  
 })

@@ -344,3 +344,59 @@ res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
 res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
 print(res1$summary)
 print(res2$summary)
+
+
+# Drop some rows of the dataset & make sure the plugin can handle this
+# (i.e. can it replicate a kind of 'tsfill' hehaviour).
+
+# drop if mod(t,7) == 0 
+x <- x[t %% 7 != 0]
+panel <- panel[t %% 7 != 0]
+t <- t[t %% 7 != 0]
+
+# edm explore x, e(5)
+cat("\n\nCommand: edm explore x, e(5)\n\n")
+res <- edm(t, x, panel=panel, E=5)
+print(res$summary)
+
+# edm explore x, e(5) allowmissing
+cat("\n\nCommand: edm explore x, e(5) allowmissing\n\n")
+res <- edm(t, x, panel=panel, E=5, allowMissing=TRUE)
+print(res$summary)
+
+# edm explore x, e(5) idw(-1)
+cat("\n\nCommand: edm explore x, e(5) idw(-1)\n\n")
+res <- edm(t, x, panel=panel, E=5, panelWeight=-1)
+print(res$summary)
+
+# edm explore x, e(5) idw(-1) allowmissing
+cat("\n\nCommand: edm explore x, e(5) idw(-1) allowmissing\n\n")
+res <- edm(t, x, panel=panel, E=5, panelWeight=-1, allowMissing=TRUE)
+print(res$summary)
+
+# edm explore x, e(5) idw(-1) k(-1)
+cat("\n\nCommand: edm explore x, e(5) idw(-1) k(-1)\n\n")
+res <- edm(t, x, panel=panel, E=5, panelWeight=-1, k=-1)
+print(res$summary)
+
+# See if the relative dt flags work
+
+# edm explore x, e(5) reldt
+cat("\n\nCommand: edm explore x, e(5) reldt\n\n")
+res <- edm(t, x, panel=panel, E=5, reldt=TRUE, dtWeight=1, saveManifolds=TRUE)
+print(res$summary)
+
+# edm explore x, e(5) reldt allowmissing
+cat("\n\nCommand: edm explore x, e(5) reldt allowmissing\n\n")
+res <- edm(t, x, panel=panel, E=5, reldt=TRUE, allowMissing=TRUE)
+print(res$summary)
+
+# edm explore x, e(5) idw(-1) reldt
+cat("\n\nCommand: edm explore x, e(5) idw(-1) reldt\n\n")
+res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE)
+print(res$summary)
+
+# edm explore x, e(5) idw(-1) reldt allowmissing
+cat("\n\nCommand: edm explore x, e(5) idw(-1) reldt allowmissing\n\n")
+res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE, allowMissing=TRUE)
+print(res$summary)
