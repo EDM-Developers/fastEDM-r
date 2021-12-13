@@ -43,9 +43,11 @@ logistic_map <- function(obs) {
   return(list(x=x, y=y))
 }
 
-SAVE_INPUTS <- "ci-test.json"
+# Set-up some new edm default arguments for this script
+formals(edm)$numThreads <- 4
 
-# Remove old JSON dump file
+SAVE_INPUTS <- "ci-test.json"
+formals(edm)$saveInputs <- SAVE_INPUTS
 if (file.exists(SAVE_INPUTS)) {
   file.remove(SAVE_INPUTS)
 }
@@ -62,38 +64,38 @@ t <- 299 + seq_along(x)
 
 # explore x, e(2/10)
 cat("\n\nCommand: explore x, e(2/10)\n\n")
-res <- edm(t, x, E=2:10, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, E=2:10)
 print(res$summary)
 rho <- c(.99893, .99879, .99835, .99763, .99457, .99385, .991, .98972, .98572)
 
 # edm xmap x y, k(5)
 cat("\n\nCommand: edm xmap x y, k(5)\n\n")
-res1 <- edm(t, x, y, k=5, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, y, x, k=5, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, y, k=5)
+res2 <- edm(t, y, x, k=5)
 print(res1$summary)
 print(res2$summary)
 
 # edm xmap x y, e(6) lib(8)
 cat("\n\nCommand: edm xmap x y, e(6) lib(8)\n\n")
-res1 <- edm(t, x, y, E=6, library=8, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, y, x, E=6, library=8, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, y, E=6, library=8)
+res2 <- edm(t, y, x, E=6, library=8)
 print(res1$summary)
 print(res2$summary)
 
 # edm explore x, k(5) crossfold(10)
 cat("\n\nCommand: edm explore x, k(5) crossfold(10)\n\n")
-res <- edm(t, x, k=5, crossfold=10, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, k=5, crossfold=10)
 print(res$summary)
 
 # edm explore x, theta(0.2(0.1)2.0) algorithm(smap)
 cat("\n\nCommand: edm explore x, theta(0.2(0.1)2.0) algorithm(smap)\n\n")
-res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap", saveInputs=SAVE_INPUTS)
+res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap")
 print(res$summary)
 
 # edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)
 cat("\n\nCommand: edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)\n\n")
-res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, y, x, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
+res2 <- edm(t, y, x, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
 beta1 <- res1$coeffs
 print(res1$summary)
 print(res2$summary)
@@ -102,7 +104,7 @@ print(res2$summary)
 
 # edm xmap y x, predict(x2) direction(oneway)
 cat("\n\nCommand: edm xmap y x, predict(x2) direction(oneway)\n\n")
-res <- edm(t, y, x, savePredictions=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, y, x, savePredictions=TRUE)
 x2 <- res$predictions
 print(res$summary)
 
@@ -110,7 +112,7 @@ print(res$summary)
 
 # edm explore x, copredict(teste) copredictvar(y)
 cat("\n\nCommand: edm explore x, copredict(teste) copredictvar(y)\n\n")
-res <- edm(t, x, copredict = y, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, copredict = y, saveCoPredictions=TRUE)
 teste <- res$copredictions
 print(res$summary)
 print(res$co_summary)
@@ -120,17 +122,17 @@ print(res$co_summary)
 # edm explore z.x, p(10)
 cat("\n\nCommand: edm explore z.x, p(10)\n\n")
 z.x <- (x - mean(x)) / sd(x)
-res <- edm(t, z.x, p=10, saveInputs=SAVE_INPUTS)
+res <- edm(t, z.x, p=10)
 print(res$summary)
 
 # edm xmap y x, p(10) direction(oneway)
 cat("\n\nCommand: edm xmap y x, p(10) direction(oneway)\n\n")
-res <- edm(t, y, x, p=10, saveInputs=SAVE_INPUTS)
+res <- edm(t, y, x, p=10)
 print(res$summary)
 
 # edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)
 cat("\n\nCommand: edm xmap y x, p(10) copredict(testx) copredictvar(x2) direction(oneway)\n\n")
-res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, y, x, p=10, copredict=x2, saveCoPredictions=TRUE)
 testx <- res$copredictions
 print(res$summary)
 
@@ -139,7 +141,7 @@ print(res$summary)
 # edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)
 cat("\n\nCommand: edm xmap y x, p(10) copredict(testx2) copredictvar(z.x2) direction(oneway)\n\n")
 z.x2 <- (x2 - mean(x2, na.rm = TRUE)) / sd(x2, na.rm = TRUE)
-res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, y, x, p=10,  copredict=z.x2, saveCoPredictions=TRUE)
 testx2 <- res$copredictions
 print(res$summary)
 
@@ -147,7 +149,7 @@ print(res$summary)
 
 # edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)
 cat("\n\nCommand: edm xmap y x, extra(u1) p(10) copredict(testx3) copredictvar(z.x2) direction(oneway)\n\n")
-res <- edm(t, y, x, extras=list(u1), p=10,  copredict=z.x2, saveCoPredictions=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, y, x, extras=list(u1), p=10,  copredict=z.x2, saveCoPredictions=TRUE)
 testx3 <- res$copredictions
 print(res$summary)
 
@@ -157,19 +159,19 @@ print(res$summary)
 
 # edm xmap l.x x, direction(oneway)
 cat("\n\nCommand: edm xmap l.x x, direction(oneway)\n\n")
-resXmap <- edm(t, tslag(t, x), x, saveInputs=SAVE_INPUTS)
+resXmap <- edm(t, tslag(t, x), x)
 print(resXmap$summary)
 
 # edm explore x, full
 cat("\n\nCommand: edm explore x, full\n\n")
-resExplore <- edm(t, x, full=TRUE, saveInputs=SAVE_INPUTS)
+resExplore <- edm(t, x, full=TRUE)
 print(resExplore$summary)
 
 # assert xmap_r[1,1] == explore_r[1,1]
 
 # Check xmap reverse consistency (not necessary to check in this version)
-res1 <- edm(t, x, y, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, y, x, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, y)
+res2 <- edm(t, y, x)
 print(res1$summary)
 print(res2$summary)
 
@@ -177,7 +179,7 @@ print(res2$summary)
 
 # edm explore x, e(2 3) theta(0 1)
 cat("\n\nCommand: edm explore x, e(2 3) theta(0 1)\n\n")
-res <- edm(t, x, E=c(2, 3), theta=c(0, 1), saveInputs=SAVE_INPUTS)
+res <- edm(t, x, E=c(2, 3), theta=c(0, 1))
 print(res$summary)
 rho <- c(.99863, .99895, .99734, .99872)
 
@@ -204,59 +206,59 @@ print(res$summary)
 
 # edm explore x, dt savemanifold(plugin) dtweight(1)
 cat("\n\nCommand: edm explore x, dt savemanifold(plugin) dtweight(1)\n\n")
-res <- edm(t, x, dt=TRUE, saveManifolds=TRUE, dtWeight=1, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, dt=TRUE, saveManifolds=TRUE, dtWeight=1)
 print(res$summary)
 
 # edm explore x, allowmissing
 cat("\n\nCommand: edm explore x, allowmissing\n\n")
-res <- edm(t, x, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, allowMissing=TRUE)
 print(res$summary)
 
 # edm explore x, missingdistance(1)
 cat("\n\nCommand: edm explore x, missingdistance(1)\n\n")
-res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, allowMissing=TRUE, missingDistance=1.0)
 print(res$summary)
 # TODO: Decide whether this is better -- being explicit about 'allowMissing' & 'missingDistance'
 # or whether to follow Stata and just let the latter auto-enable the former...
 
 # edm xmap x l.x, allowmissing
 cat("\n\nCommand: edm xmap x l.x, allowmissing\n\n")
-res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, tslag(t, x), allowMissing=TRUE)
+res2 <- edm(t, tslag(t, x), x, allowMissing=TRUE)
 print(res1$summary)
 print(res2$summary)
 
 # edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)
 cat("\n\nCommand: edm xmap x l.x, extraembed(u) dt alg(smap) savesmap(newb) e(5)")
-res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, tslag(t, x), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
+res2 <- edm(t, tslag(t, x), x, extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
 print(res1$summary)
 print(res2$summary)
 
 # edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)
 cat("\n\nCommand: edm xmap x l3.x, extraembed(u) dt alg(smap) savesmap(newc) e(5) oneway dtsave(testdt)")
-res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", saveSMAPCoeffs=TRUE, E=5)
 print(res$summary)
 
 # edm explore x, extraembed(u) allowmissing dt crossfold(5)
-res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
 print(res$summary)
 print(mean(res$summary$rho))
 
 # edm explore d.x, dt
-res <- edm(t, tsdiff(t, x), dt=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, tsdiff(t, x), dt=TRUE)
 print(res$summary)
 
 # edm explore x, rep(20) ci(95)
-res <- edm(t, x, numReps=20, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, numReps=20)
 print(res$summary)
 print(mean(res$summary$rho))
 
 #TODO: ci flag
 
 # edm xmap x y, lib(50) rep(20) ci(95)
-res1 <- edm(t, x, y, library=50, numReps=20, saveInputs=SAVE_INPUTS)
-res2 <- edm(t, y, x, library=50, numReps=20, saveInputs=SAVE_INPUTS)
+res1 <- edm(t, x, y, library=50, numReps=20)
+res2 <- edm(t, y, x, library=50, numReps=20)
 print(res1$summary)
 print(res2$summary)
 print(mean(res1$summary$rho))
@@ -275,17 +277,17 @@ t <- seq_along(x)
 
 # edm explore x, e(2) crossfold(2) k(-1) allowmissing
 cat("\n\nCommand: edm explore x, e(2) crossfold(2) k(-1) allowmissing\n\n")
-res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE)
 print(res$summary)
 
 # edm explore x, e(2) crossfold(10) k(-1) allowmissing
 cat("\n\nCommand: edm explore x, e(2) crossfold(10) k(-1) allowmissing\n\n")
-res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE)
 print(res$summary)
 
 # edm explore x, e(5) extra(d.y) full allowmissing
 cat("\n\nCommand: edm explore x, e(5) extra(d.y) full allowmissing\n\n")
-res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE, saveInputs=SAVE_INPUTS)
+res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE)
 print(res$summary)
 
 # Panel data
