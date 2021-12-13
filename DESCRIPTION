@@ -13,8 +13,8 @@ Imports:
     Rcpp (>= 1.0.7),
     RcppEigen,
     RcppJson
-LinkingTo: Rcpp, RcppEigen, RcppJson
-Remotes: nfultz/RcppJson
+LinkingTo: Rcpp, RcppEigen, RcppJson, RcppThread
+Remotes: nfultz/RcppJson, tnagler/RcppThread
 RoxygenNote: 7.1.2
 Encoding: UTF-8
 Suggests: 

@@ -4,9 +4,11 @@
 // [[Rcpp::plugins(cpp17)]]
 // [[Rcpp::depends(RcppEigen)]]
 // [[Rcpp::depends(RcppJson)]]
+// [[Rcpp::depends(RcppThread)]]
 
 #include <Rcpp.h>
 #include <RcppEigen.h>
+#include <RcppThread.h>
 
 #ifndef FMT_HEADER_ONLY
 #define FMT_HEADER_ONLY
@@ -50,12 +52,11 @@ public:
   virtual void flush() const { R_FlushConsole(); }
 };
 
+std::atomic<bool> isInterrupted;
+
 bool rcpp_keep_going()
 {
-  // The following two calls cause all kinds of crashes.
-  // Rcpp::checkUserInterrupt();
-  // return !RcppThread::isInterrupted();
-  return 1;
+  return !isInterrupted;
 }
 
 void replace_nan(std::vector<double>& v)
@@ -108,9 +109,11 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
-                       double missingDistance = 0.0, int numThreads = 1, double panelWeight = 0.0, int verbosity = 1, std::string saveInputs = "")
+                       double missingDistance = 0.0, int numThreads = 1, double panelWeight = 0.0, int verbosity = 1,
+                       std::string saveInputs = "")
 {
   RConsoleIO io(verbosity);
+  isInterrupted = false;
 
   Options opts;
 
@@ -166,9 +169,9 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   } else {
     explore = true;
   }
-  
+
   opts.idw = panelWeight;
-  
+
   std::vector<int> panelIDs;
   if (df.containsElementNamed("panel")) {
     panelIDs = Rcpp::as<std::vector<int>>(df["panel"]);
@@ -198,8 +201,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
   int numExtrasLagged = 0;
 
-  ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs,
-                              numExtrasLagged, dt, reldt, allowMissing,
+  ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt, allowMissing,
                               dtWeight);
 
   if (allowMissing && opts.missingdistance == 0) {
@@ -273,7 +275,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
   int rc = 0;
 
-  // RcppThread::ProgressBar bar(futures.size(), 1);
+  RcppThread::ProgressBar bar(futures.size(), 1);
 
   int kMin, kMax;
 
@@ -292,8 +294,14 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     auto Rdouble = [](double v) { return (v != MISSING_D) ? v : NA_REAL; };
 
     for (int f = 0; f < futures.size(); f++) {
+      // TODO: Probably should check for interruptions every second
+      // or so instead of after each future is completed.
+      isInterrupted = RcppThread::isInterrupted();
+
       const PredictionResult pred = futures[f].get();
-      // bar++;
+      if (verbosity > 0) {
+        bar++;
+      }
 
       if (f == 0 || pred.kMin < kMin) {
         kMin = pred.kMin;
@@ -301,9 +309,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
       if (f == 0 || pred.kMax > kMax) {
         kMax = pred.kMax;
       }
-
-      // io.print(io.get_and_clear_async_buffer());
-      // io.flush();
 
       if (!pred.copredict) {
         for (int t = 0; t < pred.stats.size(); t++) {
@@ -356,12 +361,18 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     }
   }
 
+  Rcpp::List res;
+  res["rc"] = rc;
+
+  if (isInterrupted) {
+    res["rc"] = 1;
+    return res;
+  }
+
   io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
   io.print(fmt::format("Return code is {}\n", rc));
 
-  Rcpp::List res;
   res["summary"] = summary;
-  res["rc"] = rc;
   res["kMin"] = kMin;
   res["kMax"] = kMax;
 
