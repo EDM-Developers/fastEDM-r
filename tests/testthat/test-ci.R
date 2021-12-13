@@ -42,8 +42,15 @@ logistic_map <- function(obs) {
 }
 
 expect_approx_equal <- function (x, y) {
-  absErr = max(abs(x - y))
-  testthat::expect_true(absErr < 1e-4)
+  validInputs <- length(x) == length(y) &&
+      length(x) == sum(is.finite(x)) &&
+      length(y) == sum(is.finite(y))
+  testthat::expect_true(validInputs)
+  
+  if (validInputs) {
+    absErr <- max(abs(x - y))
+    testthat::expect_true(absErr < 1e-4)  
+  }
 }
 
 test_that("Simple manifolds", {
@@ -164,7 +171,7 @@ test_that("Simple manifolds", {
   expect_approx_equal(resExplore$summary$rho, .99939)
   
   # assert xmap_r[1,1] == explore_r[1,1]
-  expect_approx_equal(resXmap$summary["rho"], resExplore$summary["rho"])
+  expect_approx_equal(resXmap$summary$rho, resExplore$summary$rho)
   
   # Check xmap reverse consistency (not necessary to check in this version)
   res1 <- edm(t, x, y)
