@@ -112,298 +112,310 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        double missingDistance = 0.0, double panelWeight = 0.0, int verbosity = 1, int numThreads = 1,
                        bool lowMemory = false, std::string saveInputs = "")
 {
-  RConsoleIO io(verbosity);
-  isInterrupted = false;
+  try {
+    RConsoleIO io(verbosity);
+    isInterrupted = false;
 
-  Options opts;
+    Options opts;
 
-  opts.nthreads = numThreads;
-  opts.copredict = false;
-  opts.forceCompute = true;
-  opts.saveManifolds = saveManifolds;
-  opts.saveSMAPCoeffs = saveSMAPCoeffs;
-  opts.missingdistance = missingDistance;
-  opts.lowMemoryMode = lowMemory;
+    opts.nthreads = numThreads;
+    opts.copredict = false;
+    opts.forceCompute = true;
+    opts.saveManifolds = saveManifolds;
+    opts.saveSMAPCoeffs = saveSMAPCoeffs;
+    opts.missingdistance = missingDistance;
+    opts.lowMemoryMode = lowMemory;
 
-  if (thetas.size() > 0) {
-    opts.thetas = Rcpp::as<std::vector<double>>(thetas);
-  } else {
-    opts.thetas = { 1.0 };
-  }
-
-  std::vector<int> Es = Rcpp::as<std::vector<int>>(es);
-
-  std::vector<int> libraries;
-  if (libs.isNotNull()) {
-    libraries = Rcpp::as<std::vector<int>>(libs);
-  }
-  if (algorithm == "simplex") {
-    opts.algorithm = Algorithm::Simplex;
-  } else if (algorithm == "smap") {
-    opts.algorithm = Algorithm::SMap;
-  } else {
-    return {}; // TODO
-  }
-
-  opts.calcRhoMAE = true; // TODO: When is this off?
-  opts.aspectRatio = 0;
-  opts.distance = Distance::Euclidean;
-  opts.metrics = {};
-  opts.cmdLine = "";
-  opts.saveKUsed = true;
-
-  io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
-  io.print(fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
-
-  std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
-  std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
-
-  replace_nan(t);
-  replace_nan(x);
-
-  bool explore;
-  std::vector<double> xmap;
-  if (df.containsElementNamed("y")) {
-    xmap = Rcpp::as<std::vector<double>>(df["y"]);
-    replace_nan(xmap);
-    explore = false;
-  } else {
-    explore = true;
-  }
-
-  opts.idw = panelWeight;
-
-  std::vector<int> panelIDs;
-  if (df.containsElementNamed("panel")) {
-    panelIDs = Rcpp::as<std::vector<int>>(df["panel"]);
-    opts.panelMode = true;
-  } else {
-    opts.panelMode = false;
-  }
-
-  std::vector<double> co_x;
-
-  if (df.containsElementNamed("co_x")) {
-    co_x = Rcpp::as<std::vector<double>>(df["co_x"]);
-    replace_nan(co_x);
-  }
-
-  std::vector<std::vector<double>> extrasVecs;
-
-  if (extras.isNotNull()) {
-    Rcpp::List extrasList = Rcpp::as<Rcpp::List>(extras);
-
-    for (int e = 0; e < extrasList.size(); e++) {
-      extrasVecs.emplace_back(Rcpp::as<std::vector<double>>(extrasList[e]));
-      replace_nan(extrasVecs[extrasVecs.size() - 1]);
-      opts.metrics.push_back(Metric::Diff); // TODO: Handle factor extras
+    if (thetas.size() > 0) {
+      opts.thetas = Rcpp::as<std::vector<double>>(thetas);
+    } else {
+      opts.thetas = { 1.0 };
     }
-  }
 
-  int numExtrasLagged = 0;
+    std::vector<int> Es = Rcpp::as<std::vector<int>>(es);
 
-  ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt, allowMissing,
-                              dtWeight);
+    std::vector<int> libraries;
+    if (libs.isNotNull()) {
+      libraries = Rcpp::as<std::vector<int>>(libs);
+    }
+    if (algorithm == "simplex") {
+      opts.algorithm = Algorithm::Simplex;
+    } else if (algorithm == "smap") {
+      opts.algorithm = Algorithm::SMap;
+    } else {
+      return {}; // TODO
+    }
 
-  if (allowMissing && opts.missingdistance == 0) {
-    opts.missingdistance = default_missing_distance(x);
-  }
+    opts.calcRhoMAE = true; // TODO: When is this off?
+    opts.aspectRatio = 0;
+    opts.distance = Distance::Euclidean;
+    opts.metrics = {};
+    opts.cmdLine = "";
+    opts.saveKUsed = true;
 
-  int maxE = Es[Es.size() - 1];
-  std::vector<bool> usable = generator.generate_usable(maxE);
+    io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
+    io.print(
+      fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
 
-  int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
-  if (numUsable == 0) {
-    io.print("Num usable is 0!\n");
-    return "";
-  }
+    std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
+    std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
 
-  if (!explore && libraries.size() == 0) {
-    libraries = { numUsable };
-  }
+    replace_nan(t);
+    replace_nan(x);
 
-  bool copredictMode = co_x.size() > 0;
-  std::string rngState = "";
+    bool explore;
+    std::vector<double> xmap;
+    if (df.containsElementNamed("y")) {
+      xmap = Rcpp::as<std::vector<double>>(df["y"]);
+      replace_nan(xmap);
+      explore = false;
+    } else {
+      explore = true;
+    }
+
+    opts.idw = panelWeight;
+
+    std::vector<int> panelIDs;
+    if (df.containsElementNamed("panel")) {
+      panelIDs = Rcpp::as<std::vector<int>>(df["panel"]);
+      opts.panelMode = true;
+    } else {
+      opts.panelMode = false;
+    }
+
+    std::vector<double> co_x;
+
+    if (df.containsElementNamed("co_x")) {
+      co_x = Rcpp::as<std::vector<double>>(df["co_x"]);
+      replace_nan(co_x);
+    }
+
+    std::vector<std::vector<double>> extrasVecs;
+
+    if (extras.isNotNull()) {
+      Rcpp::List extrasList = Rcpp::as<Rcpp::List>(extras);
+
+      for (int e = 0; e < extrasList.size(); e++) {
+        extrasVecs.emplace_back(Rcpp::as<std::vector<double>>(extrasList[e]));
+        replace_nan(extrasVecs[extrasVecs.size() - 1]);
+        opts.metrics.push_back(Metric::Diff); // TODO: Handle factor extras
+      }
+    }
+
+    int numExtrasLagged = 0;
+
+    ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt,
+                                allowMissing, dtWeight);
+
+    if (allowMissing && opts.missingdistance == 0) {
+      opts.missingdistance = default_missing_distance(x);
+    }
+
+    int maxE = Es[Es.size() - 1];
+    std::vector<bool> usable = generator.generate_usable(maxE);
+
+    int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
+    if (numUsable == 0) {
+      io.print("Num usable is 0!\n");
+      return "";
+    }
+
+    if (!explore && libraries.size() == 0) {
+      libraries = { numUsable };
+    }
+
+    bool copredictMode = co_x.size() > 0;
+    std::string rngState = "";
 
 #ifdef JSON
-  // If requested, save the inputs to a local file for testing
-  if (!saveInputs.empty()) {
-    // Fill in some uninitialised Option members just so we aren't saving
-    // noise to the JSON file (these will be overwritten inside edm.cpp).
-    opts.numTasks = numReps * crossfold * Es.size() * (libraries.size() > 0 ? libraries.size() : 1);
-    opts.aspectRatio = 1.0;
-    opts.k = k;
+    // If requested, save the inputs to a local file for testing
+    if (!saveInputs.empty()) {
+      // Fill in some uninitialised Option members just so we aren't saving
+      // noise to the JSON file (these will be overwritten inside edm.cpp).
+      opts.numTasks = numReps * crossfold * Es.size() * (libraries.size() > 0 ? libraries.size() : 1);
+      opts.aspectRatio = 1.0;
+      opts.k = k;
 
-    json taskGroup;
-    taskGroup["generator"] = generator;
-    taskGroup["opts"] = opts;
-    taskGroup["Es"] = Es;
-    taskGroup["libraries"] = libraries;
-    taskGroup["k"] = k;
-    taskGroup["numReps"] = numReps;
-    taskGroup["crossfold"] = crossfold;
-    taskGroup["explore"] = explore;
-    taskGroup["full"] = full;
-    taskGroup["shuffle"] = shuffle;
-    taskGroup["saveFinalPredictions"] = saveFinalPredictions;
-    taskGroup["saveFinalCoPredictions"] = saveFinalCoPredictions;
-    taskGroup["saveSMAPCoeffs"] = saveSMAPCoeffs;
-    taskGroup["copredictMode"] = copredictMode;
-    taskGroup["usable"] = bool_to_int(usable);
-    taskGroup["rngState"] = rngState;
+      json taskGroup;
+      taskGroup["generator"] = generator;
+      taskGroup["opts"] = opts;
+      taskGroup["Es"] = Es;
+      taskGroup["libraries"] = libraries;
+      taskGroup["k"] = k;
+      taskGroup["numReps"] = numReps;
+      taskGroup["crossfold"] = crossfold;
+      taskGroup["explore"] = explore;
+      taskGroup["full"] = full;
+      taskGroup["shuffle"] = shuffle;
+      taskGroup["saveFinalPredictions"] = saveFinalPredictions;
+      taskGroup["saveFinalCoPredictions"] = saveFinalCoPredictions;
+      taskGroup["saveSMAPCoeffs"] = saveSMAPCoeffs;
+      taskGroup["copredictMode"] = copredictMode;
+      taskGroup["usable"] = bool_to_int(usable);
+      taskGroup["rngState"] = rngState;
 
-    append_to_dumpfile(saveInputs, taskGroup);
+      append_to_dumpfile(saveInputs, taskGroup);
 
-    // If we just want to save the input file and not actually run the command,
-    // then uncomment the following two lines to end early.
-    // SF_scal_save(FINISHED_SCALAR, 1.0);
-    // return SUCCESS; // Let Stata give the error here.
-  }
+      // If we just want to save the input file and not actually run the command,
+      // then uncomment the following two lines to end early.
+      // SF_scal_save(FINISHED_SCALAR, 1.0);
+      // return SUCCESS; // Let Stata give the error here.
+    }
 #endif
 
-  io.print("Starting the command!\n");
-  io.flush();
+    io.print("Starting the command!\n");
+    io.flush();
 
-  auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
+    auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
 
-  std::vector<std::future<PredictionResult>> futures = launch_task_group(
-    genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
-    saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
+    std::vector<std::future<PredictionResult>> futures = launch_task_group(
+      genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
+      saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
 
-  io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));
-  io.flush();
+    io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));
+    io.flush();
 
-  int rc = 0;
+    int rc = 0;
 
-  RcppThread::ProgressBar bar(futures.size(), 1);
+    RcppThread::ProgressBar bar(futures.size(), 1);
 
-  int kMin, kMax;
+    int kMin, kMax;
 
-  Rcpp::NumericMatrix predictions, coPredictions, coeffs;
-  Rcpp::DataFrame summary, co_summary;
-  std::vector<Rcpp::NumericMatrix> Ms, Mps;
+    Rcpp::NumericMatrix predictions, coPredictions, coeffs;
+    Rcpp::DataFrame summary, co_summary;
+    std::vector<Rcpp::NumericMatrix> Ms, Mps;
 
-  {
-    Rcpp::IntegerVector Es, libraries;
-    Rcpp::NumericVector thetas, rhos, maes;
+    {
+      Rcpp::IntegerVector Es, libraries;
+      Rcpp::NumericVector thetas, rhos, maes;
 
-    Rcpp::IntegerVector co_Es, co_libraries;
-    Rcpp::NumericVector co_thetas, co_rhos, co_maes;
+      Rcpp::IntegerVector co_Es, co_libraries;
+      Rcpp::NumericVector co_thetas, co_rhos, co_maes;
 
-    auto Rint = [](double v) { return (v != MISSING_D) ? v : NA_INTEGER; };
-    auto Rdouble = [](double v) { return (v != MISSING_D) ? v : NA_REAL; };
+      auto Rint = [](double v) { return (v != MISSING_D) ? v : NA_INTEGER; };
+      auto Rdouble = [](double v) { return (v != MISSING_D) ? v : NA_REAL; };
 
-    for (int f = 0; f < futures.size(); f++) {
-      // TODO: Probably should check for interruptions every second
-      // or so instead of after each future is completed.
-      isInterrupted = RcppThread::isInterrupted();
+      for (int f = 0; f < futures.size(); f++) {
+        // TODO: Probably should check for interruptions every second
+        // or so instead of after each future is completed.
+        isInterrupted = RcppThread::isInterrupted();
 
-      if (isInterrupted) {
-        Rcpp::List res;
-        res["rc"] = 1;
-        return res;
-      }
-      
-      const PredictionResult pred = futures[f].get();
-      if (verbosity > 0) {
-        bar++;
-      }
-
-      if (f == 0 || pred.kMin < kMin) {
-        kMin = pred.kMin;
-      }
-      if (f == 0 || pred.kMax > kMax) {
-        kMax = pred.kMax;
-      }
-
-      if (!pred.copredict) {
-        for (int t = 0; t < pred.stats.size(); t++) {
-          Es.push_back(Rint(pred.stats[t].E));
-          thetas.push_back(Rdouble(pred.stats[t].theta));
-          libraries.push_back(Rint(pred.stats[t].library));
-          rhos.push_back(Rdouble(pred.stats[t].rho));
-          maes.push_back(Rdouble(pred.stats[t].mae));
+        if (isInterrupted) {
+          Rcpp::List res;
+          res["rc"] = 1;
+          return res;
         }
-      } else {
-        for (int t = 0; t < pred.stats.size(); t++) {
-          co_Es.push_back(Rint(pred.stats[t].E));
-          co_thetas.push_back(Rdouble(pred.stats[t].theta));
-          co_libraries.push_back(Rint(pred.stats[t].library));
-          co_rhos.push_back(Rdouble(pred.stats[t].rho));
-          co_maes.push_back(Rdouble(pred.stats[t].mae));
+
+        const PredictionResult pred = futures[f].get();
+        if (verbosity > 0) {
+          bar++;
         }
-      }
 
-      if (pred.rc > rc) {
-        rc = pred.rc;
-      }
+        if (f == 0 || pred.kMin < kMin) {
+          kMin = pred.kMin;
+        }
+        if (f == 0 || pred.kMax > kMax) {
+          kMax = pred.kMax;
+        }
 
-      if (pred.predictions != nullptr) {
         if (!pred.copredict) {
-          predictions =
-            to_R_matrix(pred.predictions.get(), pred.predictionRows.size(), pred.numThetas, pred.predictionRows);
+          for (int t = 0; t < pred.stats.size(); t++) {
+            Es.push_back(Rint(pred.stats[t].E));
+            thetas.push_back(Rdouble(pred.stats[t].theta));
+            libraries.push_back(Rint(pred.stats[t].library));
+            rhos.push_back(Rdouble(pred.stats[t].rho));
+            maes.push_back(Rdouble(pred.stats[t].mae));
+          }
         } else {
-          coPredictions =
-            to_R_matrix(pred.predictions.get(), pred.predictionRows.size(), pred.numThetas, pred.predictionRows);
+          for (int t = 0; t < pred.stats.size(); t++) {
+            co_Es.push_back(Rint(pred.stats[t].E));
+            co_thetas.push_back(Rdouble(pred.stats[t].theta));
+            co_libraries.push_back(Rint(pred.stats[t].library));
+            co_rhos.push_back(Rdouble(pred.stats[t].rho));
+            co_maes.push_back(Rdouble(pred.stats[t].mae));
+          }
+        }
+
+        if (pred.rc > rc) {
+          rc = pred.rc;
+        }
+
+        if (pred.predictions != nullptr) {
+          if (!pred.copredict) {
+            predictions =
+              to_R_matrix(pred.predictions.get(), pred.predictionRows.size(), pred.numThetas, pred.predictionRows);
+          } else {
+            coPredictions =
+              to_R_matrix(pred.predictions.get(), pred.predictionRows.size(), pred.numThetas, pred.predictionRows);
+          }
+        }
+        if (pred.coeffs != nullptr) {
+          coeffs = to_R_matrix(pred.coeffs.get(), pred.predictionRows.size(), pred.numCoeffCols, pred.predictionRows);
+        }
+
+        if (saveManifolds) {
+          Ms.push_back(to_R_matrix(pred.M->data(), pred.M->numPoints(), pred.M->E_actual(), {}, true));
+          Mps.push_back(to_R_matrix(pred.Mp->data(), pred.Mp->numPoints(), pred.Mp->E_actual(), {}, true));
         }
       }
-      if (pred.coeffs != nullptr) {
-        coeffs = to_R_matrix(pred.coeffs.get(), pred.predictionRows.size(), pred.numCoeffCols, pred.predictionRows);
-      }
 
-      if (saveManifolds) {
-        Ms.push_back(to_R_matrix(pred.M->data(), pred.M->numPoints(), pred.M->E_actual(), {}, true));
-        Mps.push_back(to_R_matrix(pred.Mp->data(), pred.Mp->numPoints(), pred.Mp->E_actual(), {}, true));
+      summary = Rcpp::DataFrame::create(Rcpp::_["E"] = Es, Rcpp::_["library"] = libraries, Rcpp::_["theta"] = thetas,
+                                        Rcpp::_["rho"] = rhos, Rcpp::_["mae"] = maes);
+
+      if (copredictMode) {
+        co_summary =
+          Rcpp::DataFrame::create(Rcpp::_["E"] = co_Es, Rcpp::_["library"] = co_libraries, Rcpp::_["theta"] = co_thetas,
+                                  Rcpp::_["rho"] = co_rhos, Rcpp::_["mae"] = co_maes);
       }
     }
 
-    summary = Rcpp::DataFrame::create(Rcpp::_["E"] = Es, Rcpp::_["library"] = libraries, Rcpp::_["theta"] = thetas,
-                                      Rcpp::_["rho"] = rhos, Rcpp::_["mae"] = maes);
+    io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
+    io.print(fmt::format("Return code is {}\n", rc));
+
+    Rcpp::List res;
+    res["rc"] = rc;
+    res["summary"] = summary;
+    res["kMin"] = kMin;
+    res["kMax"] = kMax;
 
     if (copredictMode) {
-      co_summary =
-        Rcpp::DataFrame::create(Rcpp::_["E"] = co_Es, Rcpp::_["library"] = co_libraries, Rcpp::_["theta"] = co_thetas,
-                                Rcpp::_["rho"] = co_rhos, Rcpp::_["mae"] = co_maes);
+      res["co_summary"] = co_summary;
     }
-  }
 
-  io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
-  io.print(fmt::format("Return code is {}\n", rc));
+    if (saveFinalPredictions) {
+      res["predictions"] = predictions;
+    }
+
+    if (saveFinalCoPredictions) {
+      res["copredictions"] = coPredictions;
+    }
+
+    if (saveManifolds) {
+      res["Ms"] = Ms;
+      res["Mps"] = Mps;
+    }
+
+    if (saveSMAPCoeffs) {
+      res["coeffs"] = coeffs;
+    }
+
+    if (allowMissing) {
+      res["missingdistance"] = opts.missingdistance;
+    }
+
+    if (dt || reldt) {
+      res["dtWeight"] = generator.dtWeight();
+    }
+
+    return res;
+
+  } catch (const std::exception& e) {
+    Rcpp::Rcerr << e.what() << std::endl;
+  } catch (...) {
+    Rcpp::Rcerr << "Unknown error in the C++ code of edm" << std::endl;
+  }
 
   Rcpp::List res;
-  res["rc"] = rc;
-  res["summary"] = summary;
-  res["kMin"] = kMin;
-  res["kMax"] = kMax;
-
-  if (copredictMode) {
-    res["co_summary"] = co_summary;
-  }
-
-  if (saveFinalPredictions) {
-    res["predictions"] = predictions;
-  }
-
-  if (saveFinalCoPredictions) {
-    res["copredictions"] = coPredictions;
-  }
-
-  if (saveManifolds) {
-    res["Ms"] = Ms;
-    res["Mps"] = Mps;
-  }
-
-  if (saveSMAPCoeffs) {
-    res["coeffs"] = coeffs;
-  }
-
-  if (allowMissing) {
-    res["missingdistance"] = opts.missingdistance;
-  }
-
-  if (dt || reldt) {
-    res["dtWeight"] = generator.dtWeight();
-  }
-
+  res["rc"] = 8000;
   return res;
 }
