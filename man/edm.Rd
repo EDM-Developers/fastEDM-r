@@ -34,6 +34,7 @@ edm(
   panelWeight = 0,
   verbosity = 0,
   numThreads = 1,
+  lowMemory = FALSE,
   saveInputs = ""
 )
 }
@@ -187,6 +188,10 @@ if the panels are unbalanced).}
 \item{verbosity}{The level of detail in the output.}
 
 \item{numThreads}{The number of threads to use for the prediction task.}
+
+\item{lowMemory}{The lowMemory option tries to save as much space as possible
+by more efficiently using memory, though for small datasets this will likely
+slow down the computations by a small but noticeable amount.}
 
 \item{saveInputs}{Save (append) all the inputs into a JSON file. This is 
 added purely for our (the developers') ease of debugging.}

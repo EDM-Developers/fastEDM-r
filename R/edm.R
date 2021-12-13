@@ -199,6 +199,10 @@
 #' 
 #' @param numThreads The number of threads to use for the prediction task.
 #' 
+#' @param lowMemory The lowMemory option tries to save as much space as possible
+#' by more efficiently using memory, though for small datasets this will likely
+#' slow down the computations by a small but noticeable amount.
+#' 
 #' @param saveInputs Save (append) all the inputs into a JSON file. This is 
 #' added purely for our (the developers') ease of debugging.
 #'
@@ -217,7 +221,7 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                 saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
                 missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
                 numReps=1, panelWeight=0, verbosity=0, numThreads=1,
-                saveInputs="") {
+                lowMemory=FALSE, saveInputs="") {
   
   if (length(t) != length(x)) {
     stop("The time and x variables should be the same length")
@@ -273,7 +277,8 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      missingDistance=missingDistance,
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
                      numThreads=numThreads, panelWeight=panelWeight,
-                     verbosity=verbosity, saveInputs=saveInputs)
+                     verbosity=verbosity, lowMemory=lowMemory,
+                     saveInputs=saveInputs)
   
   return(res)
 }

@@ -109,8 +109,8 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
-                       double missingDistance = 0.0, int numThreads = 1, double panelWeight = 0.0, int verbosity = 1,
-                       std::string saveInputs = "")
+                       double missingDistance = 0.0, double panelWeight = 0.0, int verbosity = 1, int numThreads = 1,
+                       bool lowMemory = false, std::string saveInputs = "")
 {
   RConsoleIO io(verbosity);
   isInterrupted = false;
@@ -123,6 +123,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   opts.saveManifolds = saveManifolds;
   opts.saveSMAPCoeffs = saveSMAPCoeffs;
   opts.missingdistance = missingDistance;
+  opts.lowMemoryMode = lowMemory;
 
   if (thetas.size() > 0) {
     opts.thetas = Rcpp::as<std::vector<double>>(thetas);
@@ -264,7 +265,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
   io.flush();
 
   auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
-  opts.lowMemoryMode = false;
 
   std::vector<std::future<PredictionResult>> futures = launch_task_group(
     genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,

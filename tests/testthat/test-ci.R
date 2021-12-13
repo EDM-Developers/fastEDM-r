@@ -187,7 +187,13 @@ test_that("Simple manifolds", {
   expect_approx_equal(res$summary$rho, rho)
   
   # Check that lowmemory flag is working
-  # TODO
+  res <- edm(t, x, lowMemory=TRUE)
+  
+  # Check that verbosity > 0 is working
+  capture.output(res <- edm(t, x, verbosity=1))
+  
+  # Check that numThreads > 1 is working
+  res <- edm(t, x, numThreads=4)
 })
 
 test_that("Missing data manifolds", {
