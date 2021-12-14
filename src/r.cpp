@@ -162,6 +162,14 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
     replace_nan(t);
     replace_nan(x);
+    
+    // Need to wipe out this so that the default missing distance
+    // calculation is fine.
+    for (int i = 0; i < t.size(); i++) {
+      if (t[i] == MISSING_D) {
+        x[i] = MISSING_D;
+      }
+    }
 
     bool explore;
     std::vector<double> xmap;
