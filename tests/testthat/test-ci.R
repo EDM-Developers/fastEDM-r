@@ -306,12 +306,12 @@ test_that("From 'bigger-test.do' script", {
   u1 <- c(.94173813, .4870331, .55453211, -.57394189, -1.6831859, .20002605, 2.0535631, -1.2874906, .76769561, .57129043, -.9382565, 1.4670297, -2.7969353, .65672988, -.074978352, -.61362195, -1.3412304, .45943514, 1.1464604, 1.3768886, .016770668, .94677925, -.11319048, -.49819016, -1.5304253, -.051611003, -.076513439, -1.3290932, -.45883241, .017877782, .34325397, 1.2092726, .2365011, -.73019648, -.330953, .13359453, 1.0885595, -.63763547, -.42640716, -.014303211, .21588294, .05830165, .059484873, .025059106, 1.0119363, -.35853708, 1.4637038, .70681834, -2.8081942, -.27054599, 1.5580958, .071366407, 2.2807562, .92863506, -.16536251, -.17245923, 2.0830457, -1.6134628, -.16830915, 1.6171873, -.90855205, .0026675737, .82025963, .92624164, 1.6329502, -.232575, -.089815319, -1.0917373, .061252236, 1.1413523, -.0335248, .26932761, -1.9740542, -.99436063, -.53038871, .70026708, -.79605526, -1.1729968, .17358617, -.28859794, .93706262, 1.2917892, -.06885922, 1.0749949, 1.3219627, -.093162067, 1.0999831, .31230453, -.87349302, 1.4867147, -.8970021, -1.1020641, .25990388, -1.9723424, 1.5126398, 1.4318892, -.024286436, -.33137387, -.64844704, -1.7218629)
 
   # edm explore x, e(2) crossfold(2) k(-1) allowmissing
-  res <- edm(t, x, E=2, crossfold=2, k=-1, allowMissing=TRUE)
+  res <- edm(t, x, E=2, crossfold=2, k=Inf, allowMissing=TRUE)
   expect_approx_equal(mean(res$summary$rho), .98175)
   # TODO: Make the crossfold option just output one correlation
   
   # edm explore x, e(2) crossfold(10) k(-1) allowmissing
-  res <- edm(t, x, E=2, crossfold=10, k=-1, allowMissing=TRUE)
+  res <- edm(t, x, E=2, crossfold=10, k=Inf, allowMissing=TRUE)
   expect_approx_equal(mean(res$summary$rho), .98325)
   
   # edm explore x, e(5) extra(d.y) full allowmissing
@@ -446,11 +446,11 @@ test_that("Panel data", {
   check_edm_result(res, .92115)
 
   # edm explore x, e(40) idw(-1)
-  res <- edm(t, x, panel=panel, E=40, panelWeight=-1)
+  res <- edm(t, x, panel=panel, E=40, panelWeight=Inf)
   check_edm_result(res, .86964)
 
   # edm explore x, e(40) idw(-1) allowmissing
-  res <- edm(t, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+  res <- edm(t, x, panel=panel, E=40, panelWeight=Inf, allowMissing=TRUE)
   check_edm_result(res, .91768)
   
   # edm xmap x y, e(40)
@@ -464,13 +464,13 @@ test_that("Panel data", {
   check_edm_results(res1, res2, .63174, .81394)
 
   # edm xmap x y, e(40) idw(-1)
-  res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1)
-  res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1)
+  res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=Inf)
+  res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=Inf)
   check_edm_results(res1, res2, .76444, .83836)
 
   # edm xmap x y, e(40) idw(-1) allowmissing
-  res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
-  res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=-1, allowMissing=TRUE)
+  res1 <- edm(t, x, y, panel=panel, E=40, panelWeight=Inf, allowMissing=TRUE)
+  res2 <- edm(t, y, x, panel=panel, E=40, panelWeight=Inf, allowMissing=TRUE)
   check_edm_results(res1, res2, .55937, .75815)
 })
 
@@ -501,15 +501,15 @@ test_that("Panel data with missing observations", {
   check_edm_result(res, .95905)
   
   # edm explore x, e(5) idw(-1)
-  res <- edm(t, x, panel=panel, E=5, panelWeight=-1)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=Inf)
   check_edm_result(res, .92472)
   
   # edm explore x, e(5) idw(-1) allowmissing
-  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, allowMissing=TRUE)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=Inf, allowMissing=TRUE)
   check_edm_result(res, .93052)
   
   # edm explore x, e(5) idw(-1) k(-1)
-  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, k=-1)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=Inf, k=Inf)
   check_edm_result(res, .92472)
   
   # See if the relative dt flags work
@@ -523,10 +523,10 @@ test_that("Panel data with missing observations", {
   check_edm_result(res, .9085)
 
   # edm explore x, e(5) idw(-1) reldt
-  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=Inf, reldt=TRUE)
   check_edm_result(res, .78473)
 
   # edm explore x, e(5) idw(-1) reldt allowmissing
-  res <- edm(t, x, panel=panel, E=5, panelWeight=-1, reldt=TRUE, allowMissing=TRUE)
+  res <- edm(t, x, panel=panel, E=5, panelWeight=Inf, reldt=TRUE, allowMissing=TRUE)
   check_edm_result(res, .75709)
 })

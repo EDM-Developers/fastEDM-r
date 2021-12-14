@@ -94,7 +94,7 @@ being \code{library = c(seq(4, 25), seq(30, 50, 5), seq(54, 99, 15))}.}
 set to 1, only the nearest neighbour is used, but as \eqn{k} increases the next-closest nearest neighbours
 are included for making predictions. In the case that \eqn{k} is set 0, the number of neighbours used is
 calculated automatically (typically as \eqn{k = E + 1} to form a simplex around a target), which is the
-default value. When \eqn{k < 0} (e.g., \code{k=-1}), all possible points in the prediction set are used (i.e.,
+default value. When \eqn{k = \infty} (e.g., \code{k=Inf}), all possible points in the prediction set are used (i.e.,
 all points in the library are used to reconstruct the manifold and predict target vectors). This
 latter setting is useful and typically recommended for S-mapping because it allows all points in the
 library to be used for predictions with the weightings in theta. However, with large datasets this
@@ -179,10 +179,10 @@ inference using confidence intervals in EDM (Tsonis et al., 2015; van Nes et al.
 
 \item{panelWeight}{This specifies a penalty that is added to the distances between points in the
 manifold which correspond to observations from different panels. By default \code{panelWeight} is 0,
-so the data from all panels is mixed together and treatly equally. If \code{panelWeight=1} is set
-(or any other negative value), then the weight is treated as \eqn{\infty} so neighbours will never
-be selected which cross the boundaries between panels. Setting \code{panelWeight=1} with
-\code{k=1} means we may use a different number of neighbors for different predictions (i.e.
+so the data from all panels is mixed together and treatly equally. If \code{panelWeight=Inf} is set
+then the weight is treated as \eqn{\infty} so neighbours will never
+be selected which cross the boundaries between panels. Setting \code{panelWeight=Inf} with
+\code{k=Inf} means we may use a different number of neighbors for different predictions (i.e.
 if the panels are unbalanced).}
 
 \item{verbosity}{The level of detail in the output.}
