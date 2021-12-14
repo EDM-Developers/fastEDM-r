@@ -11,3 +11,6 @@
 ^\.DS_Store$
 ^\.git$
 ^\.Rd2pdf*$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
