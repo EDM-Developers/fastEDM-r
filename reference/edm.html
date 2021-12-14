@@ -137,7 +137,7 @@ being <code>library = c(seq(4, 25), seq(30, 50, 5), seq(54, 99, 15))</code>.</p>
 set to 1, only the nearest neighbour is used, but as \(k\) increases the next-closest nearest neighbours
 are included for making predictions. In the case that \(k\) is set 0, the number of neighbours used is
 calculated automatically (typically as \(k = E + 1\) to form a simplex around a target), which is the
-default value. When \(k &lt; 0\) (e.g., <code>k=-1</code>), all possible points in the prediction set are used (i.e.,
+default value. When \(k = \infty\) (e.g., <code>k=Inf</code>), all possible points in the prediction set are used (i.e.,
 all points in the library are used to reconstruct the manifold and predict target vectors). This
 latter setting is useful and typically recommended for S-mapping because it allows all points in the
 library to be used for predictions with the weightings in theta. However, with large datasets this
@@ -222,10 +222,10 @@ inference using confidence intervals in EDM (Tsonis et al., 2015; van Nes et al.
 <dt>panelWeight</dt>
 <dd><p>This specifies a penalty that is added to the distances between points in the
 manifold which correspond to observations from different panels. By default <code>panelWeight</code> is 0,
-so the data from all panels is mixed together and treatly equally. If <code>panelWeight=1</code> is set
-(or any other negative value), then the weight is treated as \(\infty\) so neighbours will never
-be selected which cross the boundaries between panels. Setting <code>panelWeight=1</code> with
-<code>k=1</code> means we may use a different number of neighbors for different predictions (i.e.
+so the data from all panels is mixed together and treatly equally. If <code>panelWeight=Inf</code> is set
+then the weight is treated as \(\infty\) so neighbours will never
+be selected which cross the boundaries between panels. Setting <code>panelWeight=Inf</code> with
+<code>k=Inf</code> means we may use a different number of neighbors for different predictions (i.e.
 if the panels are unbalanced).</p></dd>
 <dt>verbosity</dt>
 <dd><p>The level of detail in the output.</p></dd>
