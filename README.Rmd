@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 [![CRAN status](https://www.r-pkg.org/badges/version/fastEDM)](https://CRAN.R-project.org/package=fastEDM)
 <!-- badges: end -->
 
-The goal of fastEDM is to ...
+The fastEDM package implements a series of tools that can be used for empirical dynamic modeling. The core algorithm is written in C++ to achieve a reasonable execution speed.
 
 ## Installation
 
@@ -31,16 +31,10 @@ You can install the development version of fastEDM from [GitHub](https://github.
 devtools::install_github("EDM-Developers/fastEDM")
 ```
 
-## Example
+## Example: Chicago crime levels and temperature
 
-This is a basic example which shows you how to solve a common problem:
+This example, looking at the causal links between Chicago's temperature and crime rates, is described in full in our [paper](https://jinjingli.github.io/edm/edm-wp.pdf):
 
-```{r example}
-library(fastEDM)
-
-t <- c(1, 2, 3, 4, 5, 6, 7, 8)
-x <- c(11, 12, 13, 14, 15, 16, 17, 18)
-res <- edm(t, x)
-print(res$summary)
+```{r example, code=xfun::read_utf8('man/chicago-example.R')}
 ```
 

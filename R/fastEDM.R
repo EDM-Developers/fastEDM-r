@@ -15,9 +15,5 @@
 #' @seealso{
 #'   \url{https://jinjingli.github.io/edm/}
 #' }
-#' @examples 
-#'  t <- c(1, 2, 3, 4, 5, 6, 7, 8)
-#'  x <- c(11, 12, 13, 14, 15, 16, 17, 18)
-#'  res <- edm(t, x)
-#'  print(res$summary)
+#' @example man/chicago-example.R
 NULL
