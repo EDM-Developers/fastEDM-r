@@ -73,7 +73,7 @@
   dtWeight <span class="op">=</span> <span class="fl">0</span>,
   numReps <span class="op">=</span> <span class="fl">1</span>,
   panelWeight <span class="op">=</span> <span class="fl">0</span>,
-  verbosity <span class="op">=</span> <span class="fl">0</span>,
+  verbosity <span class="op">=</span> <span class="fl">1</span>,
   numThreads <span class="op">=</span> <span class="fl">1</span>,
   lowMemory <span class="op">=</span> <span class="cn">FALSE</span>,
   saveInputs <span class="op">=</span> <span class="st">""</span>
@@ -249,6 +249,11 @@ added purely for our (the developers') ease of debugging.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"> <span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span><span class="op">)</span></span>
 <span class="r-in"> <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">11</span>, <span class="fl">12</span>, <span class="fl">13</span>, <span class="fl">14</span>, <span class="fl">15</span>, <span class="fl">16</span>, <span class="fl">17</span>, <span class="fl">18</span><span class="op">)</span></span>
 <span class="r-in"> <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">edm</span><span class="op">(</span><span class="va">t</span>, <span class="va">x</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Summary of predictions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   E library theta        rho     mae</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2       3     1 -0.9706895 2.62881</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> k value was between 3 and 3</span>
 <span class="r-in"> <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   E library theta        rho     mae</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 2       3     1 -0.9706895 2.62881</span>
