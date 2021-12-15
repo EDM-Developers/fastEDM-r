@@ -17,8 +17,7 @@ Description: The fastEDM package implements a series of tools that can be
 License: MIT + file LICENSE
 Imports:
     Rcpp (>= 1.0.7),
-    RcppEigen,
-    RcppJson
+    RcppEigen
 LinkingTo: Rcpp, RcppEigen, RcppJson, RcppThread
 Remotes: nfultz/RcppJson, tnagler/RcppThread
 RoxygenNote: 7.1.2

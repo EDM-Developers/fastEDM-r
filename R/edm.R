@@ -284,10 +284,8 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      saveInputs=saveInputs)
   
   if (res$rc == 0 && verbosity > 0) {
-    df <- na.omit(res$summary)
-    summary <- aggregate(df, list(df$E, df$library, df$theta), mean)
-    # Remove these 'group 1', 'group 2', 'group 3' columns which are added
-    summary <- summary[colnames(res$summary)]
+    df <- stats::na.omit(res$summary)
+    summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     
     cat("Summary of predictions\n")
     print(summary)
@@ -295,10 +293,8 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
     cat("k value was between", res$kMin, "and", res$kMax);
     
     if (length(copredict) > 0) {
-      df <- na.omit(res$co_summary)
-      summary <- aggregate(df, list(df$E, df$library, df$theta), mean)
-      # Remove these 'group 1', 'group 2', 'group 3' columns which are added
-      summary <- summary[colnames(res$summary)]
+      df <- stats::na.omit(res$co_summary)
+      summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
       
       cat("Summary of copredictions\n")
       print(summary)

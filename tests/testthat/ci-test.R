@@ -65,7 +65,6 @@ u1 <- c(-1.027216, 1.527376, .5907618, 1.070512, 2.139774, -.5876155, .1418234, 
 # explore x, e(2/10)
 cat("\n\nCommand: explore x, e(2/10)\n\n")
 res <- edm(t, x, E=2:10)
-rho <- c(.99893, .99879, .99835, .99763, .99457, .99385, .991, .98972, .98572)
 
 # edm xmap x y, k(5)
 cat("\n\nCommand: edm xmap x y, k(5)\n\n")
@@ -159,7 +158,6 @@ res2 <- edm(t, y, x)
 # edm explore x, e(2 3) theta(0 1)
 cat("\n\nCommand: edm explore x, e(2 3) theta(0 1)\n\n")
 res <- edm(t, x, E=c(2, 3), theta=c(0, 1))
-rho <- c(.99863, .99895, .99734, .99872)
 
 # Check that lowmemory flag is working
 cat("\n\nCommand: edm explore x, e(2) lowmemory\n\n")
