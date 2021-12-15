@@ -220,7 +220,7 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                 saveCoPredictions=FALSE, saveManifolds=FALSE,
                 saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
                 missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
-                numReps=1, panelWeight=0, verbosity=0, numThreads=1,
+                numReps=1, panelWeight=0, verbosity=1, numThreads=1,
                 lowMemory=FALSE, saveInputs="") {
   
   if (length(t) != length(x)) {
@@ -282,6 +282,28 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      numThreads=numThreads, panelWeight=panelWeight,
                      verbosity=verbosity, lowMemory=lowMemory,
                      saveInputs=saveInputs)
+  
+  if (res$rc == 0 && verbosity > 0) {
+    df <- na.omit(res$summary)
+    summary <- aggregate(df, list(df$E, df$library, df$theta), mean)
+    # Remove these 'group 1', 'group 2', 'group 3' columns which are added
+    summary <- summary[colnames(res$summary)]
+    
+    cat("Summary of predictions\n")
+    print(summary)
+    
+    cat("k value was between", res$kMin, "and", res$kMax);
+    
+    if (length(copredict) > 0) {
+      df <- na.omit(res$co_summary)
+      summary <- aggregate(df, list(df$E, df$library, df$theta), mean)
+      # Remove these 'group 1', 'group 2', 'group 3' columns which are added
+      summary <- summary[colnames(res$summary)]
+      
+      cat("Summary of copredictions\n")
+      print(summary)
+    }
+  }
   
   return(res)
 }

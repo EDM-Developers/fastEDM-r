@@ -32,7 +32,7 @@ edm(
   dtWeight = 0,
   numReps = 1,
   panelWeight = 0,
-  verbosity = 0,
+  verbosity = 1,
   numThreads = 1,
   lowMemory = FALSE,
   saveInputs = ""

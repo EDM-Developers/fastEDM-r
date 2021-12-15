@@ -153,10 +153,12 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     opts.cmdLine = "";
     opts.saveKUsed = true;
 
-    io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
-    io.print(
+    if (io.verbosity > 1) {
+      io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
+      io.print(
       fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
-
+    }
+    
     std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
     std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
 
@@ -271,8 +273,10 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     }
 #endif
 
-    io.print("Starting the command!\n");
-    io.flush();
+    if (io.verbosity > 1) {
+      io.print("Starting the command!\n");
+    io.flush();  
+    }
 
     auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
 
@@ -280,8 +284,10 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
       genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
       saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
 
-    io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));
-    io.flush();
+    if (io.verbosity > 1) {
+      io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));
+      io.flush();
+    }
 
     int rc = 0;
 
@@ -376,9 +382,6 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                                   Rcpp::_["rho"] = co_rhos, Rcpp::_["mae"] = co_maes);
       }
     }
-
-    io.print(fmt::format("k value was between {} and {}\n", kMin, kMax));
-    io.print(fmt::format("Return code is {}\n", rc));
 
     Rcpp::List res;
     res["rc"] = rc;

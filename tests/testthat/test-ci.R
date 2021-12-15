@@ -81,6 +81,8 @@ check_noisy_edm_result <- function(res, rho_1, rho_2, co_rho_1=NULL, co_rho_2=NU
   }
 }
 
+formals(edm)$verbosity <- 0
+
 test_that("Simple manifolds", {
   obs <- 500
   map <- logistic_map(obs)
