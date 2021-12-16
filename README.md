@@ -35,6 +35,7 @@ and crime rates, is described in full in our
 library(fastEDM)
 library(ggplot2)
 library(readr)
+library(tidyr)
 
 data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv")
 chicago <- read_csv(data, col_types = cols(crime = col_double()))
@@ -48,23 +49,26 @@ res1 <- edm(chicago["t"], chicago["temp"], chicago["crime"],
 res2 <- edm(chicago["t"], chicago["crime"], chicago["temp"],
                        E=7, library=libs, numReps=4, verbosity=0, numThreads=4)
 
-averaged1 <- aggregate(res1$summary[, c("mae", "rho")], list(res1$summary$library), mean)
-averaged2 <- aggregate(res2$summary[, c("mae", "rho")], list(res2$summary$library), mean)
-colnames(averaged1)[[1]] <- "library"
-colnames(averaged2)[[1]] <- "library"
+averaged1 <- stats::aggregate(rho ~ library, res1$summary, mean)
+averaged2 <- stats::aggregate(rho ~ library, res2$summary, mean)
 
-p <- ggplot() + 
-  geom_line(data = averaged1, aes(x = library, y = rho), color = 2) +
-  geom_line(data = averaged2, aes(x = library, y = rho), color = 3) +
-  xlab("Library") +
-  ylab("Rho")
+averaged <- data.frame(Library = averaged1$library,
+                       temp.to.crime = averaged1$rho,
+                       crime.to.temp = averaged2$rho)
 
-p <- p + 
-  geom_point(data = res1$summary, aes(x = library, y = rho), alpha = 0.05, color = 2) +
-  geom_point(data = res2$summary, aes(x = library, y = rho), alpha = 0.05, color = 3) +
-  geom_smooth(method = "loess", alpha = 0.9)
+combined <- gather(averaged, key = "Direction", value = "Correlation", -Library)
+combined[combined$Direction == "temp.to.crime", "Direction"] <- "Crime | M(Temperature)"
+combined[combined$Direction == "crime.to.temp", "Direction"] <- "Temperature | M(Crime)"
+
+p <- ggplot(combined, aes(x = Library, y = Correlation)) + 
+  geom_line(aes(color = Direction)) + scale_color_manual(values = c("darkred", "steelblue")) +
+  geom_point(data = res1$summary, aes(x = library, y = rho), alpha = 0.05, color = "darkred") +
+  geom_point(data = res2$summary, aes(x = library, y = rho), alpha = 0.05, color = "steelblue") +
+  ylim(c(0.275, 0.625))
 
 print(p)
+#> Warning: Removed 4 rows containing missing values (geom_point).
+#> Warning: Removed 1 rows containing missing values (geom_point).
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
