@@ -26,5 +26,6 @@ Suggests:
     ggplot2,
     readr,
     testthat (>= 3.0.0),
+    tidyr
 Config/testthat/edition: 3
 URL: https://edm-developers.github.io/fastEDM
