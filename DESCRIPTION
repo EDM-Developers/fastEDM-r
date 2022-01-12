@@ -16,6 +16,7 @@ Description: The fastEDM package implements a series of tools that can be
  to achieve a reasonable execution speed. 
 License: MIT + file LICENSE
 Imports:
+    cli,
     Rcpp (>= 1.0.7),
     RcppEigen
 LinkingTo: Rcpp, RcppEigen, RcppJson, RcppThread
