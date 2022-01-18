@@ -44,7 +44,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div id="navbar" class="collapse navbar-collapse ms-2">
+    <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item">
   <a class="nav-link" href="reference/index.html">Reference</a>
@@ -71,7 +71,13 @@
 </div>
 <!-- badges: start -->
 
-<p>The fastEDM package implements a series of tools that can be used for empirical dynamic modeling. The core algorithm is written in C++ to achieve a reasonable execution speed.</p>
+<p>The <code>fastEDM</code> R package implements a series of <em>Empirical Dynamic Modeling</em> tools that can be used for <em>causal analysis of time series</em> data.</p>
+<p>Key features of the package:</p>
+<ul>
+<li>powered by a fast multi-threaded <em>C++ backend</em>,</li>
+<li>able to process panel data, a.k.a. <em>multispatial EDM</em>,</li>
+<li>able to handle <em>missing data</em> using new <code>dt</code> algorithms or by dropping points.</li>
+</ul>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -86,43 +92,22 @@
 <p>This example, looking at the causal links between Chicago’s temperature and crime rates, is described in full in our <a href="https://jinjingli.github.io/edm/edm-wp.pdf" class="external-link">paper</a>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://edm-developers.github.io/fastEDM">fastEDM</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://readr.tidyverse.org" class="external-link">readr</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span>
 
 <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv"</span><span class="op">)</span>
+
 <span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span><span class="va">data</span>, col_types <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/cols.html" class="external-link">cols</a></span><span class="op">(</span>crime <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/parse_atomic.html" class="external-link">col_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fl">500</span><span class="op">)</span> <span class="co"># Just to speed up the example</span>
 
-<span class="va">libs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">200</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">210</span>, <span class="fl">1000</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1020</span>, <span class="fl">2000</span>, <span class="fl">20</span><span class="op">)</span>,
-          <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2050</span>, <span class="fl">4350</span>, <span class="fl">50</span><span class="op">)</span>, <span class="fl">4365</span><span class="op">)</span>
-
-<span class="va">res1</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"t"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"temp"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"crime"</span><span class="op">]</span>,
-                       E<span class="op">=</span><span class="fl">7</span>, library<span class="op">=</span><span class="va">libs</span>, numReps<span class="op">=</span><span class="fl">4</span>, verbosity<span class="op">=</span><span class="fl">0</span>, numThreads<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
-
-<span class="va">res2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"t"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"crime"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"temp"</span><span class="op">]</span>,
-                       E<span class="op">=</span><span class="fl">7</span>, library<span class="op">=</span><span class="va">libs</span>, numReps<span class="op">=</span><span class="fl">4</span>, verbosity<span class="op">=</span><span class="fl">0</span>, numThreads<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
-
-<span class="va">averaged1</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">rho</span> <span class="op">~</span> <span class="va">library</span>, <span class="va">res1</span><span class="op">$</span><span class="va">summary</span>, <span class="va">mean</span><span class="op">)</span>
-<span class="va">averaged2</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">rho</span> <span class="op">~</span> <span class="va">library</span>, <span class="va">res2</span><span class="op">$</span><span class="va">summary</span>, <span class="va">mean</span><span class="op">)</span>
-
-<span class="va">averaged</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Library <span class="op">=</span> <span class="va">averaged1</span><span class="op">$</span><span class="va">library</span>,
-                       temp.to.crime <span class="op">=</span> <span class="va">averaged1</span><span class="op">$</span><span class="va">rho</span>,
-                       crime.to.temp <span class="op">=</span> <span class="va">averaged2</span><span class="op">$</span><span class="va">rho</span><span class="op">)</span>
-
-<span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/gather.html" class="external-link">gather</a></span><span class="op">(</span><span class="va">averaged</span>, key <span class="op">=</span> <span class="st">"Direction"</span>, value <span class="op">=</span> <span class="st">"Correlation"</span>, <span class="op">-</span><span class="va">Library</span><span class="op">)</span>
-<span class="va">combined</span><span class="op">[</span><span class="va">combined</span><span class="op">$</span><span class="va">Direction</span> <span class="op">==</span> <span class="st">"temp.to.crime"</span>, <span class="st">"Direction"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Crime | M(Temperature)"</span>
-<span class="va">combined</span><span class="op">[</span><span class="va">combined</span><span class="op">$</span><span class="va">Direction</span> <span class="op">==</span> <span class="st">"crime.to.temp"</span>, <span class="st">"Direction"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Temperature | M(Crime)"</span>
-
-<span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">combined</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Library</span>, y <span class="op">=</span> <span class="va">Correlation</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">Direction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkred"</span>, <span class="st">"steelblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">res1</span><span class="op">$</span><span class="va">summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">res2</span><span class="op">$</span><span class="va">summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.275</span>, <span class="fl">0.625</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>
-<span class="co">#&gt; Warning: Removed 4 rows containing missing values (geom_point).</span>
-<span class="co">#&gt; Warning: Removed 1 rows containing missing values (geom_point).</span></code></pre></div>
-<p><img src="reference/figures/README-example-1.png" width="100%"></p>
+<span class="fu">easy_edm</span><span class="op">(</span><span class="st">"crime"</span>, <span class="st">"temp"</span>, data<span class="op">=</span><span class="va">chicago</span><span class="op">)</span>
+<span class="co">#&gt; v Found optimal embedding dimension E to be 7.</span>
+<span class="co">#&gt; i The maximum library size we can use is 3451.</span>
+<span class="co">#&gt; NULL</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="stata-package">Stata Package<a class="anchor" aria-label="anchor" href="#stata-package"></a>
+</h2>
+<p>This package is an R port of our <a href="https://edm-developers.github.io/EDM/" class="external-link">EDM Stata package</a>. As both packages share the same underlying C++ code, their behaviour will be identical. If you plan to adjust some of the various low-level EDM parameters, check out the documentation of the Stata package for more details on their options and behaviours.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">
@@ -171,7 +156,7 @@
 
 <div class="pkgdown-footer-right">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
     </footer>
