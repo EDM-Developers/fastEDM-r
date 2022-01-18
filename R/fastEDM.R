@@ -13,7 +13,7 @@
 #' @name fastEDM
 #' @references Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond Linearity, Stability, and Equilibrium: The edm Package for Empirical Dynamic Modeling and Convergent Cross Mapping in Stata, Stata Journal, 21(1), pp. 220-258
 #' @seealso{
-#'   \url{https://jinjingli.github.io/edm/}
+#'   \url{https://edm-developers.github.io/fastEDM/} and \url{https://edm-developers.github.io/EDM/}
 #' }
-#' @example man/chicago-example.R
+#' @example man/chicago-easy-edm-example.R
 NULL

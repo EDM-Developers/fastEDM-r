@@ -30,11 +30,11 @@ test_that("Simple manifolds", {
   x <- map$x
   y <- map$y
 
-  res <- easy_edm(x, y)
-  testthat::expect_true(res$rc == 0)
+  rc <- easy_edm(x, y)
+  testthat::expect_true(rc == 0)
   
   df <- data.frame(list(x = x, y = y))
   
-  res <- easy_edm("x", "y", data=df)
-  testthat::expect_true(res$rc == 0)
+  rc <- easy_edm("x", "y", data=df)
+  testthat::expect_true(rc == 0)
 })

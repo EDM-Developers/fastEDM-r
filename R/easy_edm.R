@@ -14,6 +14,8 @@
 #' directional causal effect or whether to test the reverse direction at the
 #' same time.
 #' 
+#' @param verbosity The level of detail in the output.
+#' 
 #' @returns list
 #' @export
 easy_edm <- function(cause, effect, time=NULL, data=NULL,
@@ -44,7 +46,7 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   
   if (length(t) != length(x) || length(t) != length(y)) {
     cli::cli_alert_danger("Time series are not the same length.")
-    return()
+    return(1)
   }
   
   if (verbosity > 0) {
@@ -55,12 +57,12 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   
   if (res$rc > 0) {
     cli::cli_alert_danger("Search for optimal embedding dimension failed.")
-    return()
+    return(2)
   }
   
   if (is.null(res$summary$rho) | length(res$summary$rho) == 0) {
     cli::cli_alert_danger("Search for optimal embedding dimension failed (2).")
-    return()
+    return(3)
   }
   
   E_best <- res$summary$E[which.max(res$summary$rho)]
@@ -77,5 +79,6 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   
   res <- edm(t, x, y, E=E_best, library=libraries, verbosity=verbosity)
   
-  return()
+  
+  return(res$rc) 
 }

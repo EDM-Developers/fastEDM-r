@@ -20,7 +20,15 @@ knitr::opts_chunk$set(
 [![CRAN status](https://www.r-pkg.org/badges/version/fastEDM)](https://CRAN.R-project.org/package=fastEDM)
 <!-- badges: end -->
 
-The fastEDM package implements a series of tools that can be used for empirical dynamic modeling. The core algorithm is written in C++ to achieve a reasonable execution speed.
+
+The `fastEDM` R package implements a series of  _Empirical Dynamic Modeling_ tools that can be used for _causal analysis of time series_ data.
+
+Key features of the package:
+
+- powered by a fast multi-threaded _C++ backend_,
+- able to process panel data, a.k.a. _multispatial EDM_,
+- able to handle _missing data_ using new `dt` algorithms or by dropping points.
+
 
 ## Installation
 
@@ -35,6 +43,11 @@ devtools::install_github("EDM-Developers/fastEDM")
 
 This example, looking at the causal links between Chicago's temperature and crime rates, is described in full in our [paper](https://jinjingli.github.io/edm/edm-wp.pdf):
 
-```{r example, code=xfun::read_utf8('man/chicago-example.R')}
+```{r example, file='man/chicago-easy-edm-example.R'}
 ```
 
+## Stata Package
+
+This package is an R port of our [EDM Stata package](https://edm-developers.github.io/EDM/).
+As both packages share the same underlying C++ code, their behaviour will be identical.
+If you plan to adjust some of the various low-level EDM parameters, check out the documentation of the Stata package for more details on their options and behaviours.
