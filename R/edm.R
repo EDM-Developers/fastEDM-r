@@ -264,9 +264,18 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
   }
   
   explore <- length(y) == 0
-  p <- if (!is.null(p)) { p } else { explore }
+  
+  # Re-assert default arguments if NA/NULL/NaN are passed to them 
+  p <- if (is.null(p)) { explore } else { p }
+  k <- if (isnothing(k)) { 0 } else { k }
+  if (length(E) == 1) {
+    E <- if (isnothing(E)) { 2 } else { E }
+  } else {
+    E <- if (sum(is.na(E)) > 0) { E[!is.na(E)] } else { E }
+  }
   
   k <- if (k == Inf) { -1 } else { k }
+  
   panelWeight <- if (panelWeight == Inf) { -1 } else { panelWeight }
   
   res <- run_command(df, E, tau, theta, library,
@@ -302,4 +311,8 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
   }
   
   return(res)
+}
+
+isnothing = function(x) {
+  is.null(x) | is.na(x) | is.nan(x)
 }

@@ -534,3 +534,23 @@ test_that("Panel data with missing observations", {
   res <- edm(t, x, panel=panel, E=5, panelWeight=Inf, reldt=TRUE, allowMissing=TRUE)
   check_edm_result(res, .75709)
 })
+
+
+test_that("Bad inputs", {
+  obs <- 500
+  map <- logistic_map(obs)
+  
+  x <- map$x[300:obs]
+  y <- map$y[300:obs]
+  t <- 299 + seq_along(x)
+  
+  # Check some NA inputs don't crash R
+  res <- edm(t, x, y, E=NA)
+  testthat::expect_equal(res$rc, 0)
+  
+  res <- edm(t, x, y, E=c(2, 3, NA))
+  testthat::expect_equal(res$rc, 0)
+  
+  res <-edm(t, x, y, k=NA)
+  testthat::expect_equal(res$rc, 0)
+})

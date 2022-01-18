@@ -227,7 +227,10 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
     if (numUsable == 0) {
       io.print("Num usable is 0!\n");
-      return "";
+      
+      Rcpp::List res;
+      res["rc"] = 8000;
+      return res;
     }
 
     if (!explore && libraries.size() == 0) {
