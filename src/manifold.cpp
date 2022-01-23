@@ -237,44 +237,44 @@ void ManifoldGenerator::fill_in_point(int i, int E, bool copredictionMode, bool 
   }
 }
 
-double ManifoldGenerator::get_dt(int i, bool copredictionMode, bool predictionSet, double dtWeight) const
+double ManifoldGenerator::get_dt(int i) const
 {
+  // In normal dt mode, we get the time difference between the most recent and the second-most recent observations
+  // in the i-th point.
+  // In relative dt mode, we get the time difference between the target and the second-most recent observation
+  // in the i-th point.
+
+  // We know the time of the most recent observation in the i-th point.
+  double tNow = _t[i];
+  if (tNow == MISSING_D) {
+    return MISSING_D;
+  }
+
+  // Next, we need to search for the time of the tau-lagged observation before this in inside the i-th point.
+  double tPrev;
+  int targetObsNum = _observation_number[i] - _tau; // The discrete time we're searching for.
+  int laggedIndex = i - 1;                          // Initial guess for the index of tPrev (just go back one).
   int panel = _panel_mode ? _panelIDs[i] : -1;
-
-  // For obs i, which indices correspond to looking back 0, tau, ..., (E-1)*tau observations.
-  int laggedIndex, prevLaggedIndex = i;
-  int pointStartObsNum = _observation_number[i];
-
-  // Start by going back one index
-  int k = i - 1;
-
-  // Find the discrete time we're searching for.
-  int targetObsNum = pointStartObsNum - _tau;
-
-  if (find_observation_num(targetObsNum, k, -1, panel)) {
-    laggedIndex = k;
+  if (find_observation_num(targetObsNum, laggedIndex, -1, panel)) {
+    tPrev = _t[laggedIndex];
   } else {
     return MISSING_D;
   }
 
-  double tNow = _t[laggedIndex];
-  if (_reldt) {
-    int targetIndex = i;
-    get_target(i, copredictionMode, predictionSet, targetIndex);
-    double tPred = (targetIndex >= 0) ? _t[targetIndex] : MISSING_D;
-
-    if (tNow != MISSING_D && tPred != MISSING_D) {
-      return dtWeight * (tPred - tNow);
-    } else {
-      return MISSING_D;
-    }
+  if (!_reldt) {
+    return tNow - tPrev;
   } else {
-    double tNext = _t[prevLaggedIndex];
-    if (tNext != MISSING_D && tNow != MISSING_D) {
-      return dtWeight * (tNext - tNow);
+    // For relative dt, we need to find the time of the i-th point's target.
+    double tTarget;
+    int targetIndex = i;
+    get_target(i, false, true, targetIndex);
+    if (targetIndex >= 0) {
+      tTarget = _t[targetIndex];
     } else {
       return MISSING_D;
     }
+
+    return tTarget - tPrev;
   }
 }
 

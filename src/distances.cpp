@@ -155,12 +155,17 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
   dists.reserve(M.numPoints());
 
   const bool skipOtherPanels = opts.panelMode && (opts.idw < 0);
+  const bool skipFuturePoints = opts.useOnlyPastToPredictFuture;
 
   // Compare every observation in the M manifold to the
   // Mp_i'th observation in the Mp manifold.
   for (int i = 0; i < M.numPoints(); i++) {
 
     if (skipOtherPanels && (M.panel(i) != Mp.panel(Mp_i))) {
+      continue;
+    }
+
+    if (skipFuturePoints && (M.targetTime(i) > Mp.pointTime(Mp_i))) {
       continue;
     }
 

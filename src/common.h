@@ -82,6 +82,7 @@ struct Options
   bool saveKUsed;
   bool saveManifolds;
   bool lowMemoryMode;
+  bool useOnlyPastToPredictFuture;
 };
 
 struct PredictionStats

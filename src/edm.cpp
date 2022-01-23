@@ -300,7 +300,7 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
 
   std::vector<int> kUsed;
   for (int i = 0; i < numPredictions; i++) {
-    kUsed.push_back(-1);
+    kUsed.push_back(MISSING_I);
   }
 
   if (io != nullptr && opts.taskNum == 0) {
@@ -449,8 +449,14 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
     }
 
     if (opts.saveKUsed) {
-      pred.kMin = *std::min_element(kUsed.begin(), kUsed.end());
-      pred.kMax = *std::max_element(kUsed.begin(), kUsed.end());
+      auto cleanedKUsed = remove_value<int>(kUsed, MISSING_I);
+      if (cleanedKUsed.size() > 0) {
+        pred.kMin = *std::min_element(cleanedKUsed.begin(), cleanedKUsed.end());
+        pred.kMax = *std::max_element(cleanedKUsed.begin(), cleanedKUsed.end());
+      } else {
+        pred.kMin = MISSING_I;
+        pred.kMax = MISSING_I;
+      }
     }
 
     pred.cmdLine = opts.cmdLine;
@@ -533,7 +539,7 @@ void make_prediction(int Mp_i, const Options& opts, const Manifold& M, const Man
     }
   }
 
-  if (k == 0) {
+  if (k == 0 || numValidDistances == 0) {
     // Whether we throw an error or just silently ignore this prediction
     // depends on whether we are in 'strict' mode or not.
     rcView(0, Mp_i) = opts.forceCompute ? SUCCESS : INSUFFICIENT_UNIQUE;
