@@ -217,7 +217,7 @@
 #'  t <- c(1, 2, 3, 4, 5, 6, 7, 8)
 #'  x <- c(11, 12, 13, 14, 15, 16, 17, 18)
 #'  res <- edm(t, x)
-#'  print(res$summary)
+#
 edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k=0,
                 algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
                 shuffle=FALSE, copredict = c(), savePredictions=FALSE,

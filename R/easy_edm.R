@@ -16,8 +16,17 @@
 #' 
 #' @param verbosity The level of detail in the output.
 #' 
-#' @returns list
+#' @returns An integer error/return code (success is 0)
 #' @export
+#' @examples
+#'  library(fastEDM)
+#'  library(readr)
+#'  data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv")
+#'  
+#'  chicago <- read_csv(data, col_types = cols(crime = col_double()))
+#'  chicago <- head(chicago, 500) # Just to speed up the example
+#'  easy_edm("crime", "temp", data=chicago)
+#
 easy_edm <- function(cause, effect, time=NULL, data=NULL,
                      direction="oneway", verbosity=0) {
   
