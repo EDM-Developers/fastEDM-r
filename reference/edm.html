@@ -76,6 +76,7 @@
   verbosity <span class="op">=</span> <span class="fl">1</span>,
   numThreads <span class="op">=</span> <span class="fl">1</span>,
   lowMemory <span class="op">=</span> <span class="cn">FALSE</span>,
+  predictWithPast <span class="op">=</span> <span class="cn">FALSE</span>,
   saveInputs <span class="op">=</span> <span class="st">""</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -235,6 +236,10 @@ if the panels are unbalanced).</p></dd>
 <dd><p>The lowMemory option tries to save as much space as possible
 by more efficiently using memory, though for small datasets this will likely
 slow down the computations by a small but noticeable amount.</p></dd>
+<dt>predictWithPast</dt>
+<dd><p>Force all predictions to only use contemporaneous
+data. Normally EDM is happy to cheat by pulling segments from the future
+of the time series to make a prediction.</p></dd>
 <dt>saveInputs</dt>
 <dd><p>Save (append) all the inputs into a JSON file. This is 
 added purely for our (the developers') ease of debugging.</p></dd>
