@@ -110,7 +110,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
                        double missingDistance = 0.0, double panelWeight = 0.0, int verbosity = 1, int numThreads = 1,
-                       bool lowMemory = false, std::string saveInputs = "")
+                       bool lowMemory = false, bool predictWithPast = false, std::string saveInputs = "")
 {
   try {
     RConsoleIO io(verbosity);
@@ -125,6 +125,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     opts.saveSMAPCoeffs = saveSMAPCoeffs;
     opts.missingdistance = missingDistance;
     opts.lowMemoryMode = lowMemory;
+    opts.useOnlyPastToPredictFuture = predictWithPast;
 
     if (thetas.size() > 0) {
       opts.thetas = Rcpp::as<std::vector<double>>(thetas);

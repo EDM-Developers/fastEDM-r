@@ -35,6 +35,7 @@ edm(
   verbosity = 1,
   numThreads = 1,
   lowMemory = FALSE,
+  predictWithPast = FALSE,
   saveInputs = ""
 )
 }
@@ -192,6 +193,10 @@ if the panels are unbalanced).}
 \item{lowMemory}{The lowMemory option tries to save as much space as possible
 by more efficiently using memory, though for small datasets this will likely
 slow down the computations by a small but noticeable amount.}
+
+\item{predictWithPast}{Force all predictions to only use contemporaneous
+data. Normally EDM is happy to cheat by pulling segments from the future
+of the time series to make a prediction.}
 
 \item{saveInputs}{Save (append) all the inputs into a JSON file. This is 
 added purely for our (the developers') ease of debugging.}

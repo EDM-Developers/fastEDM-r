@@ -52,6 +52,17 @@ if (file.exists(SAVE_INPUTS)) {
   file.remove(SAVE_INPUTS)
 }
 
+obs <- 10
+t <- seq(1, obs)
+x <- seq(1, obs)
+edm(t, x, shuffle=TRUE)
+
+# Make sure the plugin doesn't crash if 'predictWithPast' is set
+cat("\n\nCommand: edm explore x, full predict(newpredictions)\n\n")
+old <- edm(t, x, full=TRUE, predictWithPast=FALSE, savePredictions=TRUE)
+cat("\n\nCommand: edm explore x, full predictwithpast predict(newpredictions)\n\n")
+new <- edm(t, x, full=TRUE, predictWithPast=TRUE, savePredictions=TRUE)
+
 obs <- 500
 map <- logistic_map(obs)
 

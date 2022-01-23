@@ -83,6 +83,20 @@ check_noisy_edm_result <- function(res, rho_1, rho_2, co_rho_1=NULL, co_rho_2=NU
 
 formals(edm)$verbosity <- 0
 
+test_that("No seed and predictWithPast=TRUE", {
+  obs <- 10
+  t <- seq(1, obs)
+  x <- seq(1, obs)
+  edm(t, x, shuffle=TRUE)
+  
+  # Make sure the plugin doesn't crash if 'predictWithPast' is set
+  old <- edm(t, x, full=TRUE, predictWithPast=FALSE, savePredictions=TRUE)
+  new <- edm(t, x, full=TRUE, predictWithPast=TRUE, savePredictions=TRUE)
+  
+  check_edm_result(old, .9722)
+  check_edm_result(new, .99866)
+})
+
 test_that("Simple manifolds", {
   obs <- 500
   map <- logistic_map(obs)

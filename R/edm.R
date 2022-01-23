@@ -203,6 +203,10 @@
 #' by more efficiently using memory, though for small datasets this will likely
 #' slow down the computations by a small but noticeable amount.
 #' 
+#' @param predictWithPast Force all predictions to only use contemporaneous
+#' data. Normally EDM is happy to cheat by pulling segments from the future
+#' of the time series to make a prediction. 
+#' 
 #' @param saveInputs Save (append) all the inputs into a JSON file. This is 
 #' added purely for our (the developers') ease of debugging.
 #'
@@ -221,7 +225,7 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                 saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
                 missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
                 numReps=1, panelWeight=0, verbosity=1, numThreads=1,
-                lowMemory=FALSE, saveInputs="") {
+                lowMemory=FALSE, predictWithPast=FALSE, saveInputs="") {
   
   if (length(t) != length(x)) {
     stop("The time and x variables should be the same length")
@@ -290,7 +294,7 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
                      numThreads=numThreads, panelWeight=panelWeight,
                      verbosity=verbosity, lowMemory=lowMemory,
-                     saveInputs=saveInputs)
+                     predictWithPast=predictWithPast, saveInputs=saveInputs)
   
   if (res$rc == 0 && verbosity > 0) {
     df <- stats::na.omit(res$summary)
