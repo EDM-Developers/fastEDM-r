@@ -303,8 +303,13 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
     cat("Summary of predictions\n")
     print(summary)
     
-    cat("k value was between", res$kMin, "and", res$kMax, "\n");
-    
+    if (res$kMin == res$kMax) {
+      cat("Number of neighbours (k) is set to ", res$kMin, "\n");
+    } else {
+      cat("Number of neighbours (k) is set to between ",
+          res$kMin, "and", res$kMax, "\n");
+    }
+      
     if (length(copredict) > 0) {
       df <- stats::na.omit(res$co_summary)
       summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
