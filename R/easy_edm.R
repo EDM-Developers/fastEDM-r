@@ -16,6 +16,8 @@
 #' 
 #' @param verbosity The level of detail in the output.
 #' 
+#' @param normalize Whether to normalize the inputs before starting EDM.
+#' 
 #' @returns An integer error/return code (success is 0)
 #' @export
 #' @examples
@@ -28,7 +30,7 @@
 #'  easy_edm("crime", "temp", data=chicago)
 #
 easy_edm <- function(cause, effect, time=NULL, data=NULL,
-                     direction="oneway", verbosity=0) {
+                     direction="oneway", verbosity=0, normalize=TRUE) {
   
   # If doing a rigorous check, begin by seeing if the cause & effect
   # variable appear to be non-linear dynamical system outputs, or just
@@ -62,6 +64,11 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
     cli::cli_alert_info("Number of observations is {length(t)}")
   }
   
+  if (normalize) {
+    x <- scale(x)
+    y <- scale(y)
+  }
+  
   res <- edm(t, x, E=seq(3, 10), verbosity=verbosity)
   
   if (res$rc > 0) {
@@ -81,7 +88,10 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   # Find the maximum library size using this E selection
   res <- edm(t, x, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=verbosity)
   libraryMax <- length(res$Ms[[1]])
-  cli::cli_alert_info("The maximum library size we can use is {libraryMax}.")
+  
+  if (verbosity > 0) {
+    cli::cli_alert_info("The maximum library size we can use is {libraryMax}.")
+  }
   
   # Next do causal cross-mapping (CCM) from the cause to the effect
   libraries <- ceiling(seq(10, libraryMax, length.out=25))

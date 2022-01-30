@@ -10,7 +10,8 @@ easy_edm(
   time = NULL,
   data = NULL,
   direction = "oneway",
-  verbosity = 0
+  verbosity = 0,
+  normalize = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ directional causal effect or whether to test the reverse direction at the
 same time.}
 
 \item{verbosity}{The level of detail in the output.}
+
+\item{normalize}{Whether to normalize the inputs before starting EDM.}
 }
 \value{
 An integer error/return code (success is 0)
