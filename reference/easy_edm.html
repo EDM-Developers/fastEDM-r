@@ -51,7 +51,7 @@
   time <span class="op">=</span> <span class="cn">NULL</span>,
   data <span class="op">=</span> <span class="cn">NULL</span>,
   direction <span class="op">=</span> <span class="st">"oneway"</span>,
-  verbosity <span class="op">=</span> <span class="fl">0</span>,
+  verbosity <span class="op">=</span> <span class="fl">1</span>,
   normalize <span class="op">=</span> <span class="cn">TRUE</span>
 <span class="op">)</span></code></pre></div>
     </div>
@@ -90,8 +90,16 @@ same time.</p></dd>
 <span class="r-in"> <span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span><span class="va">data</span>, col_types <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/cols.html" class="external-link">cols</a></span><span class="op">(</span>crime <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/parse_atomic.html" class="external-link">col_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"> <span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fl">500</span><span class="op">)</span> <span class="co"># Just to speed up the example</span></span>
 <span class="r-in"> <span class="fu">easy_edm</span><span class="op">(</span><span class="st">"crime"</span>, <span class="st">"temp"</span>, data<span class="op">=</span><span class="va">chicago</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found optimal embedding dimension E to be 7.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Pulling the time series from the supplied dataframe.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Number of observations is 500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found optimal embedding dimension E to be 5.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The maximum library size we can use is 2475.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The CCM fit is (alpha, gamma, rhoInfinity) = (-0.55, 0.017, 0.61).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> No causal link from crime to temp found.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
