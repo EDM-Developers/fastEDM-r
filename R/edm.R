@@ -296,7 +296,7 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      verbosity=verbosity, lowMemory=lowMemory,
                      predictWithPast=predictWithPast, saveInputs=saveInputs)
   
-  if (res$rc == 0 && verbosity > 0) {
+  if (res$rc == 0 && verbosity > 1) {
     df <- stats::na.omit(res$summary)
     summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     

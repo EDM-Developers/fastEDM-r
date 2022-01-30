@@ -10,7 +10,7 @@ easy_edm(
   time = NULL,
   data = NULL,
   direction = "oneway",
-  verbosity = 0,
+  verbosity = 1,
   normalize = TRUE
 )
 }

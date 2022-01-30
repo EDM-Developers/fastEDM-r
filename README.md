@@ -47,10 +47,10 @@ data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/ch
 chicago <- read_csv(data, col_types = cols(crime = col_double()))
 chicago <- head(chicago, 500) # Just to speed up the example
 
-easy_edm("crime", "temp", data=chicago)
-#> v Found optimal embedding dimension E to be 7.
-#> i The maximum library size we can use is 3451.
-#> [1] 0
+crimeCCMCausesTemp <- easy_edm("crime", "temp", data=chicago, verbosity=0)
+#> x No causal link from crime to temp found.
+tempCCMCausesCrime <- easy_edm("temp", "crime", data=chicago, verbosity=0)
+#> v Strong evidence that temp causes crime.
 ```
 
 ## Stata Package
