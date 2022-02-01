@@ -109,11 +109,11 @@
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">t</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">value</span>, color <span class="op">=</span> <span class="va">variable</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"Time series"</span><span class="op">)</span></code></pre></div>
-<p><img src="chicago_files/figure-html/plot%20time%20series%20(line%20plot)-1.png" width="700"></p>
+<p><img src="chicago_files/figure-html/plot-time-series-lines-1.png" width="700"></p>
 <p>When plotted as a scatter plot, there appears to be some linear correlation between the variables:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Temperature</span>, y<span class="op">=</span><span class="va">Crime</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"#F8766D"</span><span class="op">)</span></code></pre></div>
-<p><img src="chicago_files/figure-html/plot%20time%20series%20(scatter%20plot)-1.png" width="700"></p>
+<p><img src="chicago_files/figure-html/plot-time-series-scatterplot-1.png" width="700"></p>
 <p>Calculating the linear correlation between <code>Crime</code> and <code>Temperature</code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span><span class="op">)</span>
@@ -127,125 +127,335 @@
 <p>Now we use <code>edm</code> to find the optimal embedding dimension of the <code>Temperature</code> time series. We check the values of <span class="math inline">\(E = 2, \dots 20\)</span>. The <code>crossfold=5</code> option means that, for each <span class="math inline">\(E\)</span> value we run 5 sets of predictions, and for each set we take four fifths of the data for training and predict the remaining one fifth.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Just to speed up the example</span>
-<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fl">500</span><span class="op">)</span> <span class="co"># TODO: Remove this later.</span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">library</span>(fastEDM)</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="kw">edm</span>(chicago[<span class="st">"Time"</span>], chicago[<span class="st">"Temperature"</span>], <span class="dt">E=</span><span class="dv">2</span><span class="op">:</span><span class="dv">10</span>, <span class="dt">numThreads=</span><span class="dv">4</span>)</span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt; </span></span>
-<span id="cb6-4"><a href="#cb6-4"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">======================================</span>] <span class="dv">100</span>% (done)</span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; $rc</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; [1] 0</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt; </span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; $summary</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;    E library theta       rho      mae</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt; 1  2     245     1 0.7385233 8.673756</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt; 2  3     245     1 0.7928449 7.514527</span></span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt; 3  4     245     1 0.7797324 7.739515</span></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt; 4  5     245     1 0.7961086 7.283689</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt; 5  6     245     1 0.7844071 7.603536</span></span>
-<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; 6  7     245     1 0.7537404 8.143099</span></span>
-<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt; 7  8     245     1 0.7486604 8.184175</span></span>
-<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt; 8  9     245     1 0.7428753 8.367839</span></span>
-<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt; 9 10     245     1 0.7397052 8.398060</span></span>
-<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt; </span></span>
-<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt; $kMin</span></span>
-<span id="cb6-21"><a href="#cb6-21"></a><span class="co">#&gt; [1] 3</span></span>
-<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt; </span></span>
-<span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt; $kMax</span></span>
-<span id="cb6-24"><a href="#cb6-24"></a><span class="co">#&gt; [1] 11</span></span></code></pre></div>
+<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fl">2000</span><span class="op">)</span> <span class="co"># TODO: Remove this later.</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://edm-developers.github.io/fastEDM">fastEDM</a></span><span class="op">)</span>
+
+<span class="co"># Suppress the progress bar in vignettes, as it confuses knitr.</span>
+<span class="fu"><a href="https://rdrr.io/r/base/formals.html" class="external-link">formals</a></span><span class="op">(</span><span class="va">edm</span><span class="op">)</span><span class="op">$</span><span class="va">showProgressBar</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span>
+
+<span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, E<span class="op">=</span><span class="fl">2</span><span class="op">:</span><span class="fl">10</span>, numThreads<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
+<span class="co">#&gt; Summary of predictions</span>
+<span class="co">#&gt;    E library theta       rho      mae</span>
+<span class="co">#&gt; 1  2     995     1 0.8813858 7.405334</span>
+<span class="co">#&gt; 2  3     995     1 0.8950151 7.039877</span>
+<span class="co">#&gt; 3  4     995     1 0.9008714 7.030038</span>
+<span class="co">#&gt; 4  5     995     1 0.9060736 6.872606</span>
+<span class="co">#&gt; 5  6     995     1 0.9082962 6.800805</span>
+<span class="co">#&gt; 6  7     995     1 0.9086980 6.777308</span>
+<span class="co">#&gt; 7  8     995     1 0.9091256 6.766104</span>
+<span class="co">#&gt; 8  9     995     1 0.9068787 6.858237</span>
+<span class="co">#&gt; 9 10     995     1 0.9065616 6.876766</span>
+<span class="co">#&gt; Number of neighbours (k) is set to between  3 and 11</span>
+<span class="co">#&gt; $rc</span>
+<span class="co">#&gt; [1] 0</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $summary</span>
+<span class="co">#&gt;    E library theta       rho      mae</span>
+<span class="co">#&gt; 1  2     995     1 0.8813858 7.405334</span>
+<span class="co">#&gt; 2  3     995     1 0.8950151 7.039877</span>
+<span class="co">#&gt; 3  4     995     1 0.9008714 7.030038</span>
+<span class="co">#&gt; 4  5     995     1 0.9060736 6.872606</span>
+<span class="co">#&gt; 5  6     995     1 0.9082962 6.800805</span>
+<span class="co">#&gt; 6  7     995     1 0.9086980 6.777308</span>
+<span class="co">#&gt; 7  8     995     1 0.9091256 6.766104</span>
+<span class="co">#&gt; 8  9     995     1 0.9068787 6.858237</span>
+<span class="co">#&gt; 9 10     995     1 0.9065616 6.876766</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $kMin</span>
+<span class="co">#&gt; [1] 3</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $kMax</span>
+<span class="co">#&gt; [1] 11</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; $aggregatedSummary</span>
+<span class="co">#&gt;    E library theta       rho      mae</span>
+<span class="co">#&gt; 1  2     995     1 0.8813858 7.405334</span>
+<span class="co">#&gt; 2  3     995     1 0.8950151 7.039877</span>
+<span class="co">#&gt; 3  4     995     1 0.9008714 7.030038</span>
+<span class="co">#&gt; 4  5     995     1 0.9060736 6.872606</span>
+<span class="co">#&gt; 5  6     995     1 0.9082962 6.800805</span>
+<span class="co">#&gt; 6  7     995     1 0.9086980 6.777308</span>
+<span class="co">#&gt; 7  8     995     1 0.9091256 6.766104</span>
+<span class="co">#&gt; 8  9     995     1 0.9068787 6.858237</span>
+<span class="co">#&gt; 9 10     995     1 0.9065616 6.876766</span></code></pre></div>
 <p>From the <code>rho</code> column we can see that the prediction accuracy is maximised when <span class="math inline">\(E = 7\)</span>, so we take this as our estimate of the embedding dimension.</p>
 </div>
 <div class="section level2">
 <h2 id="convergent-cross-mapping">Convergent cross-mapping<a class="anchor" aria-label="anchor" href="#convergent-cross-mapping"></a>
 </h2>
 <p>The <code>edm</code> command can also run the cross-mapping task, which allows us to ascertain the causal links between the crime and temperature time series.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># libs &lt;- c(seq(10, 200, 5), seq(210, 1000, 10), seq(1020, 2000, 20),</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a><span class="co">#           seq(2050, 4350, 50), 4365)</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a></span>
-<span id="cb7-4"><a href="#cb7-4"></a>libs &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">10</span>, <span class="dv">4300</span>, <span class="dv">100</span>)</span>
-<span id="cb7-5"><a href="#cb7-5"></a></span>
-<span id="cb7-6"><a href="#cb7-6"></a>tempPredictsCrime &lt;-<span class="st"> </span><span class="kw">edm</span>(chicago[<span class="st">"Time"</span>], chicago[<span class="st">"Temperature"</span>], chicago[<span class="st">"Crime"</span>],</span>
-<span id="cb7-7"><a href="#cb7-7"></a>                         <span class="dt">algorithm=</span><span class="st">"smap"</span>, <span class="dt">E=</span><span class="dv">7</span>, <span class="dt">library=</span>libs, <span class="dt">numReps=</span><span class="dv">4</span>, <span class="dt">numThreads=</span><span class="dv">4</span>)</span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="co">#&gt; </span></span>
-<span id="cb7-9"><a href="#cb7-9"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">=======================</span><span class="st">               </span>] <span class="dv">62</span>%  (<span class="op">~</span>0s remaining)       </span>
-<span id="cb7-10"><a href="#cb7-10"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">======================================</span>] <span class="dv">100</span>% (done)</span>
-<span id="cb7-11"><a href="#cb7-11"></a></span>
-<span id="cb7-12"><a href="#cb7-12"></a>crimePredictsTemp &lt;-<span class="st"> </span><span class="kw">edm</span>(chicago[<span class="st">"Time"</span>], chicago[<span class="st">"Crime"</span>], chicago[<span class="st">"Temperature"</span>],</span>
-<span id="cb7-13"><a href="#cb7-13"></a>                         <span class="dt">algorithm=</span><span class="st">"smap"</span>, <span class="dt">E=</span><span class="dv">7</span>, <span class="dt">library=</span>libs, <span class="dt">numReps=</span><span class="dv">4</span>, <span class="dt">numThreads=</span><span class="dv">4</span>)</span>
-<span id="cb7-14"><a href="#cb7-14"></a><span class="co">#&gt; </span></span>
-<span id="cb7-15"><a href="#cb7-15"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">========================</span><span class="st">              </span>] <span class="dv">63</span>%  (<span class="op">~</span>0s remaining)       </span>
-<span id="cb7-16"><a href="#cb7-16"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">======================================</span>] <span class="dv">100</span>% (done)</span></code></pre></div>
-<p>!!! note This selects a lot of library points, and replicates the analysis some times, so this command may take a minute or two to finish. Choosing a machine with more CPU cores or faster cores will help significantly.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Find the maximum library size for the dataset.</span>
+<span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, E<span class="op">=</span><span class="fl">7</span>, full<span class="op">=</span><span class="cn">TRUE</span>, saveManifolds<span class="op">=</span><span class="cn">TRUE</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
+<span class="va">libraryMax</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Ms</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+
+<span class="va">libs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">10</span>, <span class="va">libraryMax</span>, <span class="fl">25</span><span class="op">)</span>
+
+<span class="va">tempPredictsCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span>,
+                         algorithm<span class="op">=</span><span class="st">"smap"</span>, E<span class="op">=</span><span class="fl">7</span>, library<span class="op">=</span><span class="va">libs</span>, numReps<span class="op">=</span><span class="fl">4</span>, numThreads<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
+<span class="co">#&gt; Summary of predictions</span>
+<span class="co">#&gt;    E library theta        rho      mae</span>
+<span class="co">#&gt; 1  7      10     1 0.18483952 285.4095</span>
+<span class="co">#&gt; 2  7      35     1 0.06464608 295.2014</span>
+<span class="co">#&gt; 3  7      60     1 0.11692195 300.7643</span>
+<span class="co">#&gt; 4  7      85     1 0.12423157 277.2285</span>
+<span class="co">#&gt; 5  7     110     1 0.10787778 292.2431</span>
+<span class="co">#&gt; 6  7     135     1 0.07022290 316.2382</span>
+<span class="co">#&gt; 7  7     160     1 0.10137296 277.2690</span>
+<span class="co">#&gt; 8  7     185     1 0.11565306 274.7465</span>
+<span class="co">#&gt; 9  7     210     1 0.13830563 256.8495</span>
+<span class="co">#&gt; 10 7     235     1 0.10540068 251.7527</span>
+<span class="co">#&gt; 11 7     260     1 0.12246767 263.2897</span>
+<span class="co">#&gt; 12 7     285     1 0.11277719 273.8733</span>
+<span class="co">#&gt; 13 7     310     1 0.10609714 247.8584</span>
+<span class="co">#&gt; 14 7     335     1 0.10779588 270.8305</span>
+<span class="co">#&gt; 15 7     360     1 0.12939396 257.0540</span>
+<span class="co">#&gt; 16 7     385     1 0.12149177 257.8293</span>
+<span class="co">#&gt; 17 7     410     1 0.08840150 262.7939</span>
+<span class="co">#&gt; 18 7     435     1 0.12899526 261.4914</span>
+<span class="co">#&gt; 19 7     460     1 0.06684048 281.4404</span>
+<span class="co">#&gt; 20 7     485     1 0.14112110 261.7037</span>
+<span class="co">#&gt; 21 7     510     1 0.11694683 251.3571</span>
+<span class="co">#&gt; 22 7     535     1 0.12957344 259.9826</span>
+<span class="co">#&gt; 23 7     560     1 0.13712296 246.5089</span>
+<span class="co">#&gt; 24 7     585     1 0.08384140 301.5794</span>
+<span class="co">#&gt; 25 7     610     1 0.12136025 254.1401</span>
+<span class="co">#&gt; 26 7     635     1 0.14055510 247.1478</span>
+<span class="co">#&gt; 27 7     660     1 0.15926516 243.5642</span>
+<span class="co">#&gt; 28 7     685     1 0.10998794 255.8464</span>
+<span class="co">#&gt; 29 7     710     1 0.11282903 247.5285</span>
+<span class="co">#&gt; 30 7     735     1 0.16567470 243.3657</span>
+<span class="co">#&gt; 31 7     760     1 0.12444390 246.0671</span>
+<span class="co">#&gt; 32 7     785     1 0.11056182 251.8390</span>
+<span class="co">#&gt; 33 7     810     1 0.14549500 252.1904</span>
+<span class="co">#&gt; 34 7     835     1 0.12732679 241.2991</span>
+<span class="co">#&gt; 35 7     860     1 0.09868812 246.2854</span>
+<span class="co">#&gt; 36 7     885     1 0.15279321 243.6874</span>
+<span class="co">#&gt; 37 7     910     1 0.13503642 249.5733</span>
+<span class="co">#&gt; 38 7     935     1 0.14276098 249.3271</span>
+<span class="co">#&gt; 39 7     960     1 0.14250497 240.8863</span>
+<span class="co">#&gt; 40 7     985     1 0.13309554 243.2396</span>
+<span class="co">#&gt; 41 7    1010     1 0.14091626 247.3114</span>
+<span class="co">#&gt; 42 7    1035     1 0.09669331 260.0977</span>
+<span class="co">#&gt; 43 7    1060     1 0.14592308 244.9345</span>
+<span class="co">#&gt; 44 7    1085     1 0.13938108 242.4369</span>
+<span class="co">#&gt; 45 7    1110     1 0.13767676 239.4395</span>
+<span class="co">#&gt; 46 7    1135     1 0.13649138 235.6908</span>
+<span class="co">#&gt; 47 7    1160     1 0.14988097 239.1891</span>
+<span class="co">#&gt; 48 7    1185     1 0.12950503 249.1576</span>
+<span class="co">#&gt; 49 7    1210     1 0.12982632 249.6233</span>
+<span class="co">#&gt; 50 7    1235     1 0.12079033 250.2289</span>
+<span class="co">#&gt; 51 7    1260     1 0.14820081 236.7330</span>
+<span class="co">#&gt; 52 7    1285     1 0.13486313 238.4792</span>
+<span class="co">#&gt; 53 7    1310     1 0.12505437 242.1631</span>
+<span class="co">#&gt; 54 7    1335     1 0.13199944 254.9354</span>
+<span class="co">#&gt; 55 7    1360     1 0.12686317 245.1241</span>
+<span class="co">#&gt; 56 7    1385     1 0.14797030 241.1268</span>
+<span class="co">#&gt; 57 7    1410     1 0.17608830 232.4912</span>
+<span class="co">#&gt; 58 7    1435     1 0.15210785 234.0580</span>
+<span class="co">#&gt; 59 7    1460     1 0.11676520 243.7742</span>
+<span class="co">#&gt; 60 7    1485     1 0.14276993 243.5514</span>
+<span class="co">#&gt; 61 7    1510     1 0.11385337 247.4165</span>
+<span class="co">#&gt; 62 7    1535     1 0.13941205 227.2520</span>
+<span class="co">#&gt; 63 7    1560     1 0.13791658 235.6425</span>
+<span class="co">#&gt; 64 7    1585     1 0.14764716 229.6968</span>
+<span class="co">#&gt; 65 7    1610     1 0.14054587 228.9480</span>
+<span class="co">#&gt; 66 7    1635     1 0.13844549 242.1751</span>
+<span class="co">#&gt; 67 7    1660     1 0.14341600 233.4059</span>
+<span class="co">#&gt; 68 7    1685     1 0.13164775 237.7251</span>
+<span class="co">#&gt; 69 7    1710     1 0.12461285 233.5576</span>
+<span class="co">#&gt; 70 7    1735     1 0.09612660 244.4932</span>
+<span class="co">#&gt; 71 7    1760     1 0.13837187 240.6580</span>
+<span class="co">#&gt; 72 7    1785     1 0.08634751 252.6792</span>
+<span class="co">#&gt; 73 7    1810     1 0.14192764 234.8228</span>
+<span class="co">#&gt; 74 7    1835     1 0.14479947 236.9220</span>
+<span class="co">#&gt; 75 7    1860     1 0.12414817 234.8049</span>
+<span class="co">#&gt; 76 7    1885     1 0.13415023 236.6315</span>
+<span class="co">#&gt; 77 7    1910     1 0.11627908 238.7352</span>
+<span class="co">#&gt; 78 7    1935     1 0.12580231 237.2426</span>
+<span class="co">#&gt; 79 7    1960     1 0.11964676 235.7624</span>
+<span class="co">#&gt; 80 7    1985     1 0.12637069 238.7349</span>
+<span class="co">#&gt; Number of neighbours (k) is set to  9</span>
+
+<span class="va">crimePredictsTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>,
+                         algorithm<span class="op">=</span><span class="st">"smap"</span>, E<span class="op">=</span><span class="fl">7</span>, library<span class="op">=</span><span class="va">libs</span>, numReps<span class="op">=</span><span class="fl">4</span>, numThreads<span class="op">=</span><span class="fl">4</span><span class="op">)</span>
+<span class="co">#&gt; Summary of predictions</span>
+<span class="co">#&gt;    E library theta       rho      mae</span>
+<span class="co">#&gt; 1  7      10     1 0.3642289 30.53302</span>
+<span class="co">#&gt; 2  7      35     1 0.2044311 39.27714</span>
+<span class="co">#&gt; 3  7      60     1 0.1575592 36.60963</span>
+<span class="co">#&gt; 4  7      85     1 0.1557708 39.50634</span>
+<span class="co">#&gt; 5  7     110     1 0.1901471 35.68751</span>
+<span class="co">#&gt; 6  7     135     1 0.1985052 34.96056</span>
+<span class="co">#&gt; 7  7     160     1 0.1990775 32.85575</span>
+<span class="co">#&gt; 8  7     185     1 0.1604391 34.85910</span>
+<span class="co">#&gt; 9  7     210     1 0.2066721 34.23346</span>
+<span class="co">#&gt; 10 7     235     1 0.2000777 32.02932</span>
+<span class="co">#&gt; 11 7     260     1 0.2013336 34.95653</span>
+<span class="co">#&gt; 12 7     285     1 0.2298099 33.02414</span>
+<span class="co">#&gt; 13 7     310     1 0.1675758 33.25611</span>
+<span class="co">#&gt; 14 7     335     1 0.2140471 31.78329</span>
+<span class="co">#&gt; 15 7     360     1 0.1740509 31.77533</span>
+<span class="co">#&gt; 16 7     385     1 0.2426412 30.57438</span>
+<span class="co">#&gt; 17 7     410     1 0.1851841 31.61084</span>
+<span class="co">#&gt; 18 7     435     1 0.2362689 31.59864</span>
+<span class="co">#&gt; 19 7     460     1 0.2564895 30.86552</span>
+<span class="co">#&gt; 20 7     485     1 0.2256837 29.88678</span>
+<span class="co">#&gt; 21 7     510     1 0.1753713 30.67302</span>
+<span class="co">#&gt; 22 7     535     1 0.1571758 34.17882</span>
+<span class="co">#&gt; 23 7     560     1 0.2063314 31.84128</span>
+<span class="co">#&gt; 24 7     585     1 0.1909591 31.87472</span>
+<span class="co">#&gt; 25 7     610     1 0.2138150 31.54723</span>
+<span class="co">#&gt; 26 7     635     1 0.2367482 29.38815</span>
+<span class="co">#&gt; 27 7     660     1 0.2392450 29.76035</span>
+<span class="co">#&gt; 28 7     685     1 0.2184146 30.58127</span>
+<span class="co">#&gt; 29 7     710     1 0.2121234 29.26969</span>
+<span class="co">#&gt; 30 7     735     1 0.2334235 30.29931</span>
+<span class="co">#&gt; 31 7     760     1 0.2389054 28.79387</span>
+<span class="co">#&gt; 32 7     785     1 0.2418841 28.52921</span>
+<span class="co">#&gt; 33 7     810     1 0.2515956 29.81773</span>
+<span class="co">#&gt; 34 7     835     1 0.2350365 28.78420</span>
+<span class="co">#&gt; 35 7     860     1 0.2229200 29.51736</span>
+<span class="co">#&gt; 36 7     885     1 0.2281647 29.31747</span>
+<span class="co">#&gt; 37 7     910     1 0.2457163 28.27402</span>
+<span class="co">#&gt; 38 7     935     1 0.2037965 29.08109</span>
+<span class="co">#&gt; 39 7     960     1 0.2082272 29.14825</span>
+<span class="co">#&gt; 40 7     985     1 0.2288407 28.55651</span>
+<span class="co">#&gt; 41 7    1010     1 0.2685857 27.12580</span>
+<span class="co">#&gt; 42 7    1035     1 0.2115798 29.16924</span>
+<span class="co">#&gt; 43 7    1060     1 0.2428661 28.00063</span>
+<span class="co">#&gt; 44 7    1085     1 0.2504303 28.41482</span>
+<span class="co">#&gt; 45 7    1110     1 0.2326491 28.87479</span>
+<span class="co">#&gt; 46 7    1135     1 0.2330807 28.42480</span>
+<span class="co">#&gt; 47 7    1160     1 0.2272694 28.33716</span>
+<span class="co">#&gt; 48 7    1185     1 0.2786821 27.79291</span>
+<span class="co">#&gt; 49 7    1210     1 0.2833201 27.73573</span>
+<span class="co">#&gt; 50 7    1235     1 0.2720134 27.89579</span>
+<span class="co">#&gt; 51 7    1260     1 0.2465089 27.79209</span>
+<span class="co">#&gt; 52 7    1285     1 0.2557490 28.19913</span>
+<span class="co">#&gt; 53 7    1310     1 0.2497989 28.30356</span>
+<span class="co">#&gt; 54 7    1335     1 0.2341823 27.50715</span>
+<span class="co">#&gt; 55 7    1360     1 0.2751412 26.85890</span>
+<span class="co">#&gt; 56 7    1385     1 0.2441634 28.36577</span>
+<span class="co">#&gt; 57 7    1410     1 0.2652536 27.88444</span>
+<span class="co">#&gt; 58 7    1435     1 0.2408342 28.29714</span>
+<span class="co">#&gt; 59 7    1460     1 0.2065951 27.89937</span>
+<span class="co">#&gt; 60 7    1485     1 0.2783909 27.16609</span>
+<span class="co">#&gt; 61 7    1510     1 0.2494856 27.46231</span>
+<span class="co">#&gt; 62 7    1535     1 0.2788244 27.04388</span>
+<span class="co">#&gt; 63 7    1560     1 0.2587217 27.43808</span>
+<span class="co">#&gt; 64 7    1585     1 0.2168935 27.42739</span>
+<span class="co">#&gt; 65 7    1610     1 0.2268937 28.30451</span>
+<span class="co">#&gt; 66 7    1635     1 0.2675201 27.11599</span>
+<span class="co">#&gt; 67 7    1660     1 0.2667839 27.19354</span>
+<span class="co">#&gt; 68 7    1685     1 0.2611507 27.71664</span>
+<span class="co">#&gt; 69 7    1710     1 0.2705140 27.45646</span>
+<span class="co">#&gt; 70 7    1735     1 0.2779605 27.32161</span>
+<span class="co">#&gt; 71 7    1760     1 0.2342103 28.70641</span>
+<span class="co">#&gt; 72 7    1785     1 0.2404975 27.97711</span>
+<span class="co">#&gt; 73 7    1810     1 0.2480362 27.64174</span>
+<span class="co">#&gt; 74 7    1835     1 0.2742383 27.28181</span>
+<span class="co">#&gt; 75 7    1860     1 0.2507781 27.86409</span>
+<span class="co">#&gt; 76 7    1885     1 0.2598088 27.58648</span>
+<span class="co">#&gt; 77 7    1910     1 0.2680796 27.51773</span>
+<span class="co">#&gt; 78 7    1935     1 0.2810922 27.12467</span>
+<span class="co">#&gt; 79 7    1960     1 0.2775581 27.23860</span>
+<span class="co">#&gt; 80 7    1985     1 0.2741837 27.50466</span>
+<span class="co">#&gt; Number of neighbours (k) is set to  9</span></code></pre></div>
+<div class="card text-white bg-warning mb-3">
+<div class="card-header">
+Note
+</div>
+<div class="card-body">
+<pre><code>&lt;h4 class="card-title"&gt;These two commands will be slow&lt;/h4&gt;
+&lt;p class="card-text"&gt;
+This selects a lot of library points, and replicates the analysis some times, so this command may take a minute or two to finish.
+    Choosing a machine with more CPU cores or faster cores will help significantly.   
+&lt;/p&gt;</code></pre>
+</div>
+</div>
 <p>Plotting the results gives:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span>
 
-<span class="va">averaged1</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">rho</span> <span class="op">~</span> <span class="va">library</span>, <span class="va">tempPredictsCrime</span><span class="op">$</span><span class="va">summary</span>, <span class="va">mean</span><span class="op">)</span>
-<span class="va">averaged2</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">rho</span> <span class="op">~</span> <span class="va">library</span>, <span class="va">crimePredictsTemp</span><span class="op">$</span><span class="va">summary</span>, <span class="va">mean</span><span class="op">)</span>
+<span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Library <span class="op">=</span> <span class="va">tempPredictsCrime</span><span class="op">$</span><span class="va">aggregatedSummary</span><span class="op">$</span><span class="va">library</span>,
+                       temp.to.crime <span class="op">=</span> <span class="va">tempPredictsCrime</span><span class="op">$</span><span class="va">aggregatedSummary</span><span class="op">$</span><span class="va">rho</span>,
+                       crime.to.temp <span class="op">=</span> <span class="va">crimePredictsTemp</span><span class="op">$</span><span class="va">aggregatedSummary</span><span class="op">$</span><span class="va">rho</span><span class="op">)</span>
 
-<span class="va">averaged</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Library <span class="op">=</span> <span class="va">averaged1</span><span class="op">$</span><span class="va">library</span>,
-                       temp.to.crime <span class="op">=</span> <span class="va">averaged1</span><span class="op">$</span><span class="va">rho</span>,
-                       crime.to.temp <span class="op">=</span> <span class="va">averaged2</span><span class="op">$</span><span class="va">rho</span><span class="op">)</span>
+<span class="va">tidyDF</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/gather.html" class="external-link">gather</a></span><span class="op">(</span><span class="va">combined</span>, key <span class="op">=</span> <span class="st">"Direction"</span>, value <span class="op">=</span> <span class="st">"Correlation"</span>, <span class="op">-</span><span class="va">Library</span><span class="op">)</span>
+<span class="va">tidyDF</span><span class="op">[</span><span class="va">tidyDF</span><span class="op">$</span><span class="va">Direction</span> <span class="op">==</span> <span class="st">"temp.to.crime"</span>, <span class="st">"Direction"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Crime | M(Temperature)"</span>
+<span class="va">tidyDF</span><span class="op">[</span><span class="va">tidyDF</span><span class="op">$</span><span class="va">Direction</span> <span class="op">==</span> <span class="st">"crime.to.temp"</span>, <span class="st">"Direction"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Temperature | M(Crime)"</span>
 
-<span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tidyr.tidyverse.org/reference/gather.html" class="external-link">gather</a></span><span class="op">(</span><span class="va">averaged</span>, key <span class="op">=</span> <span class="st">"Direction"</span>, value <span class="op">=</span> <span class="st">"Correlation"</span>, <span class="op">-</span><span class="va">Library</span><span class="op">)</span>
-<span class="va">combined</span><span class="op">[</span><span class="va">combined</span><span class="op">$</span><span class="va">Direction</span> <span class="op">==</span> <span class="st">"temp.to.crime"</span>, <span class="st">"Direction"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Crime | M(Temperature)"</span>
-<span class="va">combined</span><span class="op">[</span><span class="va">combined</span><span class="op">$</span><span class="va">Direction</span> <span class="op">==</span> <span class="st">"crime.to.temp"</span>, <span class="st">"Direction"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"Temperature | M(Crime)"</span>
-
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">combined</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Library</span>, y <span class="op">=</span> <span class="va">Correlation</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">tidyDF</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Library</span>, y <span class="op">=</span> <span class="va">Correlation</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">Direction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkred"</span>, <span class="st">"steelblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">tempPredictsCrime</span><span class="op">$</span><span class="va">summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">crimePredictsTemp</span><span class="op">$</span><span class="va">summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ylim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.275</span>, <span class="fl">0.625</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt; Warning: Removed 85 row(s) containing missing values (geom_path).</span>
-<span class="co">#&gt; geom_path: Each group consists of only one observation. Do you need to adjust</span>
-<span class="co">#&gt; the group aesthetic?</span>
-<span class="co">#&gt; Warning: Removed 172 rows containing missing values (geom_point).</span>
-<span class="co">#&gt; Warning: Removed 165 rows containing missing values (geom_point).</span></code></pre></div>
-<p><img src="chicago_files/figure-html/plot%20ccm%20rho-L%20graph-1.png" width="700"></p>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">crimePredictsTemp</span><span class="op">$</span><span class="va">summary</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></code></pre></div>
+<p><img src="chicago_files/figure-html/plot-ccm-rho-L-1.png" width="700"></p>
 <!-- Convergent cross-mapping plot of accuracy against library size](chicago-rho-L.svg) -->
 <p>In this plot, we can see that one direction shows a significant increase in accuracy as <span class="math inline">\(L\)</span> increases, whereas the other direction is pretty flat. The direction which increases the most is the <span class="math inline">\(\texttt{Temperature} \mid M(\texttt{Crime})\)</span> direction. This notation means we used <span class="math inline">\(\texttt{Crime}\)</span> to predict <span class="math inline">\(\texttt{Temperature}\)</span>, and due to the backward nature of EDM means it refers to the causal link <span class="math inline">\(\texttt{Temperature} \to M(\texttt{Crime})\)</span>. Therefore, we’d conclude that there is a causal link from temperature to crime, though no link in the reverse direction (which would be implausible).</p>
-</div>
-<div class="section level2">
-<h2 id="inspecting-the-s-map-coefficients">Inspecting the S-map coefficients<a class="anchor" aria-label="anchor" href="#inspecting-the-s-map-coefficients"></a>
-</h2>
-<p>If we run <code>edm</code> with the <code>saveSMAPCoeffs=TRUE</code> option, we can store the fitted S-map coefficients into variable which start with the prefix <code>beta</code>.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># Library size should be 4365</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>tempPredictsCrime &lt;-<span class="st"> </span><span class="kw">edm</span>(chicago[<span class="st">"Time"</span>], chicago[<span class="st">"Temperature"</span>], chicago[<span class="st">"Crime"</span>],</span>
-<span id="cb9-3"><a href="#cb9-3"></a>                         <span class="dt">algorithm=</span><span class="st">"smap"</span>, <span class="dt">E=</span><span class="dv">7</span>, <span class="dt">k=</span><span class="ot">Inf</span>, <span class="dt">saveSMAPCoeffs=</span><span class="ot">TRUE</span>, </span>
-<span id="cb9-4"><a href="#cb9-4"></a>                         <span class="dt">numThreads=</span><span class="dv">4</span>)</span>
-<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#&gt; </span></span>
-<span id="cb9-6"><a href="#cb9-6"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">======================================</span>] <span class="dv">100</span>% (done)</span>
-<span id="cb9-7"><a href="#cb9-7"></a></span>
-<span id="cb9-8"><a href="#cb9-8"></a>crimePredictsTemp &lt;-<span class="st"> </span><span class="kw">edm</span>(chicago[<span class="st">"Time"</span>], chicago[<span class="st">"Crime"</span>], chicago[<span class="st">"Temperature"</span>],</span>
-<span id="cb9-9"><a href="#cb9-9"></a>                         <span class="dt">algorithm=</span><span class="st">"smap"</span>, <span class="dt">E=</span><span class="dv">7</span>, <span class="dt">k=</span><span class="ot">Inf</span>, <span class="dt">saveSMAPCoeffs=</span><span class="ot">TRUE</span>,</span>
-<span id="cb9-10"><a href="#cb9-10"></a>                         <span class="dt">numThreads=</span><span class="dv">4</span>)</span>
-<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt; </span></span>
-<span id="cb9-12"><a href="#cb9-12"></a>Computing<span class="op">:</span><span class="st"> </span>[<span class="op">==</span><span class="er">======================================</span>] <span class="dv">100</span>% (done)</span>
-<span id="cb9-13"><a href="#cb9-13"></a></span>
-<span id="cb9-14"><a href="#cb9-14"></a><span class="co"># . edm xmap temp crime, e(7) alg(smap) k(-1) savesmap(beta)</span></span>
-<span id="cb9-15"><a href="#cb9-15"></a><span class="co"># Percent complete: 0...10...20...30...40...50...60...70...80...90...</span></span>
-<span id="cb9-16"><a href="#cb9-16"></a><span class="co"># Percent complete: 0...10...20...30...40...50...60...70...80...90...</span></span>
-<span id="cb9-17"><a href="#cb9-17"></a><span class="co"># </span></span>
-<span id="cb9-18"><a href="#cb9-18"></a><span class="co"># Empirical Dynamic Modelling</span></span>
-<span id="cb9-19"><a href="#cb9-19"></a><span class="co"># Convergent Cross-mapping result for variables temp and crime</span></span>
-<span id="cb9-20"><a href="#cb9-20"></a><span class="co"># --------------------------------------------------------------------------</span></span>
-<span id="cb9-21"><a href="#cb9-21"></a><span class="co">#                  Mapping    Library size             rho             MAE</span></span>
-<span id="cb9-22"><a href="#cb9-22"></a><span class="co"># --------------------------------------------------------------------------</span></span>
-<span id="cb9-23"><a href="#cb9-23"></a><span class="co">#    crime ~ crime|M(temp)            4365          .46784          136.93 </span></span>
-<span id="cb9-24"><a href="#cb9-24"></a><span class="co">#     temp ~ temp|M(crime)            4365          .54886          14.661 </span></span>
-<span id="cb9-25"><a href="#cb9-25"></a><span class="co"># --------------------------------------------------------------------------</span></span>
-<span id="cb9-26"><a href="#cb9-26"></a><span class="co"># Note: Number of neighbours (k) is set to 4364</span></span>
-<span id="cb9-27"><a href="#cb9-27"></a><span class="co"># Note: The embedding dimension E is 7</span></span></code></pre></div>
-<p>Plotting them allows us to see the contemporaneous effect of temperature on crime.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># . twoway (kdensity beta1_b1_rep1), xtitle("Contemporaneous effect of temperatur</span>
-<span class="co"># &gt; e on crime") ytitle("Density")</span></code></pre></div>
-<!-- # ![Contemporaneous effect of temperature on crime](chicago-crime1.svg) -->
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># . twoway (scatter beta1_b1_rep1 temp, xtitle("Temperature (Fahrenheit)") ytitle</span>
-<span class="co"># &gt; ("Contemporaneous effect of temperature on crime") msize(small))(lpoly beta1_</span>
-<span class="co"># &gt; b1_rep1 temp), legend(on order( 1 "Local coefficient" 2 "Local polynomial smo</span>
-<span class="co"># &gt; othing"))</span></code></pre></div>
-<!-- ![Contemporaneous effect of temperature on crime](chicago-crime2.svg) -->
+<!--
+
+## Inspecting the S-map coefficients 
+
+If we run `edm` with the `saveSMAPCoeffs=TRUE` option, we can store the fitted S-map coefficients into variable which start with the prefix `beta`.
+
+
+```r
+# Library size should be 4365
+tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"],
+                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE, 
+                         numThreads=4)
+#> Summary of predictions
+#>   E library theta       rho      mae
+#> 1 7    1994     1 0.6824474 76.28337
+#> Number of neighbours (k) is set to  1993
+
+crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
+                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE,
+                         numThreads=4)
+#> Summary of predictions
+#>   E library theta       rho      mae
+#> 1 7    1994     1 0.7975926 9.968787
+#> Number of neighbours (k) is set to  1993
+
+# . edm xmap temp crime, e(7) alg(smap) k(-1) savesmap(beta)
+# Percent complete: 0...10...20...30...40...50...60...70...80...90...
+# Percent complete: 0...10...20...30...40...50...60...70...80...90...
+# 
+# Empirical Dynamic Modelling
+# Convergent Cross-mapping result for variables temp and crime
+# --------------------------------------------------------------------------
+#                  Mapping    Library size             rho             MAE
+# --------------------------------------------------------------------------
+#    crime ~ crime|M(temp)            4365          .46784          136.93 
+#     temp ~ temp|M(crime)            4365          .54886          14.661 
+# --------------------------------------------------------------------------
+# Note: Number of neighbours (k) is set to 4364
+# Note: The embedding dimension E is 7
+```
+
+Plotting them allows us to see the contemporaneous effect of temperature on crime.
+
+
+```r
+# . twoway (kdensity beta1_b1_rep1), xtitle("Contemporaneous effect of temperatur
+# > e on crime") ytitle("Density")
+
+```
+<!- # ![Contemporaneous effect of temperature on crime](chicago-crime1.svg) ->
+
+
+```r
+# . twoway (scatter beta1_b1_rep1 temp, xtitle("Temperature (Fahrenheit)") ytitle
+# > ("Contemporaneous effect of temperature on crime") msize(small))(lpoly beta1_
+# > b1_rep1 temp), legend(on order( 1 "Local coefficient" 2 "Local polynomial smo
+# > othing"))
+
+```
+<!- ![Contemporaneous effect of temperature on crime](chicago-crime2.svg) ->
+
+ -->
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>
