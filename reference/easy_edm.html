@@ -65,18 +65,19 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>cause</dt>
-<dd><p>The first time series in the causal analysis</p></dd>
+<dd><p>The causal time series (as a string or a vector).</p></dd>
 <dt>effect</dt>
-<dd><p>The second time series in the causal analysis</p></dd>
+<dd><p>The effect time series (as a string or a vector).</p></dd>
 <dt>time</dt>
-<dd><p>If time is not uniformly sampled, then it must be supplied here.</p></dd>
+<dd><p>For non-regularly sampled time series, the sampling times 
+must be supplied here (as a string or a vector).</p></dd>
 <dt>data</dt>
-<dd><p>If a dataframe is supplied here, then cause, effect &amp; time must
-be strings containing the column names of the relevant time series.</p></dd>
+<dd><p>If a dataframe is supplied here, then the cause, effect &amp; time
+arguments must be the column names of the relevant time series as strings.</p></dd>
 <dt>direction</dt>
 <dd><p>A string specifying whether we are checking a one
 directional causal effect or whether to test the reverse direction at the
-same time.</p></dd>
+same time (work in progress!).</p></dd>
 <dt>verbosity</dt>
 <dd><p>The level of detail in the output.</p></dd>
 <dt>normalize</dt>
@@ -84,7 +85,7 @@ same time.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An integer error/return code (success is 0)</p>
+    <p>A Boolean indicating that evidence of causation was found.</p>
     </div>
 
     <div class="section level2">
@@ -98,13 +99,14 @@ same time.</p></dd>
 <span class="r-in"> <span class="fu">easy_edm</span><span class="op">(</span><span class="st">"crime"</span>, <span class="st">"temp"</span>, data<span class="op">=</span><span class="va">chicago</span><span class="op">)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Pulling the time series from the supplied dataframe.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Number of observations is 500</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Normalizing the supplied time series</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found optimal embedding dimension E to be 5.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The maximum library size we can use is 2475.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The maximum library size we can use is 495.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The CCM fit is (alpha, gamma, rhoInfinity) = (-0.55, 0.017, 0.61).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> No causal link from crime to temp found.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> The CCM final rho was 0.18</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> No evidence of CCM causation from crime to temp found.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 </code></pre></div>
     </div>

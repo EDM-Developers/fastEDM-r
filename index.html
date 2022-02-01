@@ -87,7 +87,7 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of fastEDM from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<p>You can install the development version of fastEDM from <a href="https://github.com/EDM-Developers/fastEDM/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># install.packages("devtools")</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"EDM-Developers/fastEDM"</span><span class="op">)</span></code></pre></div>
@@ -100,15 +100,19 @@
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://edm-developers.github.io/fastEDM">fastEDM</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://readr.tidyverse.org" class="external-link">readr</a></span><span class="op">)</span>
 
-<span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv"</span><span class="op">)</span>
+<span class="va">chicagoURL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv"</span><span class="op">)</span>
+<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="va">chicagoURL</span><span class="op">)</span>
 
-<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span><span class="va">data</span>, col_types <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/cols.html" class="external-link">cols</a></span><span class="op">(</span>crime <span class="op">=</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/parse_atomic.html" class="external-link">col_double</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fl">500</span><span class="op">)</span> <span class="co"># Just to speed up the example</span>
+<span class="co"># Reduce the size of the dataset to speed up the example.</span>
+<span class="co"># Note, this will invalidate the results just below. </span>
+<span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fl">500</span><span class="op">)</span> 
 
-<span class="va">crimeCCMCausesTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"crime"</span>, <span class="st">"temp"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
-<span class="co">#&gt; x No causal link from crime to temp found.</span>
-<span class="va">tempCCMCausesCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"temp"</span>, <span class="st">"crime"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
-<span class="co">#&gt; v Strong evidence that temp causes crime.</span></code></pre></div>
+<span class="va">crimeCCMCausesTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Crime"</span>, <span class="st">"Temperature"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
+<span class="co">#&gt; i The CCM final rho was 0.62</span>
+<span class="co">#&gt; v Some evidence of CCM causation from Crime to Temperature found.</span>
+<span class="va">tempCCMCausesCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Temperature"</span>, <span class="st">"Crime"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
+<span class="co">#&gt; i The CCM final rho was 0.85</span>
+<span class="co">#&gt; v Strong evidence of CCM causation from Temperature to Crime found.</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="stata-package">Stata Package<a class="anchor" aria-label="anchor" href="#stata-package"></a>
