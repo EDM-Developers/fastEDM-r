@@ -33,10 +33,10 @@ edm(
   numReps = 1,
   panelWeight = 0,
   verbosity = 1,
+  showProgressBar = NA,
   numThreads = 1,
   lowMemory = FALSE,
-  predictWithPast = FALSE,
-  saveInputs = ""
+  predictWithPast = FALSE
 )
 }
 \arguments{
@@ -188,6 +188,8 @@ if the panels are unbalanced).}
 
 \item{verbosity}{The level of detail in the output.}
 
+\item{showProgressBar}{Whether or not to print out a progress bar during the computations.}
+
 \item{numThreads}{The number of threads to use for the prediction task.}
 
 \item{lowMemory}{The lowMemory option tries to save as much space as possible
@@ -197,9 +199,6 @@ slow down the computations by a small but noticeable amount.}
 \item{predictWithPast}{Force all predictions to only use contemporaneous
 data. Normally EDM is happy to cheat by pulling segments from the future
 of the time series to make a prediction.}
-
-\item{saveInputs}{Save (append) all the inputs into a JSON file. This is 
-added purely for our (the developers') ease of debugging.}
 }
 \value{
 A list

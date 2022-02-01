@@ -69,7 +69,7 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
     y <- scale(y)
   }
   
-  res <- edm(t, y, E=seq(3, 10), verbosity=verbosity)
+  res <- edm(t, y, E=seq(3, 10), verbosity=0, showProgressBar=(verbosity>0))
   
   if (res$rc > 0) {
     cli::cli_alert_danger("Search for optimal embedding dimension failed.")
@@ -88,7 +88,7 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   }
   
   # Find the maximum library size using this E selection
-  res <- edm(t, y, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=verbosity)
+  res <- edm(t, y, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=0, showProgressBar=(verbosity>0))
   libraryMax <- length(res$Ms[[1]])
   
   if (verbosity > 0) {
@@ -98,7 +98,7 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   # Next do causal cross-mapping (CCM) from the cause to the effect
   libraries <- ceiling(seq(10, libraryMax, length.out=25))
   
-  res <- edm(t, y, x, E=E_best, library=libraries, verbosity=verbosity)
+  res <- edm(t, y, x, E=E_best, library=libraries, verbosity=0, showProgressBar=(verbosity>0))
       
   # Make some rough guesses for the Monster exponential fit coefficients
   ccmRes <- res$summary

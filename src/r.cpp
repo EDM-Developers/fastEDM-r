@@ -109,8 +109,8 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
-                       double missingDistance = 0.0, double panelWeight = 0.0, int verbosity = 1, int numThreads = 1,
-                       bool lowMemory = false, bool predictWithPast = false, std::string saveInputs = "")
+                       double missingDistance = 0.0, double panelWeight = 0.0, int verbosity = 1, 
+                       bool showProgressBar = true, int numThreads = 1, bool lowMemory = false, bool predictWithPast = false, std::string saveInputs = "")
 {
   try {
     RConsoleIO io(verbosity);
@@ -279,7 +279,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
     if (io.verbosity > 1) {
       io.print("Starting the command!\n");
-    io.flush();  
+      io.flush();  
     }
 
     auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
@@ -325,7 +325,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
         }
 
         const PredictionResult pred = futures[f].get();
-        if (verbosity > 0) {
+        if (showProgressBar) {
           bar++;
         }
 

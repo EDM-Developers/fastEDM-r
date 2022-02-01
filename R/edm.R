@@ -197,6 +197,8 @@
 #' 
 #' @param verbosity The level of detail in the output.
 #' 
+#' @param showProgressBar Whether or not to print out a progress bar during the computations.
+#' 
 #' @param numThreads The number of threads to use for the prediction task.
 #' 
 #' @param lowMemory The lowMemory option tries to save as much space as possible
@@ -207,9 +209,6 @@
 #' data. Normally EDM is happy to cheat by pulling segments from the future
 #' of the time series to make a prediction. 
 #' 
-#' @param saveInputs Save (append) all the inputs into a JSON file. This is 
-#' added purely for our (the developers') ease of debugging.
-#'
 #' @return A list
 #' @export
 #'
@@ -224,8 +223,8 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                 saveCoPredictions=FALSE, saveManifolds=FALSE,
                 saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
                 missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
-                numReps=1, panelWeight=0, verbosity=1, numThreads=1,
-                lowMemory=FALSE, predictWithPast=FALSE, saveInputs="") {
+                numReps=1, panelWeight=0, verbosity=1, showProgressBar=NA,
+                numThreads=1, lowMemory=FALSE, predictWithPast=FALSE) {
   
   if (length(t) != length(x)) {
     stop("The time and x variables should be the same length")
@@ -267,6 +266,10 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
     shuffle = TRUE
   }
   
+  if (isnothing(showProgressBar)) {
+    showProgressBar = (verbosity > 0)
+  }
+  
   explore <- length(y) == 0
   
   # Re-assert default arguments if NA/NULL/NaN are passed to them 
@@ -293,10 +296,10 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      missingDistance=missingDistance,
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
                      numThreads=numThreads, panelWeight=panelWeight,
-                     verbosity=verbosity, lowMemory=lowMemory,
-                     predictWithPast=predictWithPast, saveInputs=saveInputs)
+                     verbosity=verbosity, showProgressBar=showProgressBar,
+                     lowMemory=lowMemory, predictWithPast=predictWithPast)
   
-  if (res$rc == 0 && verbosity > 1) {
+  if (res$rc == 0 && verbosity > 0) {
     df <- stats::na.omit(res$summary)
     summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     
