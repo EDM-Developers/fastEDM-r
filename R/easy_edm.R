@@ -17,6 +17,8 @@
 #' 
 #' @param verbosity The level of detail in the output.
 #' 
+#' @param showProgressBar Whether or not to print out a progress bar during the computations.
+#' 
 #' @param normalize Whether to normalize the inputs before starting EDM.
 #' 
 #' @returns A Boolean indicating that evidence of causation was found.
@@ -31,7 +33,12 @@
 #'  easy_edm("crime", "temp", data=chicago)
 #
 easy_edm <- function(cause, effect, time=NULL, data=NULL,
-                     direction="oneway", verbosity=1, normalize=TRUE) {
+                     direction="oneway", verbosity=1, showProgressBar=NULL,
+                     normalize=TRUE) {
+  
+  if (is.null(showProgressBar)) {
+    showProgressBar = verbosity > 0
+  }
   
   # If doing a rigorous check, begin by seeing if the cause & effect
   # variable appear to be non-linear dynamical system outputs, or just
@@ -87,7 +94,7 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
     y <- scale(y)
   }
   
-  res <- edm(t, y, E=seq(3, 10), verbosity=0, showProgressBar=(verbosity>0))
+  res <- edm(t, y, E=seq(3, 10), verbosity=0, showProgressBar=showProgressBar)
   
   if (res$rc > 0) {
     cli::cli_alert_danger("Search for optimal embedding dimension failed.")
@@ -116,8 +123,9 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   # Next do causal cross-mapping (CCM) from the cause to the effect
   libraries <- ceiling(seq(10, libraryMax, length.out=25))
   
+  # Next run the convergent cross-mapping (CCM), using the effect to predict the cause.
   res <- edm(t, y, x, E=E_best, library=libraries, algorithm="smap", k=Inf,
-             verbosity=0, showProgressBar=(verbosity>0))
+             verbosity=0, showProgressBar=showProgressBar)
       
   # Make some rough guesses for the Monster exponential fit coefficients
   ccmRes <- res$summary

@@ -11,6 +11,7 @@ easy_edm(
   data = NULL,
   direction = "oneway",
   verbosity = 1,
+  showProgressBar = NULL,
   normalize = TRUE
 )
 }
@@ -30,6 +31,8 @@ directional causal effect or whether to test the reverse direction at the
 same time (work in progress!).}
 
 \item{verbosity}{The level of detail in the output.}
+
+\item{showProgressBar}{Whether or not to print out a progress bar during the computations.}
 
 \item{normalize}{Whether to normalize the inputs before starting EDM.}
 }

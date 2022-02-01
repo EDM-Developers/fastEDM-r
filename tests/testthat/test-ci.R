@@ -82,6 +82,7 @@ check_noisy_edm_result <- function(res, rho_1, rho_2, co_rho_1=NULL, co_rho_2=NU
 }
 
 formals(edm)$verbosity <- 0
+formals(edm)$showProgressBar <- FALSE
 
 test_that("No seed and predictWithPast=TRUE", {
   obs <- 10

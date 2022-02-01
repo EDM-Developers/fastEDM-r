@@ -19,8 +19,9 @@ logistic_map <- function(obs) {
   return(list(x=x, y=y))
 }
 
+formals(easy_edm)$verbosity <- 0
+formals(easy_edm)$showProgressBar <- FALSE
 
-formals(edm)$verbosity <- 0
 
 test_that("Simple manifolds", {
   obs <- 500
@@ -36,7 +37,7 @@ test_that("Simple manifolds", {
   testthat::expect_true(xCCMCausesY)
   
   yCCMCausesX <- easy_edm("y", "x", data=df)
-  #testthat::expect_true(yCCMCausesX)
+  # testthat::expect_true(yCCMCausesX)
 
   # Check that passing the raw data is also fine.
   xCCMCausesY <- easy_edm(x, y)
