@@ -1,24 +1,25 @@
 
 #' easy_edm
 #'
-#' @param cause The first time series in the causal analysis
+#' @param cause The causal time series (as a string or a vector).
 #' 
-#' @param effect The second time series in the causal analysis
+#' @param effect The effect time series (as a string or a vector).
 #' 
-#' @param time If time is not uniformly sampled, then it must be supplied here.
+#' @param time For non-regularly sampled time series, the sampling times 
+#' must be supplied here (as a string or a vector).
 #' 
-#' @param data If a dataframe is supplied here, then cause, effect & time must
-#' be strings containing the column names of the relevant time series.
+#' @param data If a dataframe is supplied here, then the cause, effect & time
+#' arguments must be the column names of the relevant time series as strings.
 #' 
 #' @param direction A string specifying whether we are checking a one
 #' directional causal effect or whether to test the reverse direction at the
-#' same time.
+#' same time (work in progress!).
 #' 
 #' @param verbosity The level of detail in the output.
 #' 
 #' @param normalize Whether to normalize the inputs before starting EDM.
 #' 
-#' @returns An integer error/return code (success is 0)
+#' @returns A Boolean indicating that evidence of causation was found.
 #' @export
 #' @examples
 #'  library(fastEDM)
@@ -43,6 +44,20 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
     if (verbosity > 0) {
       cli::cli_alert_info("Pulling the time series from the supplied dataframe.")
     }
+    
+    if (!(cause %in% colnames(data))) {
+        cli::cli_alert_danger("{cause} is not a column in the supplied dataframe.")
+        return(1)
+    }
+    if (!(effect %in% colnames(data))) {
+      cli::cli_alert_danger("{effect} is not a column in the supplied dataframe.")
+      return(1)
+    }
+    if (!is.null(time) && !(time %in% colnames(data))) {
+      cli::cli_alert_danger("{time} is not a column in the supplied dataframe.")
+      return(1)
+    }
+
     x <- data[[cause]]
     y <- data[[effect]]
     t <- if (is.null(time)) seq(length(x)) else data[[time]]
@@ -65,6 +80,9 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   }
   
   if (normalize) {
+    if (verbosity > 0) {
+      cli::cli_alert_info("Normalizing the supplied time series")
+    }
     x <- scale(x)
     y <- scale(y)
   }
@@ -89,7 +107,7 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   
   # Find the maximum library size using this E selection
   res <- edm(t, y, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=0, showProgressBar=(verbosity>0))
-  libraryMax <- length(res$Ms[[1]])
+  libraryMax <- nrow(res$Ms[[1]])
   
   if (verbosity > 0) {
     cli::cli_alert_info("The maximum library size we can use is {libraryMax}.")
@@ -98,43 +116,55 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   # Next do causal cross-mapping (CCM) from the cause to the effect
   libraries <- ceiling(seq(10, libraryMax, length.out=25))
   
-  res <- edm(t, y, x, E=E_best, library=libraries, verbosity=0, showProgressBar=(verbosity>0))
+  res <- edm(t, y, x, E=E_best, library=libraries, algorithm="smap", k=Inf,
+             verbosity=0, showProgressBar=(verbosity>0))
       
   # Make some rough guesses for the Monster exponential fit coefficients
   ccmRes <- res$summary
-  firstLibrary <- head(ccmRes$library, 1)
-  firstRho <- head(ccmRes$rho, 1)
-  finalRho <- tail(ccmRes$rho, 1)
+  firstLibrary <- utils::head(ccmRes$library, 1)
+  firstRho <- utils::head(ccmRes$rho, 1)
+  finalRho <- utils::tail(ccmRes$rho, 1)
 
-  gammaGuess <- 0.01
+  gammaGuess <- 0.001
   rhoInfinityGuess <- finalRho
   alphaGuess <- (firstRho - rhoInfinityGuess) / exp(-gammaGuess*firstLibrary)
   
-  monsterFit <- nls(rho ~ alpha*exp(-gamma*library) + rhoInfinity, data=ccmRes,
-                    start = list(alpha=alphaGuess, gamma=gammaGuess, rhoInfinity=rhoInfinityGuess))
-
-  alphaFitted <- coef(monsterFit)[[1]]
-  gammaFitted <- coef(monsterFit)[[2]]
-  rhoInfinityFitted <- coef(monsterFit)[[3]]
+  monsterFitStart <- list(alpha=alphaGuess, gamma=gammaGuess, rhoInfinity=rhoInfinityGuess)
   
-  if (verbosity > 0) {
-    cli::cli_alert_info("The CCM fit is (alpha, gamma, rhoInfinity) = ({signif(alphaFitted, 2)}, {signif(gammaFitted, 2)}, {signif(rhoInfinityFitted, 2)}).")
-  }
-
-  
-  if (rhoInfinityFitted > 0.7) {
-    if (givenTimeSeriesNames) {
-      cli::cli_alert_success("Strong evidence that {cause} causes {effect}.")
-    } else {
-      cli::cli_alert_success("Strong evidence of causal link.")
+  monsterFit <- tryCatch(
+    expr = {
+      monsterFit <- stats::nls(rho ~ alpha*exp(-gamma*library) + rhoInfinity, data=ccmRes,start=monsterFitStart)
+      list(alpha=stats::coef(monsterFit)[[1]], gamma=stats::coef(monsterFit)[[2]], rhoInfinity=stats::coef(monsterFit)[[3]])
+      },
+    error=function(cond) {
+      cli::cli_alert_danger("The exponential fit crashed on 'nls'.")
+      return(list(alpha=NA, gamma=NA, rhoInfinity=finalRho))
     }
+  )
+
+  if (verbosity > 1) {
+    cli::cli_alert_info("The CCM fit is (alpha, gamma, rhoInfinity) = ({signif(monsterFit$alpha, 2)}, {signif(monsterFit$gamma, 2)}, {signif(monsterFit$rhoInfinity, 2)}).")
   } else {
-    if (givenTimeSeriesNames) {
-      cli::cli_alert_danger("No causal link from {cause} to {effect} found.")
-    } else {
-      cli::cli_alert_danger("No causal link found.")
-    }
+    cli::cli_alert_info("The CCM final rho was {signif(monsterFit$rhoInfinity, 2)}")
+  }
+
+  if (monsterFit$rhoInfinity > 0.7) {
+    causalSummary <- "Strong evidence"
+    alert <- cli::cli_alert_success
+  } else if (monsterFit$rhoInfinity > 0.5) {
+    causalSummary <- "Some evidence"
+    alert <- cli::cli_alert_success
+  } else {
+    causalSummary <- "No evidence"
+    alert <- cli::cli_alert_danger
   }
   
-  return(rhoInfinityFitted > 0.7) 
+  
+  if (givenTimeSeriesNames) {
+    alert("{causalSummary} of CCM causation from {cause} to {effect} found.")
+  } else {
+    alert("{causalSummary} of CCM causation found.")
+  }
+ 
+  return(monsterFit$rhoInfinity > 0.5) 
 }

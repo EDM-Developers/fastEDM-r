@@ -32,7 +32,7 @@ Key features of the package:
 
 ## Installation
 
-You can install the development version of fastEDM from [GitHub](https://github.com/) with:
+You can install the development version of fastEDM from [GitHub](https://github.com/EDM-Developers/fastEDM/) with:
 
 ``` r
 # install.packages("devtools")

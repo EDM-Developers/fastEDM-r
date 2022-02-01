@@ -15,25 +15,26 @@ easy_edm(
 )
 }
 \arguments{
-\item{cause}{The first time series in the causal analysis}
+\item{cause}{The causal time series (as a string or a vector).}
 
-\item{effect}{The second time series in the causal analysis}
+\item{effect}{The effect time series (as a string or a vector).}
 
-\item{time}{If time is not uniformly sampled, then it must be supplied here.}
+\item{time}{For non-regularly sampled time series, the sampling times 
+must be supplied here (as a string or a vector).}
 
-\item{data}{If a dataframe is supplied here, then cause, effect & time must
-be strings containing the column names of the relevant time series.}
+\item{data}{If a dataframe is supplied here, then the cause, effect & time
+arguments must be the column names of the relevant time series as strings.}
 
 \item{direction}{A string specifying whether we are checking a one
 directional causal effect or whether to test the reverse direction at the
-same time.}
+same time (work in progress!).}
 
 \item{verbosity}{The level of detail in the output.}
 
 \item{normalize}{Whether to normalize the inputs before starting EDM.}
 }
 \value{
-An integer error/return code (success is 0)
+A Boolean indicating that evidence of causation was found.
 }
 \description{
 easy_edm

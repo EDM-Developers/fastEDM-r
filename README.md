@@ -25,7 +25,7 @@ Key features of the package:
 ## Installation
 
 You can install the development version of fastEDM from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com/EDM-Developers/fastEDM/) with:
 
 ``` r
 # install.packages("devtools")
@@ -42,15 +42,19 @@ and crime rates, is described in full in our
 library(fastEDM)
 library(readr)
 
-data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv")
+chicagoURL <- url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv")
+chicago <- read.csv(chicagoURL)
 
-chicago <- read_csv(data, col_types = cols(crime = col_double()))
-chicago <- head(chicago, 500) # Just to speed up the example
+# Reduce the size of the dataset to speed up the example.
+# Note, this will invalidate the results just below. 
+chicago <- head(chicago, 500) 
 
-crimeCCMCausesTemp <- easy_edm("crime", "temp", data=chicago, verbosity=0)
-#> x No causal link from crime to temp found.
-tempCCMCausesCrime <- easy_edm("temp", "crime", data=chicago, verbosity=0)
-#> v Strong evidence that temp causes crime.
+crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
+#> i The CCM final rho was 0.62
+#> v Some evidence of CCM causation from Crime to Temperature found.
+tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
+#> i The CCM final rho was 0.85
+#> v Strong evidence of CCM causation from Temperature to Crime found.
 ```
 
 ## Stata Package

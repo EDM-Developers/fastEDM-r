@@ -1,10 +1,12 @@
 library(fastEDM)
 library(readr)
 
-data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv")
+chicagoURL <- url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv")
+chicago <- read.csv(chicagoURL)
 
-chicago <- read_csv(data, col_types = cols(crime = col_double()))
-chicago <- head(chicago, 500) # Just to speed up the example
+# Reduce the size of the dataset to speed up the example.
+# Note, this will invalidate the results just below. 
+chicago <- head(chicago, 500) 
 
-crimeCCMCausesTemp <- easy_edm("crime", "temp", data=chicago, verbosity=0)
-tempCCMCausesCrime <- easy_edm("temp", "crime", data=chicago, verbosity=0)
+crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
+tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
