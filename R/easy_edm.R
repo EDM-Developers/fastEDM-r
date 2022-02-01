@@ -137,14 +137,16 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
       list(alpha=stats::coef(monsterFit)[[1]], gamma=stats::coef(monsterFit)[[2]], rhoInfinity=stats::coef(monsterFit)[[3]])
       },
     error=function(cond) {
-      cli::cli_alert_danger("The exponential fit crashed on 'nls'.")
+      if (verbosity > 0) {
+        cli::cli_alert_danger("The exponential fit crashed on 'nls'.")
+      }
       return(list(alpha=NA, gamma=NA, rhoInfinity=finalRho))
     }
   )
 
   if (verbosity > 1) {
     cli::cli_alert_info("The CCM fit is (alpha, gamma, rhoInfinity) = ({signif(monsterFit$alpha, 2)}, {signif(monsterFit$gamma, 2)}, {signif(monsterFit$rhoInfinity, 2)}).")
-  } else {
+  } else if (verbosity == 1) {
     cli::cli_alert_info("The CCM final rho was {signif(monsterFit$rhoInfinity, 2)}")
   }
 

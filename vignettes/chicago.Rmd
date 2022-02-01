@@ -96,10 +96,10 @@ libraryMax <- nrow(res$Ms[[1]])
 libs <- ceiling(seq(10, libraryMax, length.out=25))
 
 # Run the convergent cross-mapping in each causal direction.
-tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"], numReps=2,
+crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"], numReps=2,
                          algorithm="smap", E=7, library=libs, k=100, numThreads=4, verbosity=0)
 
-crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"], numReps=2,
+tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"], numReps=2,
                          algorithm="smap", E=7, library=libs, k=100, numThreads=4, verbosity=0)
 ```
 
