@@ -103,16 +103,11 @@ crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature
                          algorithm="smap", E=7, library=libs, k=100, numThreads=4, verbosity=0)
 ```
 
-
-<div class="card text-white bg-warning mb-3">
-<div class="card-header">Note</div>
-<div class="card-body">
-<h4 class="card-title">These two commands will be slow</h4>
-<p class="card-text">
-This selects a lot of library points, and replicates the analysis some times, so this command may take a minute or two to finish.
-Choosing a machine with more CPU cores or faster cores will help significantly.   
-</p>
-</div>
+<div class="alert alert-dismissible alert-info">
+<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<strong>Note:</strong> These last two lines are the most computationally demanding.
+They may take a minute to finish.
+Choosing a machine with more CPU cores or faster cores will help significantly.
 </div>
 
 Plotting the results gives:
