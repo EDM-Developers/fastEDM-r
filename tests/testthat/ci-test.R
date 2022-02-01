@@ -227,7 +227,7 @@ res <- edm(t, x, tslag(t, x, 3), extras=list(u), dt=TRUE, algorithm="smap", save
 
 # edm explore x, extraembed(u) allowmissing dt crossfold(5)
 res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
-#print(mean(res$summary$rho))
+#print(mean(res$stats$rho))
 
 # edm explore d.x, dt
 res <- edm(t, tsdiff(t, x), dt=TRUE)

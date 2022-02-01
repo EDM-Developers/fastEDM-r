@@ -300,12 +300,12 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      lowMemory=lowMemory, predictWithPast=predictWithPast)
   
   if (res$rc == 0) {
-    df <- stats::na.omit(res$summary)
-    res$aggregatedSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+    df <- stats::na.omit(res$stats)
+    res$summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     
     if (verbosity > 0) {
       cat("Summary of predictions\n")
-      print(res$aggregatedSummary)
+      print(res$summary)
     
       if (res$kMin == res$kMax) {
         cat("Number of neighbours (k) is set to ", res$kMin, "\n");
@@ -316,12 +316,12 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
     }
     
     if (length(copredict) > 0) {
-      df <- stats::na.omit(res$co_summary)
-      res$aggregatedCoSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+      df <- stats::na.omit(res$copredStats)
+      res$copredSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
       
       if (verbosity > 0) {
         cat("Summary of copredictions\n")
-        print(res$aggregatedCoSummary)  
+        print(res$copredSummary)  
       }
     }
   }

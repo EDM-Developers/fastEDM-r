@@ -55,9 +55,9 @@ expect_approx_equal <- function (x, y) {
 
 check_edm_result <- function(res, rho, co_rho=NULL) {
   testthat::expect_equal(res$rc, 0)
-  expect_approx_equal(res$summary$rho, rho)
+  expect_approx_equal(res$stats$rho, rho)
   if (!is.null(co_rho)) {
-    expect_approx_equal(res$co_summary$rho, co_rho)
+    expect_approx_equal(res$copredStats$rho, co_rho)
   }
 }
 
@@ -69,13 +69,13 @@ check_edm_results <- function(res1, res2, rho1, rho2) {
 check_noisy_edm_result <- function(res, rho_1, rho_2, co_rho_1=NULL, co_rho_2=NULL) {
   testthat::expect_equal(res$rc, 0)
     
-  df <- na.omit(res$summary)
+  df <- na.omit(res$stats)
   meanRho <- aggregate(df[, "rho"], list(df$E, df$library, df$theta), mean)$x
 
   testthat::expect_true(all((rho_1 <= meanRho) & (meanRho <= rho_2)))
   
   if (!is.null(co_rho_1)) {
-    df <- na.omit(res$co_summary)
+    df <- na.omit(res$copredStats)
     meanCoRho <- aggregate(df[, "rho"], list(df$E, df$library, df$theta), mean)$x
     testthat::expect_true(all((co_rho_1 <= meanCoRho) & (meanCoRho <= co_rho_2)))
   }
@@ -125,12 +125,12 @@ test_that("Simple manifolds", {
   
   # edm explore x, k(5) crossfold(10)
   res <- edm(t, x, k=5, crossfold=10)
-  expect_approx_equal(mean(res$summary$rho), .99946)
+  expect_approx_equal(mean(res$stats$rho), .99946)
   
   # edm explore x, theta(0.2(0.1)2.0) algorithm(smap)
   res <- edm(t, x, theta=seq(0.2, 2.0, 0.1), algorithm="smap")
-  expect_approx_equal(res$summary$rho[1], .99874)
-  expect_approx_equal(res$summary$rho[length(res$summary$rho)], .99882)
+  expect_approx_equal(res$stats$rho[1], .99874)
+  expect_approx_equal(res$stats$rho[length(res$stats$rho)], .99882)
   
   # edm xmap x y, theta(0.2) algorithm(smap) savesmap(beta)
   res1 <- edm(t, x, y, theta=0.2, algorithm="smap", saveSMAPCoeffs=TRUE)
@@ -208,7 +208,7 @@ test_that("Simple manifolds", {
   check_edm_result(resExplore, .99939)
   
   # assert xmap_r[1,1] == explore_r[1,1]
-  expect_approx_equal(resXmap$summary$rho, resExplore$summary$rho)
+  expect_approx_equal(resXmap$stats$rho, resExplore$stats$rho)
   
   # Check xmap reverse consistency (not necessary to check in this version)
   res1 <- edm(t, x, y)
@@ -292,7 +292,7 @@ test_that("Missing data manifolds", {
   
   # edm explore x, extraembed(u) allowmissing dt crossfold(5)
   res <- edm(t, x, extras=list(u), allowMissing=TRUE, dt=TRUE, crossfold=5)
-  expect_approx_equal(mean(res$summary$rho), .92512)
+  expect_approx_equal(mean(res$stats$rho), .92512)
   
   # edm explore d.x, dt
   res <- edm(t, tsdiff(t, x), dt=TRUE)
@@ -325,12 +325,12 @@ test_that("From 'bigger-test.do' script", {
 
   # edm explore x, e(2) crossfold(2) k(-1) allowmissing
   res <- edm(t, x, E=2, crossfold=2, k=Inf, allowMissing=TRUE)
-  expect_approx_equal(mean(res$summary$rho), .98175)
+  expect_approx_equal(mean(res$stats$rho), .98175)
   # TODO: Make the crossfold option just output one correlation
   
   # edm explore x, e(2) crossfold(10) k(-1) allowmissing
   res <- edm(t, x, E=2, crossfold=10, k=Inf, allowMissing=TRUE)
-  expect_approx_equal(mean(res$summary$rho), .98325)
+  expect_approx_equal(mean(res$stats$rho), .98325)
   
   # edm explore x, e(5) extra(d.y) full allowmissing
   res <- edm(t, x, E=5, extra=list(tsdiff(t, y)), full=TRUE, allowMissing=TRUE)
@@ -397,10 +397,10 @@ test_that("From 'bigger-test.do' script", {
 
   testthat::expect_equal(res$rc, 0)
   
-  absErr <- max(abs(res$summary$rho[-7] - rho[-7]))
+  absErr <- max(abs(res$stats$rho[-7] - rho[-7]))
   testthat::expect_true(absErr < 1e-4)
   
-  absErr <- max(abs(res$co_summary$rho[-7] - co_rho[-7]))
+  absErr <- max(abs(res$copredStats$rho[-7] - co_rho[-7]))
   testthat::expect_true(absErr < 1e-4)
   
   # edm xmap x y, library(5 10 20 40) copredictvar(u1)

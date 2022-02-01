@@ -300,7 +300,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     int kMin, kMax;
 
     Rcpp::NumericMatrix predictions, coPredictions, coeffs;
-    Rcpp::DataFrame summary, co_summary;
+    Rcpp::DataFrame stats, copredStats;
     std::vector<Rcpp::NumericMatrix> Ms, Mps;
 
     {
@@ -377,11 +377,11 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
         }
       }
 
-      summary = Rcpp::DataFrame::create(Rcpp::_["E"] = Es, Rcpp::_["library"] = libraries, Rcpp::_["theta"] = thetas,
+      stats = Rcpp::DataFrame::create(Rcpp::_["E"] = Es, Rcpp::_["library"] = libraries, Rcpp::_["theta"] = thetas,
                                         Rcpp::_["rho"] = rhos, Rcpp::_["mae"] = maes);
 
       if (copredictMode) {
-        co_summary =
+        copredStats =
           Rcpp::DataFrame::create(Rcpp::_["E"] = co_Es, Rcpp::_["library"] = co_libraries, Rcpp::_["theta"] = co_thetas,
                                   Rcpp::_["rho"] = co_rhos, Rcpp::_["mae"] = co_maes);
       }
@@ -389,12 +389,12 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
     Rcpp::List res;
     res["rc"] = rc;
-    res["summary"] = summary;
+    res["stats"] = stats;
     res["kMin"] = kMin;
     res["kMax"] = kMax;
 
     if (copredictMode) {
-      res["co_summary"] = co_summary;
+      res["copredStats"] = copredStats;
     }
 
     if (saveFinalPredictions) {

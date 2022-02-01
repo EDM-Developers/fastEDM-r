@@ -113,20 +113,24 @@ Choosing a machine with more CPU cores or faster cores will help significantly.
 Plotting the results gives:
 
 ```{r plot-ccm-rho-L}
-library(tidyr)
-
-combined <- data.frame(Library = tempPredictsCrime$aggregatedSummary$library,
-                       crime.to.temp = crimePredictsTemp$aggregatedSummary$rho,
-                       temp.to.crime = tempPredictsCrime$aggregatedSummary$rho)
-
-tidyDF <- gather(combined, key = "Direction", value = "Correlation", -Library)
-tidyDF[tidyDF$Direction == "crime.to.temp", "Direction"] <- "Temperature | M(Crime)"
-tidyDF[tidyDF$Direction == "temp.to.crime", "Direction"] <- "Crime | M(Temperature)"
+tidyDF <- data.frame(list(
+  Library = c(
+    crimePredictsTemp$summary$library,
+    tempPredictsCrime$summary$library
+  ),
+  Direction = c(
+    rep("Temperature | M(Crime)", nrow(crimePredictsTemp$summary)),
+    rep("Crime | M(Temperature)", nrow(tempPredictsCrime$summary))
+  ),
+  Correlation = c(
+    crimePredictsTemp$summary$rho,
+    tempPredictsCrime$summary$rho
+)))
 
 ggplot(tidyDF, aes(x = Library, y = Correlation)) +
   geom_line(aes(color = Direction)) + scale_color_manual(values = c("steelblue", "darkred")) +
-  geom_point(data = tempPredictsCrime$summary, aes(x = library, y = rho), alpha = 0.05, color = "steelblue") +
-  geom_point(data = crimePredictsTemp$summary, aes(x = library, y = rho), alpha = 0.05, color = "darkred")
+  geom_point(data = tempPredictsCrime$stats, aes(x = library, y = rho), alpha = 0.05, color = "steelblue") +
+  geom_point(data = crimePredictsTemp$stats, aes(x = library, y = rho), alpha = 0.05, color = "darkred")
 ```
 
 <!-- Convergent cross-mapping plot of accuracy against library size](chicago-rho-L.svg) -->
