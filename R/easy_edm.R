@@ -113,18 +113,23 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   }
   
   # Find the maximum library size using this E selection
-  res <- edm(t, y, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=0, showProgressBar=(verbosity>0))
+  res <- edm(t, y, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=0, showProgressBar=showProgressBar)
   libraryMax <- nrow(res$Ms[[1]])
   
   if (verbosity > 0) {
     cli::cli_alert_info("The maximum library size we can use is {libraryMax}.")
   }
   
-  # Next do causal cross-mapping (CCM) from the cause to the effect
-  libraries <- ceiling(seq(10, libraryMax, length.out=25))
+  # Set up a grid of library sizes to run the cross-mapping over.
+  if (libraryMax >= 500) {
+    libraryStart = 100
+  } else {
+    libraryStart = 10
+  }
+  libraries <- ceiling(seq(libraryStart, libraryMax, length.out=25))
   
   # Next run the convergent cross-mapping (CCM), using the effect to predict the cause.
-  res <- edm(t, y, x, E=E_best, library=libraries, algorithm="smap", k=Inf,
+  res <- edm(t, y, x, E=E_best, library=libraries, algorithm="smap", k=Inf, shuffle=TRUE,
              verbosity=0, showProgressBar=showProgressBar)
       
   # Make some rough guesses for the Monster exponential fit coefficients
@@ -137,16 +142,24 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
   rhoInfinityGuess <- finalRho
   alphaGuess <- (firstRho - rhoInfinityGuess) / exp(-gammaGuess*firstLibrary)
   
-  monsterFitStart <- list(alpha=alphaGuess, gamma=gammaGuess, rhoInfinity=rhoInfinityGuess)
+  monsterFitStart <- list(
+    alpha=alphaGuess, gamma=gammaGuess, rhoInfinity=rhoInfinityGuess
+  )
   
   monsterFit <- tryCatch(
     expr = {
-      monsterFit <- stats::nls(rho ~ alpha*exp(-gamma*library) + rhoInfinity, data=ccmRes,start=monsterFitStart)
-      list(alpha=stats::coef(monsterFit)[[1]], gamma=stats::coef(monsterFit)[[2]], rhoInfinity=stats::coef(monsterFit)[[3]])
-      },
+      monsterFit <- stats::nls(rho ~ alpha*exp(-gamma*library) + rhoInfinity,
+                               data=ccmRes, start=monsterFitStart)
+      list(
+        alpha=stats::coef(monsterFit)[[1]],
+        gamma=stats::coef(monsterFit)[[2]],
+        rhoInfinity=stats::coef(monsterFit)[[3]]
+      )
+    },
     error=function(cond) {
       if (verbosity > 0) {
-        cli::cli_alert_danger("The exponential fit crashed on 'nls'.")
+        cli::cli_alert_danger("Couldn't fit an exponential curve to the rho-L values.")
+        cli::cli_alert_danger("This may be a sign that these EDM results are not very reliable.")
       }
       return(list(alpha=NA, gamma=NA, rhoInfinity=finalRho))
     }
