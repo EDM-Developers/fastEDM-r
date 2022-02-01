@@ -299,26 +299,30 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      verbosity=verbosity, showProgressBar=showProgressBar,
                      lowMemory=lowMemory, predictWithPast=predictWithPast)
   
-  if (res$rc == 0 && verbosity > 0) {
+  if (res$rc == 0) {
     df <- stats::na.omit(res$summary)
-    summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+    res$aggregatedSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     
-    cat("Summary of predictions\n")
-    print(summary)
+    if (verbosity > 0) {
+      cat("Summary of predictions\n")
+      print(res$aggregatedSummary)
     
-    if (res$kMin == res$kMax) {
-      cat("Number of neighbours (k) is set to ", res$kMin, "\n");
-    } else {
-      cat("Number of neighbours (k) is set to between ",
-          res$kMin, "and", res$kMax, "\n");
+      if (res$kMin == res$kMax) {
+        cat("Number of neighbours (k) is set to ", res$kMin, "\n");
+      } else {
+        cat("Number of neighbours (k) is set to between ",
+            res$kMin, "and", res$kMax, "\n");
+      }
     }
-      
+    
     if (length(copredict) > 0) {
       df <- stats::na.omit(res$co_summary)
-      summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+      res$aggregatedCoSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
       
-      cat("Summary of copredictions\n")
-      print(summary)
+      if (verbosity > 0) {
+        cat("Summary of copredictions\n")
+        print(res$aggregatedCoSummary)  
+      }
     }
   }
   
