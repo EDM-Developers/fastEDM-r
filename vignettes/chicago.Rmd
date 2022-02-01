@@ -1,0 +1,180 @@
+---
+title: "Chicago crime/temperature example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Chicago crime/temperature example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## The data
+
+To demonstrate the usefulness of EDM in estimating the impact of causal variables, we use a real-world dataset that reflects
+daily temperature and crime levels in Chicago, which we make available in the [chicago.csv](chicago.csv) file.
+
+First, we load the time series into R:
+
+```{r load data}
+chicagoURL <- url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv")
+chicago <- read.csv(chicagoURL)
+head(chicago)
+```
+
+Plotting the two time series shows:
+
+```{r plot time series (line plot)}
+library(ggplot2)
+
+df <- data.frame(list(
+  t = rep(chicago$Time, 2),
+  variable = c(rep("Crime", nrow(chicago)), rep("Temperature", nrow(chicago))),
+  value = c(chicago$Crime, chicago$Temperature)))
+
+ggplot(df, aes(x = t)) + 
+  geom_line(aes(y = value, color = variable)) +
+  labs(colour = "Time series")
+```
+
+When plotted as a scatter plot, there appears to be some linear correlation between the variables:
+
+```{r plot time series (scatter plot)}
+ggplot(chicago, aes(x = Temperature, y=Crime)) + geom_point(color="#F8766D")
+```
+
+Calculating the linear correlation between `Crime` and `Temperature`:
+
+```{r linear correlation}
+cor(chicago["Temperature"], chicago["Crime"])
+```
+
+shows a mild correlation, however the causal structure (if any) and its direction is not shown.
+
+## Find the optimal embedding dimension
+
+Now we use `edm` to find the optimal embedding dimension of the `Temperature` time series.
+We check the values of $E = 2, \dots 20$.
+The `crossfold=5` option means that, for each $E$ value we run 5 sets of predictions, and for each set we take four fifths of the data for training and predict the remaining one fifth.
+
+```{r reduce dataset size}
+# Just to speed up the example
+chicago <- head(chicago, 500) # TODO: Remove this later.
+```
+
+```{r find optimal embedding dimension}
+library(fastEDM)
+edm(chicago["Time"], chicago["Temperature"], E=2:10, numThreads=4)
+```
+
+From the `rho` column we can see that the prediction accuracy is maximised when $E = 7$, so we take this as our estimate of the embedding dimension.
+
+## Convergent cross-mapping
+
+The `edm` command can also run the cross-mapping task, which allows us to ascertain the causal links between the crime and temperature time series.
+
+```{r convergent cross mapping}
+# libs <- c(seq(10, 200, 5), seq(210, 1000, 10), seq(1020, 2000, 20),
+#           seq(2050, 4350, 50), 4365)
+
+libs <- seq(10, 4300, 100)
+
+tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"],
+                         algorithm="smap", E=7, library=libs, numReps=4, numThreads=4)
+
+crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
+                         algorithm="smap", E=7, library=libs, numReps=4, numThreads=4)
+```
+
+
+
+!!! note
+        This selects a lot of library points, and replicates the analysis some times, so this command may take a minute or two to finish.
+        Choosing a machine with more CPU cores or faster cores will help significantly.   
+
+Plotting the results gives:
+
+
+```{r plot ccm rho-L graph}
+library(tidyr)
+
+averaged1 <- stats::aggregate(rho ~ library, tempPredictsCrime$summary, mean)
+averaged2 <- stats::aggregate(rho ~ library, crimePredictsTemp$summary, mean)
+
+averaged <- data.frame(Library = averaged1$library,
+                       temp.to.crime = averaged1$rho,
+                       crime.to.temp = averaged2$rho)
+
+combined <- gather(averaged, key = "Direction", value = "Correlation", -Library)
+combined[combined$Direction == "temp.to.crime", "Direction"] <- "Crime | M(Temperature)"
+combined[combined$Direction == "crime.to.temp", "Direction"] <- "Temperature | M(Crime)"
+
+ggplot(combined, aes(x = Library, y = Correlation)) + 
+  geom_line(aes(color = Direction)) + scale_color_manual(values = c("darkred", "steelblue")) +
+  geom_point(data = tempPredictsCrime$summary, aes(x = library, y = rho), alpha = 0.05, color = "darkred") +
+  geom_point(data = crimePredictsTemp$summary, aes(x = library, y = rho), alpha = 0.05, color = "steelblue") +
+  ylim(c(0.275, 0.625))
+
+```
+
+<!-- Convergent cross-mapping plot of accuracy against library size](chicago-rho-L.svg) -->
+
+In this plot, we can see that one direction shows a significant increase in accuracy as $L$ increases, whereas the other direction is pretty flat.
+The direction which increases the most is the $\texttt{Temperature} \mid M(\texttt{Crime})$ direction.
+This notation means we used  $\texttt{Crime}$ to predict $\texttt{Temperature}$, and due to the backward nature of EDM means it refers to the causal link $\texttt{Temperature} \to M(\texttt{Crime})$.
+Therefore, we'd conclude that there is a causal link from temperature to crime, though no link in the reverse direction (which would be implausible).  
+
+## Inspecting the S-map coefficients 
+
+If we run `edm` with the `saveSMAPCoeffs=TRUE` option, we can store the fitted S-map coefficients into variable which start with the prefix `beta`.
+
+```{r save s-map coefficients}
+# Library size should be 4365
+tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"],
+                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE, 
+                         numThreads=4)
+
+crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
+                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE,
+                         numThreads=4)
+
+# . edm xmap temp crime, e(7) alg(smap) k(-1) savesmap(beta)
+# Percent complete: 0...10...20...30...40...50...60...70...80...90...
+# Percent complete: 0...10...20...30...40...50...60...70...80...90...
+# 
+# Empirical Dynamic Modelling
+# Convergent Cross-mapping result for variables temp and crime
+# --------------------------------------------------------------------------
+#                  Mapping    Library size             rho             MAE
+# --------------------------------------------------------------------------
+#    crime ~ crime|M(temp)            4365          .46784          136.93 
+#     temp ~ temp|M(crime)            4365          .54886          14.661 
+# --------------------------------------------------------------------------
+# Note: Number of neighbours (k) is set to 4364
+# Note: The embedding dimension E is 7
+
+```
+
+Plotting them allows us to see the contemporaneous effect of temperature on crime.
+
+```{r}
+# . twoway (kdensity beta1_b1_rep1), xtitle("Contemporaneous effect of temperatur
+# > e on crime") ytitle("Density")
+
+```
+<!-- # ![Contemporaneous effect of temperature on crime](chicago-crime1.svg) -->
+
+```{r}
+# . twoway (scatter beta1_b1_rep1 temp, xtitle("Temperature (Fahrenheit)") ytitle
+# > ("Contemporaneous effect of temperature on crime") msize(small))(lpoly beta1_
+# > b1_rep1 temp), legend(on order( 1 "Local coefficient" 2 "Local polynomial smo
+# > othing"))
+
+```
+<!-- ![Contemporaneous effect of temperature on crime](chicago-crime2.svg) -->
+

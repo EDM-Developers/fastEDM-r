@@ -24,9 +24,12 @@ Remotes: nfultz/RcppJson, tnagler/RcppThread
 RoxygenNote: 7.1.2
 Encoding: UTF-8
 Suggests: 
+    knitr,
     ggplot2,
     readr,
     testthat (>= 3.0.0),
-    tidyr
+    tidyr,
+    rmarkdown
 Config/testthat/edition: 3
 URL: https://edm-developers.github.io/fastEDM
+VignetteBuilder: knitr

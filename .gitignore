@@ -21,3 +21,4 @@ vcpkg_installed
 .idea*
 junk*
 docs
+inst/doc
