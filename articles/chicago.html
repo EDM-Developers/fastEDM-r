@@ -147,7 +147,7 @@
 <span class="co">#&gt; 7  8    2181     1 0.9223688 6.513701</span>
 <span class="co">#&gt; 8  9    2181     1 0.9218043 6.541796</span>
 <span class="co">#&gt; 9 10    2181     1 0.9218961 6.555065</span>
-<span class="co">#&gt; Number of neighbours (k) is set to between  3 and 11</span></code></pre></div>
+<span class="co">#&gt; Number of neighbours (k) is set to between 3 and 11</span></code></pre></div>
 <p>From the <code>rho</code> column we can see that the prediction accuracy is maximised when <span class="math inline">\(E = 7\)</span>, so we take this as our estimate of the embedding dimension.</p>
 </div>
 <div class="section level2">
@@ -212,7 +212,7 @@ tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime
 #> Summary of predictions
 #>   E library theta      rho     mae
 #> 1 7    4365     1 0.467841 136.929
-#> Number of neighbours (k) is set to  4364
+#> Number of neighbours (k) is set to 4364
 
 crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
                          algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE,
@@ -220,7 +220,7 @@ crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature
 #> Summary of predictions
 #>   E library theta      rho     mae
 #> 1 7    4365     1 0.548856 14.6611
-#> Number of neighbours (k) is set to  4364
+#> Number of neighbours (k) is set to 4364
 
 # . edm xmap temp crime, e(7) alg(smap) k(-1) savesmap(beta)
 # Percent complete: 0...10...20...30...40...50...60...70...80...90...
