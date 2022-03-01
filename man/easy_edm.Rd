@@ -43,11 +43,10 @@ A Boolean indicating that evidence of causation was found.
 easy_edm
 }
 \examples{
- library(fastEDM)
- library(readr)
- data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv")
- 
- chicago <- read_csv(data, col_types = cols(crime = col_double()))
- chicago <- head(chicago, 500) # Just to speed up the example
- easy_edm("crime", "temp", data=chicago)
+library(fastEDM)
+
+chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv"))
+
+crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
+tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
 }

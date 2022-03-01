@@ -23,14 +23,7 @@
 #' 
 #' @returns A Boolean indicating that evidence of causation was found.
 #' @export
-#' @examples
-#'  library(fastEDM)
-#'  library(readr)
-#'  data <- url("https://raw.githubusercontent.com/EDM-Developers/EDM/master/test/chicago.csv")
-#'  
-#'  chicago <- read_csv(data, col_types = cols(crime = col_double()))
-#'  chicago <- head(chicago, 500) # Just to speed up the example
-#'  easy_edm("crime", "temp", data=chicago)
+#' @example man/chicago-easy-edm-example.R
 #
 easy_edm <- function(cause, effect, time=NULL, data=NULL,
                      direction="oneway", verbosity=1, showProgressBar=NULL,
@@ -112,8 +105,9 @@ easy_edm <- function(cause, effect, time=NULL, data=NULL,
     cli::cli_alert_success("Found optimal embedding dimension E to be {E_best}.")
   }
   
-  # Find the maximum library size using this E selection
-  res <- edm(t, y, E=E_best, full=TRUE, saveManifolds=TRUE, verbosity=0, showProgressBar=showProgressBar)
+  # Find the maximum library size using S-map and this E selection
+  res <- edm(t, y, E=E_best, algorithm="smap", full=TRUE, saveManifolds=TRUE,
+             verbosity=0, showProgressBar=showProgressBar)
   libraryMax <- nrow(res$Ms[[1]])
   
   if (verbosity > 0) {

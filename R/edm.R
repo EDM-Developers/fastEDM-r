@@ -300,18 +300,27 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      lowMemory=lowMemory, predictWithPast=predictWithPast)
   
   if (res$rc == 0) {
+    if (verbosity > 1) {
+      cat("Finished successfully!\n")
+    }
+    
     df <- stats::na.omit(res$stats)
+    
+    if (verbosity > 1) {
+      cat("Number of non-missing stats:", nrow(df), "\n")
+    }
+    
     res$summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     
     if (verbosity > 0) {
       cat("Summary of predictions\n")
-      print(res$summary)
+      print.data.frame(res$summary)
     
       if (res$kMin == res$kMax) {
-        cat("Number of neighbours (k) is set to ", res$kMin, "\n");
+        cat("Number of neighbours (k) is set to", res$kMin, "\n")
       } else {
-        cat("Number of neighbours (k) is set to between ",
-            res$kMin, "and", res$kMax, "\n");
+        cat("Number of neighbours (k) is set to between",
+          res$kMin, "and", res$kMax, "\n")
       }
     }
     
@@ -321,9 +330,11 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
       
       if (verbosity > 0) {
         cat("Summary of copredictions\n")
-        print(res$copredSummary)  
+        print.data.frame(res$copredSummary)
       }
     }
+  } else {
+    cat("Error code:", res$rc, "\n")
   }
   
   return(res)
