@@ -310,23 +310,35 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
       cat("Number of non-missing stats:", nrow(df), "\n")
     }
     
-    res$summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+    if (nrow(df) > 1) {
+        res$summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)    
+    } else {
+        res$summary <- res$stats
+    }
+    
     
     if (verbosity > 0) {
       cat("Summary of predictions\n")
       print.data.frame(res$summary)
-    
-      if (res$kMin == res$kMax) {
-        cat("Number of neighbours (k) is set to", res$kMin, "\n")
-      } else {
-        cat("Number of neighbours (k) is set to between",
-          res$kMin, "and", res$kMax, "\n")
+   
+      if (!is.na(res$kMin) && !is.na(res$kMax)) { 
+        if (res$kMin == res$kMax) {
+          cat("Number of neighbours (k) is set to", res$kMin, "\n")
+        } else {
+          cat("Number of neighbours (k) is set to between",
+            res$kMin, "and", res$kMax, "\n")
+        }
       }
     }
     
     if (length(copredict) > 0) {
       df <- stats::na.omit(res$copredStats)
-      res$copredSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+
+      if (nrow(df) > 1) {
+        res$copredSummary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
+      } else {
+        res$copredSummary <- res$copredStats
+      }
       
       if (verbosity > 0) {
         cat("Summary of copredictions\n")
