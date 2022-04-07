@@ -79,6 +79,7 @@
   dtWeight <span class="op">=</span> <span class="fl">0</span>,
   numReps <span class="op">=</span> <span class="fl">1</span>,
   panelWeight <span class="op">=</span> <span class="fl">0</span>,
+  panelWeights <span class="op">=</span> <span class="cn">NULL</span>,
   verbosity <span class="op">=</span> <span class="fl">1</span>,
   showProgressBar <span class="op">=</span> <span class="cn">NA</span>,
   numThreads <span class="op">=</span> <span class="fl">1</span>,
@@ -234,6 +235,11 @@ then the weight is treated as \(\infty\) so neighbours will never
 be selected which cross the boundaries between panels. Setting <code>panelWeight=Inf</code> with
 <code>k=Inf</code> means we may use a different number of neighbors for different predictions (i.e.
 if the panels are unbalanced).</p></dd>
+<dt>panelWeights</dt>
+<dd><p>A generalisation of <code>panelWeight</code>. Instead of giving
+a constant penalty for differing panels, <code>panelWeights</code> lets you supply a
+matrix so <code>panelWeights[i, j]</code> will be added to distances between points
+in the $i$-th panel and the $j$-th panel.</p></dd>
 <dt>verbosity</dt>
 <dd><p>The level of detail in the output.</p></dd>
 <dt>showProgressBar</dt>
