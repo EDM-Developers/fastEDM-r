@@ -195,6 +195,11 @@
 #' \code{k=Inf} means we may use a different number of neighbors for different predictions (i.e.
 #' if the panels are unbalanced).
 #' 
+#' @param panelWeights A generalisation of \code{panelWeight}. Instead of giving
+#' a constant penalty for differing panels, \code{panelWeights} lets you supply a
+#' matrix so \code{panelWeights[i, j]} will be added to distances between points
+#' in the $i$-th panel and the $j$-th panel.
+#' 
 #' @param verbosity The level of detail in the output.
 #' 
 #' @param showProgressBar Whether or not to print out a progress bar during the computations.
@@ -217,14 +222,15 @@
 #'  x <- c(11, 12, 13, 14, 15, 16, 17, 18)
 #'  res <- edm(t, x)
 #
-edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k=0,
-                algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
+edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL,
+                k=0, algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
                 shuffle=FALSE, copredict = c(), savePredictions=FALSE,
                 saveCoPredictions=FALSE, saveManifolds=FALSE,
                 saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
                 missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
-                numReps=1, panelWeight=0, verbosity=1, showProgressBar=NA,
-                numThreads=1, lowMemory=FALSE, predictWithPast=FALSE) {
+                numReps=1, panelWeight=0, panelWeights=NULL, verbosity=1,
+                showProgressBar=NA, numThreads=1, lowMemory=FALSE,
+                predictWithPast=FALSE) {
   
   if (length(t) != length(x)) {
     stop("The time and x variables should be the same length")
@@ -292,12 +298,13 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL, k
                      saveFinalCoPredictions=saveCoPredictions,
                      saveManifolds=saveManifolds,
                      saveSMAPCoeffs=saveSMAPCoeffs,
-                     extras=extras,  allowMissing=allowMissing,
+                     extras=extras, allowMissing=allowMissing,
                      missingDistance=missingDistance,
                      dt=dt, reldt=reldt, dtWeight=dtWeight, 
                      numThreads=numThreads, panelWeight=panelWeight,
-                     verbosity=verbosity, showProgressBar=showProgressBar,
-                     lowMemory=lowMemory, predictWithPast=predictWithPast)
+                     panelWeights=panelWeights, verbosity=verbosity,
+                     showProgressBar=showProgressBar, lowMemory=lowMemory,
+                     predictWithPast=predictWithPast)
   
   if (res$rc == 0) {
     if (verbosity > 1) {

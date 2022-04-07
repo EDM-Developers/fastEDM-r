@@ -109,7 +109,9 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
-                       double missingDistance = 0.0, double panelWeight = 0.0, int verbosity = 1, 
+                       double missingDistance = 0.0, double panelWeight = 0.0,
+                       Rcpp::Nullable<Rcpp::NumericMatrix> panelWeights = R_NilValue, 
+                       int verbosity = 1, 
                        bool showProgressBar = true, int numThreads = 1, bool lowMemory = false, bool predictWithPast = false, std::string saveInputs = "")
 {
   try {
@@ -185,11 +187,32 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     }
 
     opts.idw = panelWeight;
+    
+    std::map<std::pair<int, int>, float> fakePanelWeights;
 
     std::vector<int> panelIDs;
     if (df.containsElementNamed("panel")) {
       panelIDs = Rcpp::as<std::vector<int>>(df["panel"]);
       opts.panelMode = true;
+      
+      if (panelWeights.isNotNull()) {
+        Rcpp::NumericMatrix matrix = Rcpp::as<Rcpp::NumericMatrix>(panelWeights);
+        
+        std::vector<int> uniquePanelIDs(panelIDs);
+        auto it = std::unique(uniquePanelIDs.begin(), uniquePanelIDs.end());
+        uniquePanelIDs.resize(std::distance(uniquePanelIDs.begin(),it));
+        
+        for (int i = 0; i < uniquePanelIDs.size(); i++) {
+          for (int j = 0; j < uniquePanelIDs.size(); j++) {
+            std::pair<int,int> key(uniquePanelIDs[i], uniquePanelIDs[j]);
+            opts.idWeights[key] = Rcpp::as<Rcpp::NumericMatrix>(panelWeights)(i,j);
+          }
+        }
+
+        // TODO: Perhaps throw error if both idw constant and matrix supplied.
+        opts.idw = 0;
+      }
+      
     } else {
       opts.panelMode = false;
     }

@@ -32,6 +32,7 @@ edm(
   dtWeight = 0,
   numReps = 1,
   panelWeight = 0,
+  panelWeights = NULL,
   verbosity = 1,
   showProgressBar = NA,
   numThreads = 1,
@@ -185,6 +186,11 @@ then the weight is treated as \eqn{\infty} so neighbours will never
 be selected which cross the boundaries between panels. Setting \code{panelWeight=Inf} with
 \code{k=Inf} means we may use a different number of neighbors for different predictions (i.e.
 if the panels are unbalanced).}
+
+\item{panelWeights}{A generalisation of \code{panelWeight}. Instead of giving
+a constant penalty for differing panels, \code{panelWeights} lets you supply a
+matrix so \code{panelWeights[i, j]} will be added to distances between points
+in the $i$-th panel and the $j$-th panel.}
 
 \item{verbosity}{The level of detail in the output.}
 

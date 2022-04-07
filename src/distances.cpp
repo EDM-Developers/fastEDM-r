@@ -99,6 +99,8 @@ DistanceIndexPairs lazy_lp_distances(int Mp_i, const Options& opts, const Manifo
     // then add the user-supplied penalty/distance for the mismatch.
     if (opts.panelMode && opts.idw > 0) {
       dist_i += opts.idw * (M.panel(i) != Mp.panel(Mp_i));
+    } else if (opts.panelMode && !opts.idWeights.empty()) {
+      dist_i += opts.idWeights.at(std::pair<int,int>(M.panel(i), Mp.panel(Mp_i)));
     }
 
     for (int j = 0; j < M.E_actual(); j++) {
@@ -176,6 +178,8 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
     // then add the user-supplied penalty/distance for the mismatch.
     if (opts.panelMode && opts.idw > 0) {
       dist_i += opts.idw * (M.panel(i) != Mp.panel(Mp_i));
+    } else if (opts.panelMode && !opts.idWeights.empty()) {
+      dist_i += opts.idWeights.at(std::pair<int,int>(M.panel(i), Mp.panel(Mp_i)));
     }
 
     for (int j = 0; j < M.E_actual(); j++) {
@@ -343,6 +347,8 @@ std::unique_ptr<double[]> wasserstein_cost_matrix(const Manifold& M, const Manif
   // then add the user-supplied penalty/distance for the mismatch.
   if (opts.panelMode && opts.idw > 0) {
     unlaggedDist += opts.idw * (M.panel(i) != Mp.panel(j));
+  } else if (opts.panelMode && !opts.idWeights.empty()) {
+    unlaggedDist += opts.idWeights.at(std::pair<int,int>(M.panel(i), Mp.panel(j)));
   }
 
   auto flatCostMatrix = std::make_unique<double[]>(len_i * len_j);

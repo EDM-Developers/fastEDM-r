@@ -344,6 +344,11 @@ panel <- (seq_along(x) > obs / 3) * 1.0
 cat("\n\nCommand: edm explore x, e(40)\n\n")
 res <- edm(t, x, panel=panel, E=40)
 
+## Test the panelWeight and panelWeights
+res <- edm(t, x, panel=panel, panelWeight=100)
+res <- edm(t, x, panel=panel, panelWeights=100 * (1 - diag(2)))
+res <- edm(t, x, panel=panel, panelWeights=matrix(c(100, 1, 1, 0), 2, 2))
+
 # edm explore x, e(40) allowmissing
 cat("\n\nCommand: edm explore x, e(40) allowmissing\n\n")
 res <- edm(t, x, panel=panel, E=40, allowMissing=TRUE)

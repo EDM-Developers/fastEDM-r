@@ -71,6 +71,7 @@ struct Options
   double missingdistance;
   bool panelMode;
   double idw;
+  std::map<std::pair<int, int>, float> idWeights;
   std::vector<double> thetas;
   Algorithm algorithm;
   int taskNum, numTasks, configNum;
