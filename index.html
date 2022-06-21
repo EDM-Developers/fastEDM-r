@@ -101,9 +101,9 @@
 <span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv"</span><span class="op">)</span><span class="op">)</span>
 
 <span class="va">crimeCCMCausesTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Crime"</span>, <span class="st">"Temperature"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
-<span class="co">#&gt; x No evidence of CCM causation from Crime to Temperature found.</span>
+<span class="co">#&gt; ✖ No evidence of CCM causation from Crime to Temperature found.</span>
 <span class="va">tempCCMCausesCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Temperature"</span>, <span class="st">"Crime"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span>
-<span class="co">#&gt; ✓ Some evidence of CCM causation from Temperature to Crime found.</span></code></pre></div>
+<span class="co">#&gt; ✔ Some evidence of CCM causation from Temperature to Crime found.</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="stata-package">Stata Package<a class="anchor" aria-label="anchor" href="#stata-package"></a>
