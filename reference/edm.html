@@ -92,13 +92,21 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>t</dt>
 <dd><p>The time variable</p></dd>
+
+
 <dt>x</dt>
 <dd><p>The first variable in the causal analysis</p></dd>
+
+
 <dt>y</dt>
 <dd><p>The second variable in the causal analysis</p></dd>
+
+
 <dt>panel</dt>
 <dd><p>If the data is panel data, then this variable specifies the
 panel ID of each observation.</p></dd>
+
+
 <dt>E</dt>
 <dd><p>This option specifies the number of dimensions \(E\) used for the
 main variable in the manifold reconstruction. If a list of numbers is provided, the command will
@@ -108,6 +116,8 @@ option whereas the explore subcommand supports the option as a numlist. The defa
 the estimation may be different if additional variables are incorporated. A error message is
 provided if the specified value is out of range. Missing data will limit the maximum \(E\) under the
 default deletion method.</p></dd>
+
+
 <dt>tau</dt>
 <dd><p>The tau (or \(\tau\)) option allows researchers to specify the ‘time delay’,
 which essentially sorts the data by the multiple \(\tau\). This is done by specifying lagged embeddings
@@ -122,6 +132,8 @@ scales, and can be chosen to reflect a researcher’s theory-driven interest in 
 large autocorrelations in the observed data. Of course, such
 a linear measure of association may not work well in nonlinear systems and thus researchers can also
 check performance by examining \(\rho\) and MAE at different values of \(\tau\).</p></dd>
+
+
 <dt>theta</dt>
 <dd><p>Theta (or \(\theta\)) is the distance weighting parameter for the
 local neighbours in the manifold. It is used to detect the nonlinearity of the system in the explore
@@ -131,6 +143,8 @@ default value of \(\theta\) is 1. However, this can be altered even for simplex 
 that we do not cover here). Particularly, values for S-mapping to test for improved predictions as
 they become more local may include</p>
 <p><code>theta = c(0, .00001, .0001, .001, .005, .01, .05, .1, .5, 1, 1.5, 2, 3, 4, 6, 8, 10)</code>.</p></dd>
+
+
 <dt>library</dt>
 <dd><p>This option specifies the total library size \(L\) used for
 the manifold reconstruction. Varying the library size is used to estimate the convergence property
@@ -140,6 +154,8 @@ observations minus sufficient lags (e.g., in the time-series case without missin
 rate of convergence (i.e., the rate at which \(\rho\) increases as \(L\) grows), the full range of library
 sizes at small values of \(L\) can be used, such as if \(E = 2\) and \(T = 100\), with the setting then perhaps
 being <code>library = c(seq(4, 25), seq(30, 50, 5), seq(54, 99, 15))</code>.</p></dd>
+
+
 <dt>k</dt>
 <dd><p>This option specifies the number of neighbours used for prediction. When
 set to 1, only the nearest neighbour is used, but as \(k\) increases the next-closest nearest neighbours
@@ -151,6 +167,8 @@ latter setting is useful and typically recommended for S-mapping because it allo
 library to be used for predictions with the weightings in theta. However, with large datasets this
 may be computationally burdensome and therefore <code>k=100</code> or perhaps <code>k=500</code> may be preferred if \(T\) or \(NT\)
 is large.</p></dd>
+
+
 <dt>algorithm</dt>
 <dd><p>This option specifies the algorithm used for prediction. If not
 specified, simplex projection (a locally weighted average) is used. Valid options include simplex
@@ -162,50 +180,76 @@ observation/target vector—because each predicted observation has its own type 
 with \(k\) neighbours as rows and \(E + 1\) coefficients as columns. As noted below, in this case special
 options are available to save these coefficients for post-processing but, again, it is not actually
 a regression model and instead should be seen as a manifold.</p></dd>
+
+
 <dt>p</dt>
 <dd><p>This option adjusts the default number of observations ahead
 which we predict.
 This parameter can be negative.</p></dd>
+
+
 <dt>crossfold</dt>
 <dd><p>This option asks the program to run a cross-fold validation of the
 predicted variables. crossfold(5) indicates a 5-fold cross validation. Note that this cannot be used
 together with replicate.</p></dd>
+
+
 <dt>full</dt>
 <dd><p>When this option is specified, the explore command will use all possible
 observations in the manifold construction instead of the default 50/50 split. This is effectively
 the same as leave-one-out cross-validation as the observation itself is not used for the prediction.</p></dd>
+
+
 <dt>shuffle</dt>
 <dd><p>When splitting the observations into library and prediction sets, by default
 the oldest observations go into the library set and the newest observations to the prediction set.
 Though if the randomize option is specified, the data is allocated into the two sets in a random
 fashion. If the replicate option is specified, then this randomization is enabled automatically.</p></dd>
+
+
 <dt>copredict</dt>
 <dd><p>This option specifies the variable used for coprediction.
 A second prediction is run for each configuration of \(E\), library, etc., using the same library set
 but with a prediction set built from the lagged embedding of this variable.</p></dd>
+
+
 <dt>savePredictions</dt>
 <dd><p>This option allows you to save the edm predictions
 which could be useful for plotting and diagnosis.</p></dd>
+
+
 <dt>saveCoPredictions</dt>
 <dd><p>This option allows you to save the copredictions.
 You must specify the <code>copredict</code> option for this to work.</p></dd>
+
+
 <dt>saveManifolds</dt>
 <dd><p>This option allows you to save the library and prediction manifolds.</p></dd>
+
+
 <dt>saveSMAPCoeffs</dt>
 <dd><p>This option allows S-map coefficients to be stored.</p></dd>
+
+
 <dt>extras</dt>
 <dd><p>This option allows incorporating additional variables into the
 embedding (multivariate embedding), e.g. <code>extras=c(y, z)</code>.</p></dd>
+
+
 <dt>allowMissing</dt>
 <dd><p>This option allows observations with missing values to be used in the
 manifold. Vectors with at least one non-missing values will be used in the manifold construction.
 Distance computations are adapted to allow missing values when this option is specified.</p></dd>
+
+
 <dt>missingDistance</dt>
 <dd><p>This option allows users to specify the assumed distance
 between missing values and any values (including missing) when estimating the Euclidean distance of
 the vector. This enables computations with missing values. The option implies <code>allowmissing</code>. By
 default, the distance is set to the expected distance of two random draws in a normal distribution,
 which equals to \(2/\sqrt{\pi} \times\) standard deviation of the mapping variable.</p></dd>
+
+
 <dt>dt</dt>
 <dd><p>This option allows automatic inclusion of the timestamp differencing in the
 embedding. There will be \(E\) dt variables included for an embedding with \(E\) dimensions. By default,
@@ -214,19 +258,27 @@ mapping variable divided by the standard deviation of the time difference. This 
 the <code>dtWeight</code> option. The <code>dt</code> option will be ignored when running with data with no sampling
 variation in the time lags. The first dt variable embeds the time of the between the most recent
 observation and the time of the corresponding target/predictand.</p></dd>
+
+
 <dt>reldt</dt>
 <dd><p>This option, to be read as ‘relative dt’, is like the <code>dt</code> option above in
 that it includes \(E\) extra variables for an embedding with E dimensions. However the timestamp
 differences added are not the time between the corresponding observations, but the time of the
 target/predictand minus the time of the lagged observations.</p></dd>
+
+
 <dt>dtWeight</dt>
 <dd><p>This option specifies the weight used for the timestamp differencing
 variable.</p></dd>
+
+
 <dt>numReps</dt>
 <dd><p>The number of random replications (i.e. random splits to library and prediction sets) to run.
 This is akin to a nonparametric bootstrap without replacement, and is commonly used for
 inference using confidence intervals in EDM (Tsonis et al., 2015; van Nes et al., 2015; Ye et al.,
 2015b).</p></dd>
+
+
 <dt>panelWeight</dt>
 <dd><p>This specifies a penalty that is added to the distances between points in the
 manifold which correspond to observations from different panels. By default <code>panelWeight</code> is 0,
@@ -235,29 +287,44 @@ then the weight is treated as \(\infty\) so neighbours will never
 be selected which cross the boundaries between panels. Setting <code>panelWeight=Inf</code> with
 <code>k=Inf</code> means we may use a different number of neighbors for different predictions (i.e.
 if the panels are unbalanced).</p></dd>
+
+
 <dt>panelWeights</dt>
 <dd><p>A generalisation of <code>panelWeight</code>. Instead of giving
 a constant penalty for differing panels, <code>panelWeights</code> lets you supply a
 matrix so <code>panelWeights[i, j]</code> will be added to distances between points
 in the $i$-th panel and the $j$-th panel.</p></dd>
+
+
 <dt>verbosity</dt>
 <dd><p>The level of detail in the output.</p></dd>
+
+
 <dt>showProgressBar</dt>
 <dd><p>Whether or not to print out a progress bar during the computations.</p></dd>
+
+
 <dt>numThreads</dt>
 <dd><p>The number of threads to use for the prediction task.</p></dd>
+
+
 <dt>lowMemory</dt>
 <dd><p>The lowMemory option tries to save as much space as possible
 by more efficiently using memory, though for small datasets this will likely
 slow down the computations by a small but noticeable amount.</p></dd>
+
+
 <dt>predictWithPast</dt>
 <dd><p>Force all predictions to only use contemporaneous
 data. Normally EDM is happy to cheat by pulling segments from the future
 of the time series to make a prediction.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list</p>
+    
+
+<p>A list</p>
     </div>
 
     <div class="section level2">
@@ -281,7 +348,7 @@ of the time series to make a prediction.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
     </footer></div>
