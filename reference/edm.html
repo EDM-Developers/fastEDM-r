@@ -51,41 +51,41 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">edm</span><span class="op">(</span>
-  <span class="va">t</span>,
-  <span class="va">x</span>,
-  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,
-  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,
-  E <span class="op">=</span> <span class="fl">2</span>,
-  tau <span class="op">=</span> <span class="fl">1</span>,
-  theta <span class="op">=</span> <span class="fl">1</span>,
-  library <span class="op">=</span> <span class="cn">NULL</span>,
-  k <span class="op">=</span> <span class="fl">0</span>,
-  algorithm <span class="op">=</span> <span class="st">"simplex"</span>,
-  p <span class="op">=</span> <span class="cn">NULL</span>,
-  crossfold <span class="op">=</span> <span class="fl">0</span>,
-  full <span class="op">=</span> <span class="cn">FALSE</span>,
-  shuffle <span class="op">=</span> <span class="cn">FALSE</span>,
-  copredict <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,
-  savePredictions <span class="op">=</span> <span class="cn">FALSE</span>,
-  saveCoPredictions <span class="op">=</span> <span class="cn">FALSE</span>,
-  saveManifolds <span class="op">=</span> <span class="cn">FALSE</span>,
-  saveSMAPCoeffs <span class="op">=</span> <span class="cn">FALSE</span>,
-  extras <span class="op">=</span> <span class="cn">NULL</span>,
-  allowMissing <span class="op">=</span> <span class="cn">FALSE</span>,
-  missingDistance <span class="op">=</span> <span class="fl">0</span>,
-  dt <span class="op">=</span> <span class="cn">FALSE</span>,
-  reldt <span class="op">=</span> <span class="cn">FALSE</span>,
-  dtWeight <span class="op">=</span> <span class="fl">0</span>,
-  numReps <span class="op">=</span> <span class="fl">1</span>,
-  panelWeight <span class="op">=</span> <span class="fl">0</span>,
-  panelWeights <span class="op">=</span> <span class="cn">NULL</span>,
-  verbosity <span class="op">=</span> <span class="fl">1</span>,
-  showProgressBar <span class="op">=</span> <span class="cn">NA</span>,
-  numThreads <span class="op">=</span> <span class="fl">1</span>,
-  lowMemory <span class="op">=</span> <span class="cn">FALSE</span>,
-  predictWithPast <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">edm</span><span class="op">(</span></span>
+<span>  <span class="va">t</span>,</span>
+<span>  <span class="va">x</span>,</span>
+<span>  y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  panel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  E <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  tau <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  theta <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  library <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  algorithm <span class="op">=</span> <span class="st">"simplex"</span>,</span>
+<span>  p <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  crossfold <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  full <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  shuffle <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  copredict <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  savePredictions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  saveCoPredictions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  saveManifolds <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  saveSMAPCoeffs <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  extras <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  allowMissing <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  missingDistance <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  dt <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  reldt <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  dtWeight <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  numReps <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  panelWeight <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  panelWeights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbosity <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  showProgressBar <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  numThreads <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  lowMemory <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  predictWithPast <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -329,9 +329,9 @@ of the time series to make a prediction.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"> <span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span><span class="op">)</span></span>
-<span class="r-in"> <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">11</span>, <span class="fl">12</span>, <span class="fl">13</span>, <span class="fl">14</span>, <span class="fl">15</span>, <span class="fl">16</span>, <span class="fl">17</span>, <span class="fl">18</span><span class="op">)</span></span>
-<span class="r-in"> <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">edm</span><span class="op">(</span><span class="va">t</span>, <span class="va">x</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span> <span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">11</span>, <span class="fl">12</span>, <span class="fl">13</span>, <span class="fl">14</span>, <span class="fl">15</span>, <span class="fl">16</span>, <span class="fl">17</span>, <span class="fl">18</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">edm</span><span class="op">(</span><span class="va">t</span>, <span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Computing: [========================================] 100% (done)                         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Summary of predictions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   E library theta        rho     mae</span>
@@ -348,7 +348,7 @@ of the time series to make a prediction.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
     </footer></div>
