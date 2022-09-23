@@ -110,9 +110,9 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
                        double missingDistance = 0.0, double panelWeight = 0.0,
-                       Rcpp::Nullable<Rcpp::NumericMatrix> panelWeights = R_NilValue, 
-                       int verbosity = 1, 
-                       bool showProgressBar = true, int numThreads = 1, bool lowMemory = false, bool predictWithPast = false, std::string saveInputs = "")
+                       Rcpp::Nullable<Rcpp::NumericMatrix> panelWeights = R_NilValue, int verbosity = 1,
+                       bool showProgressBar = true, int numThreads = 1, bool lowMemory = false,
+                       bool predictWithPast = false, std::string saveInputs = "")
 {
   try {
     RConsoleIO io(verbosity);
@@ -159,15 +159,15 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     if (io.verbosity > 1) {
       io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
       io.print(
-      fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
+        fmt::format("CPU has {} logical cores and {} physical cores\n", num_logical_cores(), num_physical_cores()));
     }
-    
+
     std::vector<double> t = Rcpp::as<std::vector<double>>(df["t"]);
     std::vector<double> x = Rcpp::as<std::vector<double>>(df["x"]);
 
     replace_nan(t);
     replace_nan(x);
-    
+
     // Need to wipe out this so that the default missing distance
     // calculation is fine.
     for (int i = 0; i < t.size(); i++) {
@@ -187,32 +187,32 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     }
 
     opts.idw = panelWeight;
-    
+
     std::map<std::pair<int, int>, float> fakePanelWeights;
 
     std::vector<int> panelIDs;
     if (df.containsElementNamed("panel")) {
       panelIDs = Rcpp::as<std::vector<int>>(df["panel"]);
       opts.panelMode = true;
-      
+
       if (panelWeights.isNotNull()) {
         Rcpp::NumericMatrix matrix = Rcpp::as<Rcpp::NumericMatrix>(panelWeights);
-        
+
         std::vector<int> uniquePanelIDs(panelIDs);
         auto it = std::unique(uniquePanelIDs.begin(), uniquePanelIDs.end());
-        uniquePanelIDs.resize(std::distance(uniquePanelIDs.begin(),it));
-        
+        uniquePanelIDs.resize(std::distance(uniquePanelIDs.begin(), it));
+
         for (int i = 0; i < uniquePanelIDs.size(); i++) {
           for (int j = 0; j < uniquePanelIDs.size(); j++) {
-            std::pair<int,int> key(uniquePanelIDs[i], uniquePanelIDs[j]);
-            opts.idWeights[key] = Rcpp::as<Rcpp::NumericMatrix>(panelWeights)(i,j);
+            std::pair<int, int> key(uniquePanelIDs[i], uniquePanelIDs[j]);
+            opts.idWeights[key] = Rcpp::as<Rcpp::NumericMatrix>(panelWeights)(i, j);
           }
         }
 
         // TODO: Perhaps throw error if both idw constant and matrix supplied.
         opts.idw = 0;
       }
-      
+
     } else {
       opts.panelMode = false;
     }
@@ -251,7 +251,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     int numUsable = std::accumulate(usable.begin(), usable.end(), 0);
     if (numUsable == 0) {
       io.print("Num usable is 0!\n");
-      
+
       Rcpp::List res;
       res["rc"] = 8000;
       return res;
@@ -302,7 +302,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
     if (io.verbosity > 1) {
       io.print("Starting the command!\n");
-      io.flush();  
+      io.flush();
     }
 
     auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
@@ -401,7 +401,7 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
       }
 
       stats = Rcpp::DataFrame::create(Rcpp::_["E"] = Es, Rcpp::_["library"] = libraries, Rcpp::_["theta"] = thetas,
-                                        Rcpp::_["rho"] = rhos, Rcpp::_["mae"] = maes);
+                                      Rcpp::_["rho"] = rhos, Rcpp::_["mae"] = maes);
 
       if (copredictMode) {
         copredStats =
