@@ -1,10 +1,10 @@
 
 #' fastEDM
-#' 
+#'
 #' The fastEDM package implements a series of tools that can be
 #' used for empirical dynamic modeling. The core algorithm is written in C++
-#' to achieve a reasonable execution speed. 
-#' 
+#' to achieve a reasonable execution speed.
+#'
 #' @docType package
 #' @author Patrick Laub <patrick.laub@gmail.com>
 #' @import Rcpp RcppEigen

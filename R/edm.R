@@ -1,14 +1,14 @@
 #' edm
 #'
 #' @param t The time variable
-#' 
+#'
 #' @param x The first variable in the causal analysis
-#' 
+#'
 #' @param y The second variable in the causal analysis
-#' 
+#'
 #' @param panel If the data is panel data, then this variable specifies the
 #' panel ID of each observation.
-#' 
+#'
 #' @param E This option specifies the number of dimensions \eqn{E} used for the
 #' main variable in the manifold reconstruction. If a list of numbers is provided, the command will
 #' compute results for all numbers specified. The xmap subcommand only supports a single integer as the
@@ -41,7 +41,7 @@
 #' they become more local may include
 #'
 #' \code{theta = c(0, .00001, .0001, .001, .005, .01, .05, .1, .5, 1, 1.5, 2, 3, 4, 6, 8, 10)}.
-#' 
+#'
 #' @param library This option specifies the total library size \eqn{L} used for
 #' the manifold reconstruction. Varying the library size is used to estimate the convergence property
 #' of the cross-mapping, with a minimum value \eqn{L_{min} = E + 2} and the maximum equal to the total number of
@@ -51,7 +51,7 @@
 #' sizes at small values of \eqn{L} can be used, such as if \eqn{E = 2} and \eqn{T = 100}, with the setting then perhaps
 #' being \code{library = c(seq(4, 25), seq(30, 50, 5), seq(54, 99, 15))}.
 # This option is only available with the `xmap` subcommand.
-#' 
+#'
 #' @param k This option specifies the number of neighbours used for prediction. When
 #' set to 1, only the nearest neighbour is used, but as \eqn{k} increases the next-closest nearest neighbours
 #' are included for making predictions. In the case that \eqn{k} is set 0, the number of neighbours used is
@@ -62,7 +62,7 @@
 #' library to be used for predictions with the weightings in theta. However, with large datasets this
 #' may be computationally burdensome and therefore \code{k=100} or perhaps \code{k=500} may be preferred if \eqn{T} or \eqn{NT}
 #' is large.
-#' 
+#'
 #' @param algorithm This option specifies the algorithm used for prediction. If not
 #' specified, simplex projection (a locally weighted average) is used. Valid options include simplex
 #' and smap, the latter of which is a sequential locally weighted global linear mapping (or S-map as
@@ -73,38 +73,38 @@
 #' with \eqn{k} neighbours as rows and \eqn{E + 1} coefficients as columns. As noted below, in this case special
 #' options are available to save these coefficients for post-processing but, again, it is not actually
 #' a regression model and instead should be seen as a manifold.
-#' 
+#'
 #' @param p This option adjusts the default number of observations ahead
 #' which we predict.
-#By default, the explore mode predict \eqn{\tau} observations ahead and the xmap mode uses p(0).
+# By default, the explore mode predict \eqn{\tau} observations ahead and the xmap mode uses p(0).
 #' This parameter can be negative.
-#' 
+#'
 #' @param crossfold This option asks the program to run a cross-fold validation of the
 #' predicted variables. crossfold(5) indicates a 5-fold cross validation. Note that this cannot be used
 #' together with replicate.
-#This option is only available with the `explore` subcommand.
-#' 
+# This option is only available with the `explore` subcommand.
+#'
 #' @param full When this option is specified, the explore command will use all possible
 #' observations in the manifold construction instead of the default 50/50 split. This is effectively
 #' the same as leave-one-out cross-validation as the observation itself is not used for the prediction.
-#' 
+#'
 #' @param shuffle When splitting the observations into library and prediction sets, by default
 #' the oldest observations go into the library set and the newest observations to the prediction set.
 #' Though if the randomize option is specified, the data is allocated into the two sets in a random
 #' fashion. If the replicate option is specified, then this randomization is enabled automatically.
-#' 
+#'
 #' @param copredict This option specifies the variable used for coprediction.
 #' A second prediction is run for each configuration of \eqn{E}, library, etc., using the same library set
 #' but with a prediction set built from the lagged embedding of this variable.
-#' 
+#'
 #' @param savePredictions This option allows you to save the edm predictions
 #' which could be useful for plotting and diagnosis.
-#' 
+#'
 #' @param saveCoPredictions This option allows you to save the copredictions.
 #' You must specify the \code{copredict} option for this to work.
-#' 
+#'
 #' @param saveManifolds This option allows you to save the library and prediction manifolds.
-#' 
+#'
 #' @param saveSMAPCoeffs  This option allows S-map coefficients to be stored.
 # in variables with
 # a specified prefix. For example, specifying "edm xmap x y, algorithm(smap) savesmap(beta) k(-1)" will
@@ -144,17 +144,17 @@
 # e.g. extra(L(1/3).z) will be equivalent to extra(L1.z L2.z L3.z). Normally, lagged versions of the
 # extra variables are not included in the embedding, however the syntax extra(z(e)) includes e lags
 # of z in the embedding.
-#' 
+#'
 #' @param allowMissing This option allows observations with missing values to be used in the
 #' manifold. Vectors with at least one non-missing values will be used in the manifold construction.
 #' Distance computations are adapted to allow missing values when this option is specified.
-#' 
+#'
 #' @param missingDistance This option allows users to specify the assumed distance
 #' between missing values and any values (including missing) when estimating the Euclidean distance of
 #' the vector. This enables computations with missing values. The option implies \code{allowmissing}. By
 #' default, the distance is set to the expected distance of two random draws in a normal distribution,
 #' which equals to \eqn{2/\sqrt{\pi} \times} standard deviation of the mapping variable.
-#' 
+#'
 #' @param dt This option allows automatic inclusion of the timestamp differencing in the
 #' embedding. There will be \eqn{E} dt variables included for an embedding with \eqn{E} dimensions. By default,
 #' the weights used for these additional variables equal to the standard deviation of the main
@@ -162,15 +162,15 @@
 #' the \code{dtWeight} option. The \code{dt} option will be ignored when running with data with no sampling
 #' variation in the time lags. The first dt variable embeds the time of the between the most recent
 #' observation and the time of the corresponding target/predictand.
-#' 
+#'
 #' @param reldt This option, to be read as \sQuote{relative dt}, is like the \code{dt} option above in
 #' that it includes \eqn{E} extra variables for an embedding with E dimensions. However the timestamp
 #' differences added are not the time between the corresponding observations, but the time of the
 #' target/predictand minus the time of the lagged observations.
-#' 
+#'
 #' @param dtWeight This option specifies the weight used for the timestamp differencing
 #' variable.
-#' 
+#'
 #' @param numReps The number of random replications (i.e. random splits to library and prediction sets) to run.
 # The explore subcommand uses a random 50/50 split for simplex
 # projection and S-maps, whereas the xmap subcommand selects the observations randomly for library
@@ -186,7 +186,7 @@
 # of the results are reported across the 50 runs by default. As we note below, it is possible to save
 # all estimates for post-processing using typical Stata commands such as svmat, allowing the graphing
 # of results or finding percentile-based with the pctile command.
-#' 
+#'
 #' @param panelWeight This specifies a penalty that is added to the distances between points in the
 #' manifold which correspond to observations from different panels. By default \code{panelWeight} is 0,
 #' so the data from all panels is mixed together and treatly equally. If \code{panelWeight=Inf} is set
@@ -194,72 +194,71 @@
 #' be selected which cross the boundaries between panels. Setting \code{panelWeight=Inf} with
 #' \code{k=Inf} means we may use a different number of neighbors for different predictions (i.e.
 #' if the panels are unbalanced).
-#' 
+#'
 #' @param panelWeights A generalisation of \code{panelWeight}. Instead of giving
 #' a constant penalty for differing panels, \code{panelWeights} lets you supply a
 #' matrix so \code{panelWeights[i, j]} will be added to distances between points
 #' in the $i$-th panel and the $j$-th panel.
-#' 
+#'
 #' @param verbosity The level of detail in the output.
-#' 
+#'
 #' @param showProgressBar Whether or not to print out a progress bar during the computations.
-#' 
+#'
 #' @param numThreads The number of threads to use for the prediction task.
-#' 
+#'
 #' @param lowMemory The lowMemory option tries to save as much space as possible
 #' by more efficiently using memory, though for small datasets this will likely
 #' slow down the computations by a small but noticeable amount.
-#' 
+#'
 #' @param predictWithPast Force all predictions to only use contemporaneous
 #' data. Normally EDM is happy to cheat by pulling segments from the future
-#' of the time series to make a prediction. 
-#' 
+#' of the time series to make a prediction.
+#'
 #' @return A list
 #' @export
 #'
 #' @examples
-#'  t <- c(1, 2, 3, 4, 5, 6, 7, 8)
-#'  x <- c(11, 12, 13, 14, 15, 16, 17, 18)
-#'  res <- edm(t, x)
-#
-edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL,
-                k=0, algorithm="simplex", p=NULL, crossfold=0, full=FALSE,
-                shuffle=FALSE, copredict = c(), savePredictions=FALSE,
-                saveCoPredictions=FALSE, saveManifolds=FALSE,
-                saveSMAPCoeffs=FALSE, extras=NULL, allowMissing=FALSE,
-                missingDistance=0.0, dt=FALSE, reldt=FALSE, dtWeight=0.0,
-                numReps=1, panelWeight=0, panelWeights=NULL, verbosity=1,
-                showProgressBar=NA, numThreads=1, lowMemory=FALSE,
-                predictWithPast=FALSE) {
-  
+#' t <- c(1, 2, 3, 4, 5, 6, 7, 8)
+#' x <- c(11, 12, 13, 14, 15, 16, 17, 18)
+#' res <- edm(t, x)
+#' #
+edm <- function(t, x, y = c(), panel = c(), E = 2, tau = 1, theta = 1, library = NULL,
+                k = 0, algorithm = "simplex", p = NULL, crossfold = 0, full = FALSE,
+                shuffle = FALSE, copredict = c(), savePredictions = FALSE,
+                saveCoPredictions = FALSE, saveManifolds = FALSE,
+                saveSMAPCoeffs = FALSE, extras = NULL, allowMissing = FALSE,
+                missingDistance = 0.0, dt = FALSE, reldt = FALSE, dtWeight = 0.0,
+                numReps = 1, panelWeight = 0, panelWeights = NULL, verbosity = 1,
+                showProgressBar = NA, numThreads = 1, lowMemory = FALSE,
+                predictWithPast = FALSE) {
   if (length(t) != length(x)) {
     stop("The time and x variables should be the same length")
   }
-  
+
   df <- data.frame(t = t, x = x)
   colnames(df) <- c("t", "x")
-  
+
   if (length(y) > 0) {
     if (length(t) != length(y)) {
       stop("The y variable is the wrong length")
     }
     df["y"] <- y
   }
-  
+
   if (length(panel) > 0) {
     if (length(t) != length(panel)) {
       stop("The panel id variable is the wrong length")
     }
     df["panel"] <- panel
   }
-  
+
   if (length(copredict) > 0) {
     if (length(t) != length(copredict)) {
       stop("Coprediction vector is the wrong length")
     }
     df["co_x"] <- copredict
   }
-  
+
   if (!is.null(extras)) {
     for (extra in extras) {
       if (length(extra) != length(x)) {
@@ -267,77 +266,105 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL,
       }
     }
   }
-  
+
   if (numReps > 1) {
-    shuffle = TRUE
+    shuffle <- TRUE
   }
-  
+
   if (isnothing(showProgressBar)) {
-    showProgressBar = (verbosity > 0)
+    showProgressBar <- (verbosity > 0)
   }
-  
+
   explore <- length(y) == 0
-  
-  # Re-assert default arguments if NA/NULL/NaN are passed to them 
-  p <- if (is.null(p)) { explore } else { p }
-  k <- if (isnothing(k)) { 0 } else { k }
-  if (length(E) == 1) {
-    E <- if (isnothing(E)) { 2 } else { E }
+
+  # Re-assert default arguments if NA/NULL/NaN are passed to them
+  p <- if (is.null(p)) {
+    explore
   } else {
-    E <- if (sum(is.na(E)) > 0) { E[!is.na(E)] } else { E }
+    p
   }
-  
-  k <- if (k == Inf) { -1 } else { k }
-  
-  panelWeight <- if (panelWeight == Inf) { -1 } else { panelWeight }
-  
+  k <- if (isnothing(k)) {
+    0
+  } else {
+    k
+  }
+  if (length(E) == 1) {
+    E <- if (isnothing(E)) {
+      2
+    } else {
+      E
+    }
+  } else {
+    E <- if (sum(is.na(E)) > 0) {
+      E[!is.na(E)]
+    } else {
+      E
+    }
+  }
+
+  k <- if (k == Inf) {
+    -1
+  } else {
+    k
+  }
+
+  panelWeight <- if (panelWeight == Inf) {
+    -1
+  } else {
+    panelWeight
+  }
+
   res <- run_command(df, E, tau, theta, library,
-                     k, algorithm=algorithm, numReps=numReps,
-                     p=p, crossfold=crossfold, full=full, shuffle=shuffle,
-                     saveFinalPredictions=savePredictions,
-                     saveFinalCoPredictions=saveCoPredictions,
-                     saveManifolds=saveManifolds,
-                     saveSMAPCoeffs=saveSMAPCoeffs,
-                     extras=extras, allowMissing=allowMissing,
-                     missingDistance=missingDistance,
-                     dt=dt, reldt=reldt, dtWeight=dtWeight, 
-                     numThreads=numThreads, panelWeight=panelWeight,
-                     panelWeights=panelWeights, verbosity=verbosity,
-                     showProgressBar=showProgressBar, lowMemory=lowMemory,
-                     predictWithPast=predictWithPast)
-  
+    k,
+    algorithm = algorithm, numReps = numReps,
+    p = p, crossfold = crossfold, full = full, shuffle = shuffle,
+    saveFinalPredictions = savePredictions,
+    saveFinalCoPredictions = saveCoPredictions,
+    saveManifolds = saveManifolds,
+    saveSMAPCoeffs = saveSMAPCoeffs,
+    extras = extras, allowMissing = allowMissing,
+    missingDistance = missingDistance,
+    dt = dt, reldt = reldt, dtWeight = dtWeight,
+    numThreads = numThreads, panelWeight = panelWeight,
+    panelWeights = panelWeights, verbosity = verbosity,
+    showProgressBar = showProgressBar, lowMemory = lowMemory,
+    predictWithPast = predictWithPast
+  )
+
   if (res$rc == 0) {
     if (verbosity > 1) {
       cat("Finished successfully!\n")
     }
-    
+
     df <- stats::na.omit(res$stats)
-    
+
     if (verbosity > 1) {
       cat("Number of non-missing stats:", nrow(df), "\n")
     }
-    
+
     if (nrow(df) > 1) {
-        res$summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)    
+      res$summary <- stats::aggregate(cbind(rho, mae) ~ E + library + theta, df, mean)
     } else {
-        res$summary <- res$stats
+      res$summary <- res$stats
     }
-    
-    
+
+
     if (verbosity > 0) {
       cat("Summary of predictions\n")
       print.data.frame(res$summary)
-   
-      if (!is.na(res$kMin) && !is.na(res$kMax)) { 
+
+      if (!is.na(res$kMin) && !is.na(res$kMax)) {
         if (res$kMin == res$kMax) {
           cat("Number of neighbours (k) is set to", res$kMin, "\n")
         } else {
-          cat("Number of neighbours (k) is set to between",
-            res$kMin, "and", res$kMax, "\n")
+          cat(
+            "Number of neighbours (k) is set to between",
+            res$kMin, "and", res$kMax, "\n"
+          )
         }
       }
     }
-    
+
     if (length(copredict) > 0) {
       df <- stats::na.omit(res$copredStats)
 
@@ -346,7 +373,7 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL,
       } else {
         res$copredSummary <- res$copredStats
       }
-      
+
       if (verbosity > 0) {
         cat("Summary of copredictions\n")
         print.data.frame(res$copredSummary)
@@ -355,10 +382,10 @@ edm <- function(t, x, y = c(), panel = c(), E=2, tau=1, theta=1, library=NULL,
   } else {
     cat("Error code:", res$rc, "\n")
   }
-  
+
   return(res)
 }
 
-isnothing = function(x) {
+isnothing <- function(x) {
   is.null(x) | is.na(x) | is.nan(x)
 }
