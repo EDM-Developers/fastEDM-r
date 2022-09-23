@@ -424,19 +424,19 @@ test_that("From 'bigger-test.do' script", {
   res1 <- edm(t, x, y, library=c(5, 10, 20, 40), copredict=u1, numReps=100)
   res2 <- edm(t, y, x, library=c(5, 10, 20, 40), copredict=u1, numReps=100)
 
-  rho_low <- c(.20414, .26436, .26986, .31482)
-  rho_up <- c(.30439, .33304, .31819, .33598)
-  co_rho_low <- c(.30019, .50907, .47339, .33987)
-  co_rho_up <- c(.45948, .58669, .54501, .40624)
+  rho_low = c(-.24081, -.040511, .055321, .22091)
+  rho_up = c(.74934, .63791, .53273, .4299)
+  co_rho_low = c(-.40689, .1645, .15547, .045263)
+  co_rho_up = c(1.1666, .93126, .86293, .70085)
   
-  #check_noisy_edm_result(res1, rho_low, rho_up, co_rho_low, co_rho_up)
+  check_noisy_edm_result(res1, rho_low, rho_up, co_rho_low, co_rho_up)
   
-  rho_low <- c(.29306, .49379, .66676, .80149)
-  rho_up <- c(.39298, .54764, .69695, .81972)
-  co_rho_low <- c(.27839, .47432, .53525, .52206)
-  co_rho_up <- c(.42846, .56706, .58327, .55028)
+  rho_low = c(-.15045, .25476, .53274, .72057)
+  rho_up = c(.83649, .78668, .83097, .90064)
+  co_rho_low = c(-.38777, .062654, .32211, .39681)
+  co_rho_up = c(1.0946, .97872, .7964, .67552)
   
-  #check_noisy_edm_result(res2, rho_low, rho_up, co_rho_low, co_rho_up)
+  check_noisy_edm_result(res2, rho_low, rho_up, co_rho_low, co_rho_up)
   
   # edm explore x, copredictvar(y) rep(100) ci(10)
   # res <- edm(t, x, copredict=y, numReps=100)
