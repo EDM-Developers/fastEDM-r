@@ -235,12 +235,14 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
         opts.metrics.push_back(Metric::Diff); // TODO: Handle factor extras
       }
     }
+    opts.hasCategorical = false; // TODO: Handle factor extras
 
     int numExtrasLagged = 0;
 
     ManifoldGenerator generator(t, x, tau, p, xmap, co_x, panelIDs, extrasVecs, numExtrasLagged, dt, reldt,
                                 allowMissing, dtWeight);
 
+    opts.hasMissing = allowMissing;
     if (allowMissing && opts.missingdistance == 0) {
       opts.missingdistance = default_missing_distance(x);
     }

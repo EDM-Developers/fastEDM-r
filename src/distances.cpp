@@ -148,7 +148,8 @@ DistanceIndexPairs lazy_lp_distances(int Mp_i, const Options& opts, const Manifo
   return { inds, dists };
 }
 
-DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
+template<bool hasMissing, bool hasCategorical, bool panelMode, int p>
+DistanceIndexPairs templated_eager_lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
 {
   std::vector<int> inds;
   std::vector<double> dists;
@@ -156,7 +157,7 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
   inds.reserve(M.numPoints());
   dists.reserve(M.numPoints());
 
-  const bool skipOtherPanels = opts.panelMode && (opts.idw < 0);
+  const bool skipOtherPanels = panelMode && (opts.idw < 0);
   const bool skipFuturePoints = opts.useOnlyPastToPredictFuture;
 
   // Compare every observation in the M manifold to the
@@ -176,7 +177,7 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
 
     // If we have panel data and the M[i] / Mp[Mp_j] observations come from different panels
     // then add the user-supplied penalty/distance for the mismatch.
-    if (opts.panelMode && opts.idw > 0) {
+    if (panelMode && opts.idw > 0) {
       dist_i += opts.idw * (M.panel(i) != Mp.panel(Mp_i));
     } else if (opts.panelMode && !opts.idWeights.empty()) {
       dist_i += opts.idWeights.at(std::pair<int, int>(M.panel(i), Mp.panel(Mp_i)));
@@ -190,7 +191,7 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
       // M[i,j] to Mp[Mp_i, j] is opts.missingdistance.
       // However, if the user doesn't specify this, then the entire
       // M[i] to Mp[Mp_i] distance is set as missing.
-      if ((M(i, j) == MISSING_D) || (Mp(Mp_i, j) == MISSING_D)) {
+      if (hasMissing && ((M(i, j) == MISSING_D) || (Mp(Mp_i, j) == MISSING_D))) {
         if (opts.missingdistance == 0) {
           dist_i = MISSING_D;
           break;
@@ -200,14 +201,14 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
       } else { // Neither M[i,j] nor Mp[Mp_i, j] is missing.
         // How do we compare them? Do we treat them like continuous values and subtract them,
         // or treat them like unordered categorical variables and just check if they're the same?
-        if (opts.metrics[j] == Metric::Diff) {
-          dist_ij = M(i, j) - Mp(Mp_i, j);
-        } else { // Metric::CheckSame
+        if (hasCategorical && opts.metrics[j] == Metric::CheckSame) {
           dist_ij = (M(i, j) != Mp(Mp_i, j));
+        } else { // Metric::Diff)
+          dist_ij = M(i, j) - Mp(Mp_i, j);
         }
       }
 
-      if (opts.distance == Distance::MeanAbsoluteError) {
+      if (p == 1) { // Distance::MeanAbsoluteError
         dist_i += abs(dist_ij) / M.E_actual();
       } else { // Distance::Euclidean
         dist_i += dist_ij * dist_ij;
@@ -215,7 +216,7 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
     }
 
     if (dist_i != 0 && dist_i != MISSING_D) {
-      if (opts.distance == Distance::MeanAbsoluteError) {
+      if (p == 1) { // Distance::MeanAbsoluteError
         dists.push_back(dist_i);
       } else { // Distance::Euclidean
         dists.push_back(sqrt(dist_i));
@@ -225,6 +226,71 @@ DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manif
   }
 
   return { inds, dists };
+}
+
+DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
+{
+  if (opts.hasMissing) {
+    if (opts.hasCategorical) {
+      if (opts.panelMode) {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<true, true, true, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<true, true, true, 2>(Mp_i, opts, M, Mp);
+        }
+      } else {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<true, true, false, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<true, true, false, 2>(Mp_i, opts, M, Mp);
+        }
+      }
+    } else {
+      if (opts.panelMode) {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<true, false, true, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<true, false, true, 2>(Mp_i, opts, M, Mp);
+        }
+      } else {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<true, false, false, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<true, false, false, 2>(Mp_i, opts, M, Mp);
+        }
+      }
+    }
+  } else {
+    if (opts.hasCategorical) {
+      if (opts.panelMode) {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<false, true, true, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<false, true, true, 2>(Mp_i, opts, M, Mp);
+        }
+      } else {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<false, true, false, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<false, true, false, 2>(Mp_i, opts, M, Mp);
+        }
+      }
+    } else {
+      if (opts.panelMode) {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<false, false, true, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<false, false, true, 2>(Mp_i, opts, M, Mp);
+        }
+      } else {
+        if (opts.distance == Distance::MeanAbsoluteError) {
+          return templated_eager_lp_distances<false, false, false, 1>(Mp_i, opts, M, Mp);
+        } else {
+          return templated_eager_lp_distances<false, false, false, 2>(Mp_i, opts, M, Mp);
+        }
+      }
+    }
+  }
 }
 
 // This function compares the M(i,.) multivariate time series to the Mp(j,.) multivariate time series.

@@ -84,6 +84,8 @@ struct Options
   bool saveManifolds;
   bool lowMemoryMode;
   bool useOnlyPastToPredictFuture;
+  bool hasMissing;
+  bool hasCategorical;
 };
 
 struct PredictionStats
