@@ -26,6 +26,7 @@ std::vector<int> bool_to_int(std::vector<bool> bv)
   return iv;
 }
 
+#ifdef JSON
 void append_to_dumpfile(std::string fName, const json& taskGroup)
 {
   json allTaskGroups;
@@ -41,6 +42,7 @@ void append_to_dumpfile(std::string fName, const json& taskGroup)
   std::ofstream o(fName);
   o << allTaskGroups << std::endl;
 }
+#endif
 
 class RConsoleIO : public IO
 {
