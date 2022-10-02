@@ -76,7 +76,7 @@ std::atomic<int> estimatedTotalNumPredictions = 0;
 std::atomic<int> numPredictionsFinished = 0;
 std::atomic<int> numTasksFinished = 0;
 
-#ifdef _WIN32
+#if defined LEAK_POOL_ON_WINDOWS && defined _WIN32
 // Must leak resource, because windows + R deadlock otherwise. Memory
 // is released on shutdown.
 ThreadPool* workerPoolPtr = new ThreadPool(0);
