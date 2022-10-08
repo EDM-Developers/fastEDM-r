@@ -87,23 +87,13 @@ ThreadPool* workerPoolPtr = &workerPool;
 ThreadPool* taskRunnerPoolPtr = &taskRunnerPool;
 #endif
 
-std::vector<std::future<PredictionResult>> launch_task_group(
+std::vector<std::function<PredictionResult()>> configure_tasks(
   const std::shared_ptr<ManifoldGenerator> generator, Options opts, const std::vector<int>& Es,
   const std::vector<int>& libraries, int k, int numReps, int crossfold, bool explore, bool full, bool shuffle,
   bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode,
   const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
 {
-  static bool initOnce = [&]() {
-#if defined(WITH_ARRAYFIRE)
-    af::setMemStepSize(1024 * 1024 * 5);
-    taskRunnerPoolPtr->set_num_workers(1); // Avoid oversubscribing to the GPU
-#else
-    taskRunnerPoolPtr->set_num_workers(1);
-#endif
-    return true;
-  }();
-
-  workerPoolPtr->set_num_workers(opts.nthreads);
+  std::vector<std::function<PredictionResult()>> tasks;
 
   // Construct the instance which will (repeatedly) split the data
   // into either the library set or the prediction set.
@@ -132,9 +122,6 @@ std::vector<std::future<PredictionResult>> launch_task_group(
   }
 
   int E, kAdj, library, librarySize;
-
-  std::vector<std::future<PredictionResult>> futures;
-
   bool newLibraryPredictionSplit = true;
 
   for (int iter = 1; iter <= numIters; iter++) {
@@ -192,11 +179,10 @@ std::vector<std::future<PredictionResult>> launch_task_group(
         opts.k = kAdj;
         opts.library = library;
 
-        futures.emplace_back(
-          taskRunnerPoolPtr->enqueue([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
-            return edm_task(generator, opts, E, splitter.libraryRows(), splitter.predictionRows(), io, keep_going,
-                            all_tasks_finished);
-          }));
+        tasks.emplace_back([generator, opts, E, splitter, io, keep_going, all_tasks_finished] {
+          return edm_task(generator, opts, E, splitter.libraryRows(), splitter.predictionRows(), io, keep_going,
+                          all_tasks_finished);
+        });
 
         opts.taskNum += 1;
 
@@ -209,10 +195,9 @@ std::vector<std::future<PredictionResult>> launch_task_group(
           }
           opts.saveSMAPCoeffs = false;
 
-          futures.emplace_back(
-            taskRunnerPoolPtr->enqueue([generator, opts, E, splitter, cousable, io, keep_going, all_tasks_finished] {
-              return edm_task(generator, opts, E, splitter.libraryRows(), cousable, io, keep_going, all_tasks_finished);
-            }));
+          tasks.emplace_back([generator, opts, E, splitter, cousable, io, keep_going, all_tasks_finished] {
+            return edm_task(generator, opts, E, splitter.libraryRows(), cousable, io, keep_going, all_tasks_finished);
+          });
 
           opts.taskNum += 1;
         }
@@ -220,6 +205,71 @@ std::vector<std::future<PredictionResult>> launch_task_group(
         opts.configNum += opts.thetas.size();
       }
     }
+  }
+
+  return tasks;
+}
+
+#if defined(WITH_ARRAYFIRE)
+void setup_arrayfire()
+{
+  static bool initOnce = [&]() {
+    af::setMemStepSize(1024 * 1024 * 5);
+    return true;
+  }();
+}
+#endif
+
+std::vector<PredictionResult> run_tasks(const std::shared_ptr<ManifoldGenerator> generator, Options opts,
+                                        const std::vector<int>& Es, const std::vector<int>& libraries, int k,
+                                        int numReps, int crossfold, bool explore, bool full, bool shuffle,
+                                        bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs,
+                                        bool copredictMode, const std::vector<bool>& usable,
+                                        const std::string& rngState, IO* io, bool keep_going(),
+                                        void all_tasks_finished())
+{
+#if defined(WITH_ARRAYFIRE)
+  setup_arrayfire();
+#endif
+  if (opts.nthreads > 1) {
+    workerPoolPtr->set_num_workers(opts.nthreads);
+  }
+
+  std::vector<std::function<PredictionResult()>> tasks = configure_tasks(
+    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
+    saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io, keep_going, all_tasks_finished);
+
+  std::vector<PredictionResult> results;
+
+  for (auto& task : tasks) {
+    results.emplace_back(task());
+  }
+
+  return results;
+}
+
+std::vector<std::future<PredictionResult>> launch_tasks(
+  const std::shared_ptr<ManifoldGenerator> generator, Options opts, const std::vector<int>& Es,
+  const std::vector<int>& libraries, int k, int numReps, int crossfold, bool explore, bool full, bool shuffle,
+  bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode,
+  const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
+{
+#if defined(WITH_ARRAYFIRE)
+  setup_arrayfire();
+#endif
+  taskRunnerPoolPtr->set_num_workers(1);
+  if (opts.nthreads > 1) {
+    workerPoolPtr->set_num_workers(opts.nthreads);
+  }
+
+  std::vector<std::function<PredictionResult()>> tasks = configure_tasks(
+    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
+    saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io, keep_going, all_tasks_finished);
+
+  std::vector<std::future<PredictionResult>> futures;
+
+  for (auto& task : tasks) {
+    futures.emplace_back(taskRunnerPoolPtr->enqueue(task));
   }
 
   return futures;
