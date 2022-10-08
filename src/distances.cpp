@@ -230,67 +230,41 @@ DistanceIndexPairs templated_eager_lp_distances(int Mp_i, const Options& opts, c
 
 DistanceIndexPairs eager_lp_distances(int Mp_i, const Options& opts, const Manifold& M, const Manifold& Mp)
 {
-  if (opts.hasMissing) {
-    if (opts.hasCategorical) {
-      if (opts.panelMode) {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<true, true, true, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<true, true, true, 2>(Mp_i, opts, M, Mp);
-        }
-      } else {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<true, true, false, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<true, true, false, 2>(Mp_i, opts, M, Mp);
-        }
-      }
-    } else {
-      if (opts.panelMode) {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<true, false, true, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<true, false, true, 2>(Mp_i, opts, M, Mp);
-        }
-      } else {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<true, false, false, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<true, false, false, 2>(Mp_i, opts, M, Mp);
-        }
-      }
-    }
-  } else {
-    if (opts.hasCategorical) {
-      if (opts.panelMode) {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<false, true, true, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<false, true, true, 2>(Mp_i, opts, M, Mp);
-        }
-      } else {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<false, true, false, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<false, true, false, 2>(Mp_i, opts, M, Mp);
-        }
-      }
-    } else {
-      if (opts.panelMode) {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<false, false, true, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<false, false, true, 2>(Mp_i, opts, M, Mp);
-        }
-      } else {
-        if (opts.distance == Distance::MeanAbsoluteError) {
-          return templated_eager_lp_distances<false, false, false, 1>(Mp_i, opts, M, Mp);
-        } else {
-          return templated_eager_lp_distances<false, false, false, 2>(Mp_i, opts, M, Mp);
-        }
-      }
-    }
-  }
+  // Force the compiler to generate different versions of the distance function specialised
+  // to the case when have/don't have missing/categorical/panel data.
+  bool l2 = (opts.distance == Distance::Euclidean);
+  if (opts.hasMissing && opts.hasCategorical && opts.panelMode && !l2)
+    return templated_eager_lp_distances<true, true, true, 1>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && opts.hasCategorical && opts.panelMode && l2)
+    return templated_eager_lp_distances<true, true, true, 2>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && opts.hasCategorical && !opts.panelMode && !l2)
+    return templated_eager_lp_distances<true, true, false, 1>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && opts.hasCategorical && !opts.panelMode && l2)
+    return templated_eager_lp_distances<true, true, false, 2>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && !opts.hasCategorical && opts.panelMode && !l2)
+    return templated_eager_lp_distances<true, false, true, 1>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && !opts.hasCategorical && opts.panelMode && l2)
+    return templated_eager_lp_distances<true, false, true, 2>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && !opts.hasCategorical && !opts.panelMode && !l2)
+    return templated_eager_lp_distances<true, false, false, 1>(Mp_i, opts, M, Mp);
+  if (opts.hasMissing && !opts.hasCategorical && !opts.panelMode && l2)
+    return templated_eager_lp_distances<true, false, false, 2>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && opts.hasCategorical && opts.panelMode && !l2)
+    return templated_eager_lp_distances<false, true, true, 1>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && opts.hasCategorical && opts.panelMode && l2)
+    return templated_eager_lp_distances<false, true, true, 2>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && opts.hasCategorical && !opts.panelMode && !l2)
+    return templated_eager_lp_distances<false, true, false, 1>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && opts.hasCategorical && !opts.panelMode && l2)
+    return templated_eager_lp_distances<false, true, false, 2>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && !opts.hasCategorical && opts.panelMode && !l2)
+    return templated_eager_lp_distances<false, false, true, 1>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && !opts.hasCategorical && opts.panelMode && l2)
+    return templated_eager_lp_distances<false, false, true, 2>(Mp_i, opts, M, Mp);
+  if (!opts.hasMissing && !opts.hasCategorical && !opts.panelMode && !l2)
+    return templated_eager_lp_distances<false, false, false, 1>(Mp_i, opts, M, Mp);
+  else // !opts.hasMissing && !opts.hasCategorical && !opts.panelMode && l2)
+    return templated_eager_lp_distances<false, false, false, 2>(Mp_i, opts, M, Mp);
 }
 
 // This function compares the M(i,.) multivariate time series to the Mp(j,.) multivariate time series.
