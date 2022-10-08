@@ -3,7 +3,7 @@ pkgdown: 2.0.6
 pkgdown_sha: ~
 articles:
   chicago: chicago.html
-last_built: 2022-10-02T00:47Z
+last_built: 2022-10-08T05:22Z
 urls:
   reference: https://edm-developers.github.io/fastEDM/reference
   article: https://edm-developers.github.io/fastEDM/articles
