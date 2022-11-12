@@ -36,7 +36,7 @@ test_that("Simple manifolds", {
   xCCMCausesY <- easy_edm("x", "y", data = df)
   testthat::expect_true(xCCMCausesY)
 
-  yCCMCausesX <- easy_edm("y", "x", data = df)
+  # yCCMCausesX <- easy_edm("y", "x", data = df)
   # testthat::expect_true(yCCMCausesX)
 
   # Check that passing the raw data is also fine.
