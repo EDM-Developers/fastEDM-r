@@ -32,11 +32,6 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     showProgressBar <- verbosity > 0
   }
 
-  # If doing a rigorous check, begin by seeing if the cause & effect
-  # variable appear to be non-linear dynamical system outputs, or just
-  # random noise.
-  # TODO
-
   # First find out the embedding dimension of the causal variable
   givenTimeSeriesNames <- !is.null(data)
   if (givenTimeSeriesNames) {
@@ -85,6 +80,9 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     x <- scale(x)
     y <- scale(y)
   }
+  
+  # ---------------------------------------------------------------------------------------
+  # Find optimal E using simplex projection
 
   res <- edm(t, y, E = seq(3, 10), verbosity = 0, showProgressBar = showProgressBar)
 
@@ -103,6 +101,44 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
   if (verbosity > 0) {
     cli::cli_alert_success("Found optimal embedding dimension E to be {E_best}.")
   }
+  
+  # ---------------------------------------------------------------------------------------
+  # Test for non-linearity using S-Map
+  debug = TRUE
+  
+  max_theta <- 10; theta_step <- 0.1; theta_reps <- 20;
+  
+  theta_values <- seq(0, max_theta, theta_step)
+  
+  res <- edm(t, y, E = E_best, theta = theta_values, verbosity = 0, 
+             showProgressBar = showProgressBar)
+  
+  optIndex <- which(res$summary$rho==max(res$summary$rho))
+  optRho <- res$summary$rho[optIndex]
+  optTheta <- res$summary$theta[optIndex]
+  
+  if (verbosity > 0 || debug) {
+    cli::cli_alert_success("Found optimal theta to be {optTheta}, with rho = {optRho}.")
+  }
+
+  resBase <- edm(t, y, E = E_best, theta = 0, verbosity = 0, numReps = theta_reps, 
+             showProgressBar = showProgressBar)
+  resOpt <- edm(t, y, E = E_best, theta = optTheta, verbosity = 0, numReps = theta_reps, 
+             showProgressBar = showProgressBar)
+  
+  sampleBase <- resBase$stats$rho
+  sampleOpt <- resOpt$stats$rho
+  
+  ksOut <- ks.test(sampleOpt, sampleBase, alternative="less")
+  ksStat <- ksOut$statistic
+  ksPVal <- ksOut$p.value
+  
+  if (verbosity > 0 || debug) {
+    cli::cli_alert_success("Found Kolmogorov-Smirnov test statistic to be {ksStat} with p-value={ksPVal}.")
+  }
+  
+  # ---------------------------------------------------------------------------------------
+  # Test for causality using CCM
 
   # Find the maximum library size using S-map and this E selection
   res <- edm(t, y,
