@@ -106,30 +106,30 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
   # Test for non-linearity using S-Map
   debug = TRUE
   
-  max_theta <- 10; theta_step <- 0.1; theta_reps <- 20;
+  max_theta <- 5; theta_step <- 0.05; theta_reps <- 20;
   
   theta_values <- seq(0, max_theta, theta_step)
   
-  res <- edm(t, y, E = E_best, theta = theta_values, verbosity = 0, 
-             showProgressBar = showProgressBar)
+  res <- edm(t, x, E = E_best, theta = theta_values, algorithm="smap", k=Inf,
+             verbosity = 0, showProgressBar = showProgressBar)
   
   optIndex <- which(res$summary$rho==max(res$summary$rho))
-  optRho <- res$summary$rho[optIndex]
+  optRho   <- res$summary$rho[optIndex]
   optTheta <- res$summary$theta[optIndex]
   
   if (verbosity > 0 || debug) {
     cli::cli_alert_success("Found optimal theta to be {optTheta}, with rho = {optRho}.")
   }
 
-  resBase <- edm(t, y, E = E_best, theta = 0, verbosity = 0, numReps = theta_reps, 
-             showProgressBar = showProgressBar)
-  resOpt <- edm(t, y, E = E_best, theta = optTheta, verbosity = 0, numReps = theta_reps, 
-             showProgressBar = showProgressBar)
+  resBase <- edm(t, x, E = E_best, theta = 0, verbosity = 0, numReps = theta_reps, 
+                 k=20, algorithm = "smap", showProgressBar = showProgressBar)
+  resOpt  <- edm(t, x, E = E_best, theta = optTheta, verbosity = 0, numReps = theta_reps, 
+                 k=20, algorithm = "smap", showProgressBar = showProgressBar)
   
   sampleBase <- resBase$stats$rho
-  sampleOpt <- resOpt$stats$rho
+  sampleOpt  <- resOpt$stats$rho
   
-  ksOut <- ks.test(sampleOpt, sampleBase, alternative="less")
+  ksOut  <- ks.test(sampleOpt, sampleBase, alternative="less")
   ksStat <- ksOut$statistic
   ksPVal <- ksOut$p.value
   
@@ -142,7 +142,7 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
 
   # Find the maximum library size using S-map and this E selection
   res <- edm(t, y,
-    E = E_best, algorithm = "smap", full = TRUE, saveManifolds = TRUE,
+    E = E_best, algorithm = "smap", full = TRUE, saveManifolds = TRUE, 
     verbosity = 0, showProgressBar = showProgressBar
   )
   libraryMax <- nrow(res$Ms[[1]])
