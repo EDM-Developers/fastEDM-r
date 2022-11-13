@@ -32,7 +32,7 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     showProgressBar <- verbosity > 0
   }
 
-  # First find out the embedding dimension of the causal variable
+  # Convert time series to vectors (they can be supplied as columns of a dataframe).
   givenTimeSeriesNames <- !is.null(data)
   if (givenTimeSeriesNames) {
     if (verbosity > 0) {
@@ -82,9 +82,9 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
   }
   
   # ---------------------------------------------------------------------------------------
-  # Find optimal E using simplex projection
+  # Find optimal E (embedding dimension) of the causal variable using simplex projection
 
-  res <- edm(t, y, E = seq(3, 10), verbosity = 0, showProgressBar = showProgressBar)
+  res <- edm(t, x, E = seq(3, 10), verbosity = 0, showProgressBar = showProgressBar)
 
   if (res$rc > 0) {
     cli::cli_alert_danger("Search for optimal embedding dimension failed.")
