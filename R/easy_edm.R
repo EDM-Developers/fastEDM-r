@@ -39,40 +39,6 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     showProgressBar <- verbosity > 0
   }
   
-  # Convert time series to arrays (they can be supplied as columns of a dataframe).
-  inputs <- preprocess_inputs(data, cause, effect, time, verbosity, normalize)
-  
-  t <- inputs$t 
-  x <- inputs$x 
-  y <- inputs$y
-  
-  # Find optimal E (embedding dimension) of the causal variable using simplex projection
-  E_best <- find_embedding_dimension(t, x, verbosity, showProgressBar)
-  
-  # Test for non-linearity using S-Map 
-  optTheta <- test_nonlinearity(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar)
-  
-  # Perform cross-mapping (CCM)
-  res <- cross_mapping(t, x, y, E_best, verbosity, showProgressBar)
-  
-  # Test for causality using CCM
-  if (convergence_method == "parametric") {
-    conv_test <- test_convergence_monster
-  }
-  else if (convergence_method == "hypothesis") {
-      conv_test <- test_convergence_monster # Replace this later
-  }
-  else {
-      conv_test <- test_convergence_monster # Replace this later
-  }
-  
-  outcome <- conv_test(res, data, cause, effect, verbosity)
-  
-  return(outcome)
-}
-  
-preprocess_inputs <- function(data, cause, effect, time, verbosity, normalize) {
-  # First find out the embedding dimension of the causal variable
   givenTimeSeriesNames <- !is.null(data)
   if (givenTimeSeriesNames) {
     if (verbosity > 0) {
