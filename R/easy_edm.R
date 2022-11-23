@@ -39,7 +39,7 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     showProgressBar <- verbosity > 0
   }
   
-  # Convert time series to arrays (they can be supplied as columns of a dataframe).
+  # Convert time series to vectors (they can be supplied as columns of a dataframe).
   inputs <- preprocess_inputs(data, cause, effect, time, verbosity, normalize)
   
   t <- inputs$t 
@@ -124,8 +124,8 @@ preprocess_inputs <- function(data, cause, effect, time, verbosity, normalize) {
   return(data.frame(t=t, x=x, y=y))
 }
   
-  # ---------------------------------------------------------------------------------------
-  # Find optimal E using simplex projection
+# ---------------------------------------------------------------------------------------
+# Find optimal E (embedding dimension) of the causal variable using simplex projection
 find_embedding_dimension <- function(t, x, verbosity, showProgressBar) {
 
   res <- edm(t, x, E = seq(3, 10), verbosity = 0, showProgressBar = showProgressBar)
@@ -149,8 +149,8 @@ find_embedding_dimension <- function(t, x, verbosity, showProgressBar) {
   return(E_best)
 }
   
-  # ---------------------------------------------------------------------------------------
-  # Test for non-linearity using S-Map
+# ---------------------------------------------------------------------------------------
+# Test for non-linearity using S-Map
 test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar) {
   debug = TRUE
   
