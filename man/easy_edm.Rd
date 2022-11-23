@@ -20,7 +20,7 @@ easy_edm(
 
 \item{effect}{The effect time series (as a string or a vector).}
 
-\item{time}{For non-regularly sampled time series, the sampling times 
+\item{time}{For non-regularly sampled time series, the sampling times
 must be supplied here (as a string or a vector).}
 
 \item{data}{If a dataframe is supplied here, then the cause, effect & time

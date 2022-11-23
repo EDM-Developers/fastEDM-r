@@ -28,17 +28,57 @@
 easy_edm <- function(cause, effect, time = NULL, data = NULL,
                      direction = "oneway", verbosity = 1, showProgressBar = NULL,
                      normalize = TRUE) {
+  
+  # !! Parameterise these values later
+  max_theta <- 5 
+  num_thetas <- 100 
+  theta_reps <- 20 
+  convergence_method <- "parametric"              
+  
   if (is.null(showProgressBar)) {
     showProgressBar <- verbosity > 0
   }
-
+  
+  # Convert time series to arrays (they can be supplied as columns of a dataframe).
+  inputs <- preprocess_inputs(data, cause, effect, time, verbosity, normalize)
+  
+  t <- inputs$t 
+  x <- inputs$x 
+  y <- inputs$y
+  
+  # Find optimal E (embedding dimension) of the causal variable using simplex projection
+  E_best <- find_embedding_dimension(t, x, verbosity, showProgressBar)
+  
+  # Test for non-linearity using S-Map 
+  optTheta <- test_nonlinearity(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar)
+  
+  # Perform cross-mapping (CCM)
+  res <- cross_mapping(t, x, y, E_best, verbosity, showProgressBar)
+  
+  # Test for causality using CCM
+  if (convergence_method == "parametric") {
+    conv_test <- test_convergence_monster
+  }
+  else if (convergence_method == "hypothesis") {
+      conv_test <- test_convergence_monster # Replace this later
+  }
+  else {
+      conv_test <- test_convergence_monster # Replace this later
+  }
+  
+  outcome <- conv_test(res, data, cause, effect, verbosity)
+  
+  return(outcome)
+}
+  
+preprocess_inputs <- function(data, cause, effect, time, verbosity, normalize) {
   # First find out the embedding dimension of the causal variable
   givenTimeSeriesNames <- !is.null(data)
   if (givenTimeSeriesNames) {
     if (verbosity > 0) {
       cli::cli_alert_info("Pulling the time series from the supplied dataframe.")
     }
-
+    
     if (!(cause %in% colnames(data))) {
       cli::cli_alert_danger("{cause} is not a column in the supplied dataframe.")
       return(1)
@@ -51,7 +91,7 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
       cli::cli_alert_danger("{time} is not a column in the supplied dataframe.")
       return(1)
     }
-
+    
     x <- data[[cause]]
     y <- data[[effect]]
     t <- if (is.null(time)) seq(length(x)) else data[[time]]
@@ -63,16 +103,16 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     y <- effect
     t <- if (is.null(time)) seq(length(x)) else time
   }
-
+  
   if (length(t) != length(x) || length(t) != length(y)) {
     cli::cli_alert_danger("Time series are not the same length.")
     return(1)
   }
-
+  
   if (verbosity > 0) {
     cli::cli_alert_info("Number of observations is {length(t)}")
   }
-
+  
   if (normalize) {
     if (verbosity > 0) {
       cli::cli_alert_info("Normalizing the supplied time series")
@@ -81,10 +121,14 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     y <- scale(y)
   }
   
+  return(data.frame(t=t, x=x, y=y))
+}
+  
   # ---------------------------------------------------------------------------------------
   # Find optimal E using simplex projection
+find_embedding_dimension <- function(t, x, verbosity, showProgressBar) {
 
-  res <- edm(t, y, E = seq(3, 10), verbosity = 0, showProgressBar = showProgressBar)
+  res <- edm(t, x, E = seq(3, 10), verbosity = 0, showProgressBar = showProgressBar)
 
   if (res$rc > 0) {
     cli::cli_alert_danger("Search for optimal embedding dimension failed.")
@@ -102,8 +146,12 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     cli::cli_alert_success("Found optimal embedding dimension E to be {E_best}.")
   }
   
+  return(E_best)
+}
+  
   # ---------------------------------------------------------------------------------------
   # Test for non-linearity using S-Map
+test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar) {
   debug = TRUE
   
   max_theta <- 5; theta_step <- 0.05; theta_reps <- 20;
@@ -137,9 +185,12 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     cli::cli_alert_success("Found Kolmogorov-Smirnov test statistic to be {ksStat} with p-value={ksPVal}.")
   }
   
-  # ---------------------------------------------------------------------------------------
-  # Test for causality using CCM
-
+  return(optTheta)
+}
+  
+# ---------------------------------------------------------------------------------------
+# Test for causality using CCM
+cross_mapping <- function(t, x, y, E_best, verbosity, showProgressBar) {
   # Find the maximum library size using S-map and this E selection
   res <- edm(t, y,
     E = E_best, algorithm = "smap", full = TRUE, saveManifolds = TRUE, 
@@ -164,7 +215,13 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     E = E_best, library = libraries, algorithm = "smap", k = Inf, shuffle = TRUE,
     verbosity = 0, showProgressBar = showProgressBar
   )
+  
+  return(res)
+}
 
+# ---------------------------------------------------------------------------------------
+# Test for convergence using parametric test (Monster)
+test_convergence_monster <- function(res, data, cause, effect, verbosity) {
   # Make some rough guesses for the Monster exponential fit coefficients
   ccmRes <- res$summary
   firstLibrary <- utils::head(ccmRes$library, 1)
@@ -216,7 +273,7 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
     alert <- cli::cli_alert_danger
   }
 
-
+  givenTimeSeriesNames <- !is.null(data)
   if (givenTimeSeriesNames) {
     alert("{causalSummary} of CCM causation from {cause} to {effect} found.")
   } else {
