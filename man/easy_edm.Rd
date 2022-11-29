@@ -20,7 +20,7 @@ easy_edm(
 
 \item{effect}{The effect time series (as a string or a vector).}
 
-\item{time}{For non-regularly sampled time series, the sampling times 
+\item{time}{For non-regularly sampled time series, the sampling times
 must be supplied here (as a string or a vector).}
 
 \item{data}{If a dataframe is supplied here, then the cause, effect & time
@@ -45,7 +45,7 @@ easy_edm
 \examples{
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv"))
+chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
 
 crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
 tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
