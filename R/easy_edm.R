@@ -152,7 +152,7 @@ find_embedding_dimension <- function(t, x, verbosity, showProgressBar) {
 # ---------------------------------------------------------------------------------------
 # Test for non-linearity using S-Map
 test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar) {
-  debug = TRUE
+  debug = FALSE
   
   max_theta <- 5; theta_step <- 0.05; theta_reps <- 20;
   
