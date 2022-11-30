@@ -9,6 +9,7 @@ Authors@R: c(
   person("Michael", "Zyphur", email = "mzyphur@unimelb.edu.au", role = c("aut")),
   person("Edoardo", "Tescari", email = "e.tescari@unimelb.edu.au", role = c("ctb")),
   person("Simon", "Mutch", email = "", role = c("ctb")),
+  person("Rishi", "Dhushiyandan", email = "", role = c("ctb")),
   person("George", "Sugihara", email = "", role = c("org"))
   )
 Description: The fastEDM package implements a series of tools that can be
