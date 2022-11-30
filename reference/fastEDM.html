@@ -76,12 +76,8 @@ to achieve a reasonable execution speed.</p>
 <span class="r-in"><span><span class="va">chicago</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">crimeCCMCausesTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Crime"</span>, <span class="st">"Temperature"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found optimal theta to be 0.45, with rho = 0.837191072516305.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found Kolmogorov-Smirnov test statistic to be 0 with p-value=1.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> No evidence of CCM causation from Crime to Temperature found.</span>
 <span class="r-in"><span><span class="va">tempCCMCausesCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Temperature"</span>, <span class="st">"Crime"</span>, data<span class="op">=</span><span class="va">chicago</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found optimal theta to be 2.1, with rho = 0.93632847300189.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Found Kolmogorov-Smirnov test statistic to be 0 with p-value=1.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Some evidence of CCM causation from Temperature to Crime found.</span>
 </code></pre></div>
     </div>
