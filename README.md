@@ -49,11 +49,13 @@ tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0
 #> ✔ Some evidence of CCM causation from Temperature to Crime found.
 ```
 
-## Stata Package
+## Stata & Python Packages
 
 This package is an R port of our [EDM Stata
-package](https://edm-developers.github.io/edm-stata/). As both packages
-share the same underlying C++ code, their behaviour will be identical.
-If you plan to adjust some of the various low-level EDM parameters,
-check out the documentation of the Stata package for more details on
-their options and behaviours.
+package](https://edm-developers.github.io/edm-stata/). Similarly, we are
+creating a [fastEDM Python
+package](https://edm-developers.github.io/fastEDM-python/). As the
+packages share the same underlying C++ code, their behaviour will be
+identical. If you plan to adjust some of the various low-level EDM
+parameters, check out the documentation of the Stata package for more
+details on their options and behaviours.
