@@ -22,7 +22,7 @@ daily temperature and crime levels in Chicago, which we make available in the [c
 First, we load the time series into R:
 
 ```{r load-data}
-chicagoURL <- url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv")
+chicagoURL <- url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv")
 chicago <- read.csv(chicagoURL)
 head(chicago)
 ```

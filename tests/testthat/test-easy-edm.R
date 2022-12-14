@@ -54,7 +54,7 @@ test_that("Simple manifolds", {
 test_that("Chicago dataset", {
   start.time <- Sys.time()
   
-  chicagoURL <- url("https://raw.githubusercontent.com/EDM-Developers/fastEDM-r/main/vignettes/chicago.csv")
+  chicagoURL <- url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv")
   chicago <- read.csv(chicagoURL)
 
   print("Starting test 1")

@@ -12,7 +12,7 @@ to achieve a reasonable execution speed.
 \examples{
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv"))
+chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
 
 crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
 tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
@@ -22,7 +22,7 @@ Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond L
 }
 \seealso{
 {
-  \url{https://edm-developers.github.io/fastEDM/} and \url{https://edm-developers.github.io/EDM/}
+  \url{https://edm-developers.github.io/fastEDM-r/}, \url{https://edm-developers.github.io/fastEDM-python/},and \url{https://edm-developers.github.io/edm-stata/}
 }
 }
 \author{

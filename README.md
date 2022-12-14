@@ -17,19 +17,19 @@ data.
 
 Key features of the package:
 
--   powered by a fast multi-threaded *C++ backend*,
--   able to process panel data, a.k.a. *multispatial EDM*,
--   able to handle *missing data* using new `dt` algorithms or by
-    dropping points.
+- powered by a fast multi-threaded *C++ backend*,
+- able to process panel data, a.k.a. *multispatial EDM*,
+- able to handle *missing data* using new `dt` algorithms or by dropping
+  points.
 
 ## Installation
 
 You can install the development version of fastEDM from
-[GitHub](https://github.com/EDM-Developers/fastEDM/) with:
+[GitHub](https://github.com/EDM-Developers/fastEDM-r/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("EDM-Developers/fastEDM")
+devtools::install_github("EDM-Developers/fastEDM-r")
 ```
 
 ## Example: Chicago crime levels and temperature
@@ -41,19 +41,21 @@ and crime rates, is described in full in our
 ``` r
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM/raw/master/vignettes/chicago.csv"))
+chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
 
 crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
-#> x No evidence of CCM causation from Crime to Temperature found.
+#> ✖ No evidence of CCM causation from Crime to Temperature found.
 tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
-#> ✓ Some evidence of CCM causation from Temperature to Crime found.
+#> ✔ Some evidence of CCM causation from Temperature to Crime found.
 ```
 
-## Stata Package
+## Stata & Python Packages
 
 This package is an R port of our [EDM Stata
-package](https://edm-developers.github.io/EDM/). As both packages share
-the same underlying C++ code, their behaviour will be identical. If you
-plan to adjust some of the various low-level EDM parameters, check out
-the documentation of the Stata package for more details on their options
-and behaviours.
+package](https://edm-developers.github.io/edm-stata/). Similarly, we are
+creating a [fastEDM Python
+package](https://edm-developers.github.io/fastEDM-python/). As the
+packages share the same underlying C++ code, their behaviour will be
+identical. If you plan to adjust some of the various low-level EDM
+parameters, check out the documentation of the Stata package for more
+details on their options and behaviours.
