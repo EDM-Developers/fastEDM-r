@@ -35,9 +35,10 @@ library(ggplot2)
 df <- data.frame(list(
   t = rep(chicago$Time, 2),
   variable = c(rep("Crime", nrow(chicago)), rep("Temperature", nrow(chicago))),
-  value = c(chicago$Crime, chicago$Temperature)))
+  value = c(chicago$Crime, chicago$Temperature)
+))
 
-ggplot(df, aes(x = t)) + 
+ggplot(df, aes(x = t)) +
   geom_line(aes(y = value, color = variable)) +
   labs(colour = "Time series")
 ```
@@ -45,7 +46,8 @@ ggplot(df, aes(x = t)) +
 When plotted as a scatter plot, there appears to be some linear correlation between the variables:
 
 ```{r plot-time-series-scatterplot}
-ggplot(chicago, aes(x = Temperature, y=Crime)) + geom_point(color="#F8766D")
+ggplot(chicago, aes(x = Temperature, y = Crime)) +
+  geom_point(color = "#F8766D")
 ```
 
 Calculating the linear correlation between `Crime` and `Temperature`:
@@ -77,7 +79,7 @@ library(fastEDM)
 # Suppress the progress bar in vignettes, as it confuses knitr.
 formals(edm)$showProgressBar <- FALSE
 
-res <- edm(chicago["Time"], chicago["Temperature"], E=2:10, numThreads=4)
+res <- edm(chicago["Time"], chicago["Temperature"], E = 2:10, numThreads = 4)
 ```
 
 From the `rho` column we can see that the prediction accuracy is maximised when $E = 7$, so we take this as our estimate of the embedding dimension.
@@ -88,19 +90,25 @@ The `edm` command can also run the cross-mapping task, which allows us to ascert
 
 ```{r convergent-cross-mapping}
 # Find the maximum library size for the dataset.
-res <- edm(chicago["Time"], chicago["Temperature"], E=7,
-           full=TRUE, saveManifolds=TRUE, verbosity=0)
+res <- edm(chicago["Time"], chicago["Temperature"],
+  E = 7,
+  full = TRUE, saveManifolds = TRUE, verbosity = 0
+)
 libraryMax <- nrow(res$Ms[[1]])
 
 # Choose a linearly spaced grid of library sizes to evaluate the S-map algorithm on.
-libs <- ceiling(seq(10, libraryMax, length.out=25))
+libs <- ceiling(seq(10, libraryMax, length.out = 25))
 
 # Run the convergent cross-mapping in each causal direction.
-crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"], numReps=2,
-                         algorithm="smap", E=7, library=libs, k=100, numThreads=4, verbosity=0)
+crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
+  numReps = 2,
+  algorithm = "smap", E = 7, library = libs, k = 100, numThreads = 4, verbosity = 0
+)
 
-tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"], numReps=2,
-                         algorithm="smap", E=7, library=libs, k=100, numThreads=4, verbosity=0)
+tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"],
+  numReps = 2,
+  algorithm = "smap", E = 7, library = libs, k = 100, numThreads = 4, verbosity = 0
+)
 ```
 
 <div class="alert alert-dismissible alert-info">
@@ -125,10 +133,12 @@ tidyDF <- data.frame(list(
   Correlation = c(
     crimePredictsTemp$summary$rho,
     tempPredictsCrime$summary$rho
-)))
+  )
+))
 
 ggplot(tidyDF, aes(x = Library, y = Correlation)) +
-  geom_line(aes(color = Direction)) + scale_color_manual(values = c("steelblue", "darkred")) +
+  geom_line(aes(color = Direction)) +
+  scale_color_manual(values = c("steelblue", "darkred")) +
   geom_point(data = tempPredictsCrime$stats, aes(x = library, y = rho), alpha = 0.05, color = "steelblue") +
   geom_point(data = crimePredictsTemp$stats, aes(x = library, y = rho), alpha = 0.05, color = "darkred")
 ```
@@ -150,28 +160,29 @@ If we run `edm` with the `saveSMAPCoeffs=TRUE` option, we can store the fitted S
 ```{r save-smap-coefficients}
 # Library size should be 4365
 tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"],
-                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE, 
-                         numThreads=4)
+  algorithm = "smap", E = 7, k = Inf, saveSMAPCoeffs = TRUE,
+  numThreads = 4
+)
 
 crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
-                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE,
-                         numThreads=4)
+  algorithm = "smap", E = 7, k = Inf, saveSMAPCoeffs = TRUE,
+  numThreads = 4
+)
 
 # . edm xmap temp crime, e(7) alg(smap) k(-1) savesmap(beta)
 # Percent complete: 0...10...20...30...40...50...60...70...80...90...
 # Percent complete: 0...10...20...30...40...50...60...70...80...90...
-# 
+#
 # Empirical Dynamic Modelling
 # Convergent Cross-mapping result for variables temp and crime
 # --------------------------------------------------------------------------
 #                  Mapping    Library size             rho             MAE
 # --------------------------------------------------------------------------
-#    crime ~ crime|M(temp)            4365          .46784          136.93 
-#     temp ~ temp|M(crime)            4365          .54886          14.661 
+#    crime ~ crime|M(temp)            4365          .46784          136.93
+#     temp ~ temp|M(crime)            4365          .54886          14.661
 # --------------------------------------------------------------------------
 # Note: Number of neighbours (k) is set to 4364
 # Note: The embedding dimension E is 7
-
 ```
 
 Plotting them allows us to see the contemporaneous effect of temperature on crime.
@@ -179,7 +190,6 @@ Plotting them allows us to see the contemporaneous effect of temperature on crim
 ```{r}
 # . twoway (kdensity beta1_b1_rep1), xtitle("Contemporaneous effect of temperatur
 # > e on crime") ytitle("Density")
-
 ```
 <!- # ![Contemporaneous effect of temperature on crime](chicago-crime1.svg) ->
 
@@ -188,7 +198,6 @@ Plotting them allows us to see the contemporaneous effect of temperature on crim
 # > ("Contemporaneous effect of temperature on crime") msize(small))(lpoly beta1_
 # > b1_rep1 temp), legend(on order( 1 "Local coefficient" 2 "Local polynomial smo
 # > othing"))
-
 ```
 <!- ![Contemporaneous effect of temperature on crime](chicago-crime2.svg) ->
 
