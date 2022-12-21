@@ -27,6 +27,12 @@ test_that("Simple manifolds", {
   xCCMCausesY <- easy_edm(x, y)
   testthat::expect_true(xCCMCausesY)
   print(Sys.time()- start.time)
+
+  print("Starting test 3")
+  # Check that having a high verbosity value works.
+  xCCMCausesY <- easy_edm(x, y, verbosity=4)
+  testthat::expect_true(xCCMCausesY)
+  print(Sys.time()- start.time)
 })
 
 
