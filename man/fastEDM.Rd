@@ -12,17 +12,19 @@ to achieve a reasonable execution speed.
 \examples{
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
+num_obs <- 500
+map <- logistic_map(num_obs)
+df <- data.frame(list(x = map$x, y = map$y))
 
-crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
-tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
+x_causes_y <- easy_edm("x", "y", data=df, verbosity=0)
+y_causes_x <- easy_edm("y", "x", data=df, verbosity=0)
 }
 \references{
 Jinjing Li, Michael J. Zyphur, George Sugihara, Patrick J. Laub (2021), Beyond Linearity, Stability, and Equilibrium: The edm Package for Empirical Dynamic Modeling and Convergent Cross Mapping in Stata, Stata Journal, 21(1), pp. 220-258
 }
 \seealso{
 {
-  \url{https://edm-developers.github.io/fastEDM-r/}, \url{https://edm-developers.github.io/fastEDM-python/},and \url{https://edm-developers.github.io/edm-stata/}
+  \url{https://edm-developers.github.io/fastEDM-r/}, \url{https://edm-developers.github.io/fastEDM-python/}, and \url{https://edm-developers.github.io/edm-stata/}
 }
 }
 \author{

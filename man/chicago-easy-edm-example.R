@@ -1,6 +1,8 @@
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
+df <- read.csv(url(
+  "https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"
+))
 
-crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
-tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
+crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=df, verbosity=0)
+tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=df, verbosity=0)

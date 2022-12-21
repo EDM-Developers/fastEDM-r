@@ -1,5 +1,17 @@
 
 #' easy_edm
+#' 
+#' This is an automated workflow for performing causal analysis on the
+#' supplied time series using empirical dynamical modelling (EDM) techniques.
+#' It is intended to hide all the common steps of an EDM analysis, and should
+#' work on most datasets.
+#' 
+#' It may be the case that your data requires a custom analysis, so this
+#' function can be used as a helpful starting point from which to create a
+#' specialised analysis using the `edm` function directly.
+#' 
+#' Warning: While the `edm` functionality is well-tested and ready for use,
+#' this `easy_edm` automated analysis is still a work-in-progress.
 #'
 #' @param cause The causal time series (as a string or a vector).
 #'
@@ -23,7 +35,7 @@
 #'
 #' @returns A Boolean indicating that evidence of causation was found.
 #' @export
-#' @example man/chicago-easy-edm-example.R
+#' @example man/examples/logistic-map-example.R
 #
 easy_edm <- function(cause, effect, time = NULL, data = NULL,
                      direction = "oneway", verbosity = 1, showProgressBar = NULL,
@@ -74,9 +86,9 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
 
   foundEvidence <- result != "No evidence"
   if (foundEvidence) {
-    alert <- cli::cli_alert_danger
-  } else {
     alert <- cli::cli_alert_success
+  } else {
+    alert <- cli::cli_alert_danger
   }
 
   givenTimeSeriesNames <- !is.null(data)
@@ -193,7 +205,7 @@ test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, v
   sampleBase <- resBase$stats$rho
   sampleOpt  <- resOpt$stats$rho
 
-  ksOut  <- ks.test(sampleOpt, sampleBase, alternative="less")
+  ksOut  <- stats::ks.test(sampleOpt, sampleBase, alternative="less")
   ksStat <- ksOut$statistic
   ksPVal <- ksOut$p.value
 
@@ -232,18 +244,23 @@ get_optimal_effect <- function(t, x, y, E_best, verbosity, showProgressBar, isNo
     lagRhos <- lagRhos[order(-lagRhos$rho),]
 
     optLag <- lagRhos$lag[1]
+    optRho <- round(lagRhos$rho[1], 5)
 
     if (verbosity > 0)
-      cli::cli_alert_info('Found optimal lag to be {optLag} with rho={round(rhos[optLag], 5)}')
+      cli::cli_alert_info('Found optimal lag to be {optLag} with rho={optRho}')
 
-    # If retro-causality is spotted, default to best positive lag and print warning
+    # If retro-causality is spotted,
+    # default to best positive lag and print warning
     invalidLag = optLag < 0
     if (invalidLag) {
       validRhos <- lagRhos[lagRhos >= 0,]
       optLag <- validRhos$lag[1]
+      optRho <- round(validRhos$rho[1], 5)
 
       if (verbosity > 0)
-        cli::cli_alert_info('This may indicate retrocausality, using alternate lag of {optLag} with rho={round(rhos[optLag], 5)}')
+        cli::cli_alert_info(
+          'Potential retrocausality, using lag of {optLag} with rho={optRho}'
+        )
     }
 
     yLag <- tslag(t, y, optLag)
@@ -251,7 +268,7 @@ get_optimal_effect <- function(t, x, y, E_best, verbosity, showProgressBar, isNo
       # Transform y and data to match optimal lagged series
       yOpt <- yLag
 
-      if (verbosity > 0){
+      if (verbosity > 0) {
         cli::cli_alert_info("Lagging time series using optimal lag of {optLag}")
       }
     }
@@ -382,7 +399,7 @@ test_convergence_dist <- function(t, x, y, E_best, libraryMax, theta, verbosity,
                   verbosity = 0, showProgressBar = showProgressBar)
   finalRho <- finalRes$summary$rho
 
-  quantiles <- quantile(dist, c(0.95, 0.975))
+  quantiles <- stats::quantile(dist, c(0.95, 0.975))
 
   q975 <- quantiles[[1]]
   q95  <- quantiles[[2]]

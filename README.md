@@ -41,12 +41,14 @@ and crime rates, is described in full in our
 ``` r
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
+df <- read.csv(url(
+  "https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"
+))
 
-crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
+crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=df, verbosity=0)
 #> ✖ No evidence of CCM causation from Crime to Temperature found.
-tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
-#> ✔ Some evidence of CCM causation from Temperature to Crime found.
+tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=df, verbosity=0)
+#> ✔ Strong evidence of CCM causation from Temperature to Crime found.
 ```
 
 ## Stata & Python Packages

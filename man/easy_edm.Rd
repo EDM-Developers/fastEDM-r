@@ -40,13 +40,26 @@ same time (work in progress!).}
 A Boolean indicating that evidence of causation was found.
 }
 \description{
-easy_edm
+This is an automated workflow for performing causal analysis on the
+supplied time series using empirical dynamical modelling (EDM) techniques.
+It is intended to hide all the common steps of an EDM analysis, and should
+work on most datasets.
+}
+\details{
+It may be the case that your data requires a custom analysis, so this
+function can be used as a helpful starting point from which to create a
+specialised analysis using the `edm` function directly.
+
+Warning: While the `edm` functionality is well-tested and ready for use,
+this `easy_edm` automated analysis is still a work-in-progress.
 }
 \examples{
 library(fastEDM)
 
-chicago <- read.csv(url("https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"))
+num_obs <- 500
+map <- logistic_map(num_obs)
+df <- data.frame(list(x = map$x, y = map$y))
 
-crimeCCMCausesTemp <- easy_edm("Crime", "Temperature", data=chicago, verbosity=0)
-tempCCMCausesCrime <- easy_edm("Temperature", "Crime", data=chicago, verbosity=0)
+x_causes_y <- easy_edm("x", "y", data=df, verbosity=0)
+y_causes_x <- easy_edm("y", "x", data=df, verbosity=0)
 }

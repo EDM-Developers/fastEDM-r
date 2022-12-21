@@ -210,7 +210,9 @@ of the time series to make a prediction.}
 A list
 }
 \description{
-edm
+This function provides access to the empirical dynamical modelling (EDM)
+routines (which are implemented efficiently in C++). The interface is quite
+low-level, so beginners are recommended to instead use `easy_edm`.
 }
 \examples{
 t <- c(1, 2, 3, 4, 5, 6, 7, 8)

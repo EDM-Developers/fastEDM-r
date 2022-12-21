@@ -2,6 +2,7 @@
 
 export(easy_edm)
 export(edm)
+export(logistic_map)
 import(Rcpp)
 import(RcppEigen)
 importFrom(Rcpp,evalCpp)

@@ -1,5 +1,9 @@
 #' edm
 #'
+#' This function provides access to the empirical dynamical modelling (EDM)
+#' routines (which are implemented efficiently in C++). The interface is quite
+#' low-level, so beginners are recommended to instead use `easy_edm`.
+#'
 #' @param t The time variable
 #'
 #' @param x The first variable in the causal analysis
