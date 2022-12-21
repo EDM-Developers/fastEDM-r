@@ -30,10 +30,11 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
                      normalize = TRUE) {
 
   # !! Parameterise these values later
+  convergence_method <- "quantile"
   max_theta <- 5
   num_thetas <- 100
   theta_reps <- 20
-  convergence_method <- "parametric"
+  max_lag <- 5
 
   if (is.null(showProgressBar)) {
     showProgressBar <- verbosity > 0
@@ -41,7 +42,6 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
 
   # Convert time series to vectors (they can be supplied as columns of a dataframe).
   inputs <- preprocess_inputs(data, cause, effect, time, verbosity, normalize)
-
   t <- inputs$t
   x <- inputs$x
   y <- inputs$y
@@ -50,27 +50,46 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
   E_best <- find_embedding_dimension(t, x, verbosity, showProgressBar)
 
   # Test for non-linearity using S-Map
-  optTheta <- test_nonlinearity(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar)
+  test_output <- test_nonlinearity(t, x, E_best, max_theta, num_thetas, theta_reps,
+                                  verbosity, showProgressBar)
+  optTheta    <- test_output$theta
+  isNonLinear <- test_output$outcome
 
-  # Perform cross-mapping (CCM)
-  res <- cross_mapping(t, x, y, E_best, verbosity, showProgressBar)
+  # Lags the y (effect) time series by the optimal value or differences the series if it was linear
+  yOpt <- get_optimal_effect(t, x, y, E_best, verbosity, showProgressBar, isNonLinear, optTheta, max_lag)
+
+  # Get max library size
+  libraryMax <- get_max_library(t, x, yOpt, E_best, verbosity, showProgressBar)
 
   # Test for causality using CCM
   if (convergence_method == "parametric") {
-    conv_test <- test_convergence_monster
+      result <- test_convergence_monster(t, x, yOpt, E_best, libraryMax, optTheta, verbosity, showProgressBar)
   }
-  else if (convergence_method == "hypothesis") {
-      conv_test <- test_convergence_monster # Replace this later
+  else if (convergence_method == "quantile") {
+      result <- test_convergence_dist(t, x, yOpt, E_best, libraryMax, optTheta, verbosity, showProgressBar)
   }
   else {
-      conv_test <- test_convergence_monster # Replace this later
+      result <- test_convergence_dist(t, x, yOpt, E_best, libraryMax, optTheta, verbosity, showProgressBar)
   }
 
-  outcome <- conv_test(res, data, cause, effect, verbosity)
+  foundEvidence <- result != "No evidence"
+  if (foundEvidence) {
+    alert <- cli::cli_alert_danger
+  } else {
+    alert <- cli::cli_alert_success
+  }
 
-  return(outcome)
+  givenTimeSeriesNames <- !is.null(data)
+  if (givenTimeSeriesNames) {
+    alert("{result} of CCM causation from {cause} to {effect} found.")
+  } else {
+    alert("{result} of CCM causation found.")
+  }
+
+  return(foundEvidence)
 }
 
+# ---------------------------------------------------------------------------------------
 preprocess_inputs <- function(data, cause, effect, time, verbosity, normalize) {
   # First find out the embedding dimension of the causal variable
   givenTimeSeriesNames <- !is.null(data)
@@ -152,11 +171,8 @@ find_embedding_dimension <- function(t, x, verbosity, showProgressBar) {
 # ---------------------------------------------------------------------------------------
 # Test for non-linearity using S-Map
 test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar) {
-  debug = FALSE
-  
-  max_theta <- 5; theta_step <- 0.05; theta_reps <- 20;
 
-  theta_values <- seq(0, max_theta, theta_step)
+  theta_values <- seq(0, max_theta, length.out=1+num_thetas)
 
   res <- edm(t, x, E = E_best, theta = theta_values, algorithm="smap", k=Inf,
              verbosity = 0, showProgressBar = showProgressBar)
@@ -165,7 +181,7 @@ test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, v
   optRho   <- res$summary$rho[optIndex]
   optTheta <- res$summary$theta[optIndex]
 
-  if (verbosity > 0 || debug) {
+  if (verbosity > 0) {
     cli::cli_alert_success("Found optimal theta to be {optTheta}, with rho = {optRho}.")
   }
 
@@ -181,11 +197,84 @@ test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, v
   ksStat <- ksOut$statistic
   ksPVal <- ksOut$p.value
 
-  if (verbosity > 0 || debug) {
+  if (verbosity > 0) {
     cli::cli_alert_success("Found Kolmogorov-Smirnov test statistic to be {ksStat} with p-value={ksPVal}.")
   }
 
-  return(optTheta)
+  isNonLinear <- ksPVal < 0.05
+
+  return(data.frame(theta=optTheta, outcome=isNonLinear))
+}
+
+# ---------------------------------------------------------------------------------------
+tslag <- function(t, x, lag = 1, dt = 1) {
+  l.x <- rep(NA, length(t))
+  for (i in seq_along(t)) {
+    lagged_t <- t[i] - lag * dt
+    if (!is.na(lagged_t) && lagged_t %in% t) {
+      l.x[i] <- x[which(t == lagged_t)]
+    }
+  }
+  return(l.x)
+}
+
+# ---------------------------------------------------------------------------------------
+# Find optimal lag for the y (effect) time series
+get_optimal_effect <- function(t, x, y, E_best, verbosity, showProgressBar, isNonLinear, theta, maxLag) {
+    lagRhos = data.frame(lag=double(), rho=double())
+    for (i in seq(-maxLag, maxLag + 1, 1)) {
+      res = edm(t, x, tslag(t, y, i), E = E_best, theta = theta,
+                algorithm="simplex", k=Inf, verbosity = 0, showProgressBar = showProgressBar)
+      lagRhos[nrow(lagRhos) + 1,] = c(i, res$summary$rho)
+    }
+
+    # Sort by Rho values
+    lagRhos <- lagRhos[order(-lagRhos$rho),]
+
+    optLag <- lagRhos$lag[1]
+
+    if (verbosity > 0)
+      cli::cli_alert_info('Found optimal lag to be {optLag} with rho={round(rhos[optLag], 5)}')
+
+    # If retro-causality is spotted, default to best positive lag and print warning
+    invalidLag = optLag < 0
+    if (invalidLag) {
+      validRhos <- lagRhos[lagRhos >= 0,]
+      optLag <- validRhos$lag[1]
+
+      if (verbosity > 0)
+        cli::cli_alert_info('This may indicate retrocausality, using alternate lag of {optLag} with rho={round(rhos[optLag], 5)}')
+    }
+
+    yLag <- tslag(t, y, optLag)
+    if (isNonLinear) {
+      # Transform y and data to match optimal lagged series
+      yOpt <- yLag
+
+      if (verbosity > 0){
+        cli::cli_alert_info("Lagging time series using optimal lag of {optLag}")
+      }
+    }
+    else {
+      # Difference y and data by optimal lagged series
+      yOpt <- y - yLag
+
+      if (verbosity > 0)
+        cli::cli_alert_info('Differencing time series due to failed nonlinearity test (lag={optLag})')
+    }
+
+    return(yOpt)
+}
+
+# ---------------------------------------------------------------------------------------
+# Find maximum library size
+get_max_library <- function(t, x, y, E_best, verbosity, showProgressBar) {
+  res <- edm(t, y,
+             E = E_best, algorithm = "simplex", full = TRUE, saveManifolds = TRUE,
+             verbosity = 0, showProgressBar = showProgressBar
+  )
+  libraryMax <- nrow(res$Ms[[1]])
+  return(libraryMax)
 }
 
 # ---------------------------------------------------------------------------------------
@@ -193,7 +282,7 @@ test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, v
 cross_mapping <- function(t, x, y, E_best, verbosity, showProgressBar) {
   # Find the maximum library size using S-map and this E selection
   res <- edm(t, y,
-    E = E_best, algorithm = "smap", full = TRUE, saveManifolds = TRUE,
+    E = E_best, algorithm = "simplex", full = TRUE, saveManifolds = TRUE,
     verbosity = 0, showProgressBar = showProgressBar
   )
   libraryMax <- nrow(res$Ms[[1]])
@@ -212,7 +301,7 @@ cross_mapping <- function(t, x, y, E_best, verbosity, showProgressBar) {
 
   # Next run the convergent cross-mapping (CCM), using the effect to predict the cause.
   res <- edm(t, y, x,
-    E = E_best, library = libraries, algorithm = "smap", k = Inf, shuffle = TRUE,
+    E = E_best, library = libraries, algorithm = "simplex", k = Inf, shuffle = TRUE,
     verbosity = 0, showProgressBar = showProgressBar
   )
 
@@ -221,9 +310,12 @@ cross_mapping <- function(t, x, y, E_best, verbosity, showProgressBar) {
 
 # ---------------------------------------------------------------------------------------
 # Test for convergence using parametric test (Monster)
-test_convergence_monster <- function(res, data, cause, effect, verbosity) {
+test_convergence_monster <- function(t, x, y, E_best, libraryMax, theta, verbosity, showProgressBar) {
+  # Perform cross-mapping (CCM)
+  ccm <- cross_mapping(t, x, y, E_best, verbosity, showProgressBar)
+
   # Make some rough guesses for the Monster exponential fit coefficients
-  ccmRes <- res$summary
+  ccmRes <- ccm$summary
   firstLibrary <- utils::head(ccmRes$library, 1)
   firstRho <- utils::head(ccmRes$rho, 1)
   finalRho <- utils::tail(ccmRes$rho, 1)
@@ -264,21 +356,53 @@ test_convergence_monster <- function(res, data, cause, effect, verbosity) {
 
   if (monsterFit$rhoInfinity > 0.7) {
     causalSummary <- "Strong evidence"
-    alert <- cli::cli_alert_success
   } else if (monsterFit$rhoInfinity > 0.5) {
     causalSummary <- "Some evidence"
-    alert <- cli::cli_alert_success
   } else {
     causalSummary <- "No evidence"
-    alert <- cli::cli_alert_danger
   }
 
-  givenTimeSeriesNames <- !is.null(data)
-  if (givenTimeSeriesNames) {
-    alert("{causalSummary} of CCM causation from {cause} to {effect} found.")
-  } else {
-    alert("{causalSummary} of CCM causation found.")
+  return(causalSummary)
+}
+
+# ---------------------------------------------------------------------------------------
+# Test for convergence by comparing the distribution of rho at a small library size and
+# a sampled rho at the maximum library size.
+test_convergence_dist <- function(t, x, y, E_best, libraryMax, theta, verbosity, showProgressBar, numReps = 1000) {
+
+  librarySmall <- max(E_best + 2, floor(libraryMax/10))
+
+  distRes <- edm(t, y, x, E = E_best, library = librarySmall, numReps = numReps,
+                 theta = theta, algorithm = "simplex", k = Inf, shuffle = TRUE,
+                 verbosity = 0, showProgressBar = showProgressBar)
+  dist <- distRes$stats$rho
+
+  finalRes <- edm(t, y, x, E = E_best, library = libraryMax, theta = theta,
+                  algorithm = "simplex", k = Inf, shuffle = TRUE,
+                  verbosity = 0, showProgressBar = showProgressBar)
+  finalRho <- finalRes$summary$rho
+
+  quantiles <- quantile(dist, c(0.95, 0.975))
+
+  q975 <- quantiles[[1]]
+  q95  <- quantiles[[2]]
+
+  rhoQuantile = length(dist[dist < finalRho]) / length(dist)
+
+  if (verbosity >= 1 ){
+    cli::cli_alert_info("At library=E+2, found rho quantiles of {round(q975, 5)} (0.975) and {round(q95, 5)} (0.95)")
+    cli::cli_alert_info("At library=max, found final rho was {round(finalRho, 5)}, i.e. quantile={rhoQuantile}")
   }
 
-  return(monsterFit$rhoInfinity > 0.5)
+  if (finalRho > q975) {
+    causalSummary = "Strong evidence"
+  }
+  else if (finalRho > q95) {
+    causalSummary = "Some evidence"
+  }
+  else {
+    causalSummary = "No evidence"
+  }
+
+  return(causalSummary)
 }
