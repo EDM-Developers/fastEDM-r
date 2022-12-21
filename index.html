@@ -103,9 +103,10 @@
 <span>  <span class="st">"https://github.com/EDM-Developers/fastEDM-r/raw/main/vignettes/chicago.csv"</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">crimeCCMCausesTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Crime"</span>, <span class="st">"Temperature"</span>, data<span class="op">=</span><span class="va">df</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
+<span><span class="va">crime_causes_temp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Crime"</span>, <span class="st">"Temperature"</span>, data<span class="op">=</span><span class="va">df</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✖ No evidence of CCM causation from Crime to Temperature found.</span></span>
-<span><span class="va">tempCCMCausesCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Temperature"</span>, <span class="st">"Crime"</span>, data<span class="op">=</span><span class="va">df</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">temp_causes_crime</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/easy_edm.html">easy_edm</a></span><span class="op">(</span><span class="st">"Temperature"</span>, <span class="st">"Crime"</span>, data<span class="op">=</span><span class="va">df</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ Strong evidence of CCM causation from Temperature to Crime found.</span></span></code></pre></div>
 </div>
 <div class="section level2">

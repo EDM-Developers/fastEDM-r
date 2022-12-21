@@ -106,16 +106,18 @@ temperature and crime levels in Chicago, which we make available in the
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  t <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">$</span><span class="va">Time</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  variable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Crime"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Temperature"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">$</span><span class="va">Crime</span>, <span class="va">chicago</span><span class="op">$</span><span class="va">Temperature</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">$</span><span class="va">Crime</span>, <span class="va">chicago</span><span class="op">$</span><span class="va">Temperature</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">t</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">t</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">value</span>, color <span class="op">=</span> <span class="va">variable</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"Time series"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="chicago_files/figure-html/plot-time-series-lines-1.png" width="700"></p>
 <p>When plotted as a scatter plot, there appears to be some linear
 correlation between the variables:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Temperature</span>, y<span class="op">=</span><span class="va">Crime</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"#F8766D"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">chicago</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Temperature</span>, y <span class="op">=</span> <span class="va">Crime</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"#F8766D"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="chicago_files/figure-html/plot-time-series-scatterplot-1.png" width="700"></p>
 <p>Calculating the linear correlation between <code>Crime</code> and
 <code>Temperature</code>:</p>
@@ -145,7 +147,7 @@ of the <code>Temperature</code> time series. We check the values of
 <span><span class="co"># Suppress the progress bar in vignettes, as it confuses knitr.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/formals.html" class="external-link">formals</a></span><span class="op">(</span><span class="va">edm</span><span class="op">)</span><span class="op">$</span><span class="va">showProgressBar</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span></span>
 <span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, E<span class="op">=</span><span class="fl">2</span><span class="op">:</span><span class="fl">10</span>, numThreads<span class="op">=</span><span class="fl">4</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, E <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">10</span>, numThreads <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Summary of predictions</span></span>
 <span><span class="co">#&gt;    E library theta       rho      mae</span></span>
 <span><span class="co">#&gt; 1  2    2181     1 0.9053390 7.103633</span></span>
@@ -170,19 +172,25 @@ which allows us to ascertain the causal links between the crime and
 temperature time series.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Find the maximum library size for the dataset.</span></span>
-<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, E<span class="op">=</span><span class="fl">7</span>,</span>
-<span>           full<span class="op">=</span><span class="cn">TRUE</span>, saveManifolds<span class="op">=</span><span class="cn">TRUE</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>,</span>
+<span>  E <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>  full <span class="op">=</span> <span class="cn">TRUE</span>, saveManifolds <span class="op">=</span> <span class="cn">TRUE</span>, verbosity <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span>
 <span><span class="va">libraryMax</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">Ms</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Choose a linearly spaced grid of library sizes to evaluate the S-map algorithm on.</span></span>
-<span><span class="va">libs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">10</span>, <span class="va">libraryMax</span>, length.out<span class="op">=</span><span class="fl">25</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">libs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">10</span>, <span class="va">libraryMax</span>, length.out <span class="op">=</span> <span class="fl">25</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Run the convergent cross-mapping in each causal direction.</span></span>
-<span><span class="va">crimePredictsTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, numReps<span class="op">=</span><span class="fl">2</span>,</span>
-<span>                         algorithm<span class="op">=</span><span class="st">"smap"</span>, E<span class="op">=</span><span class="fl">7</span>, library<span class="op">=</span><span class="va">libs</span>, k<span class="op">=</span><span class="fl">100</span>, numThreads<span class="op">=</span><span class="fl">4</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span>
+<span><span class="va">crimePredictsTemp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>,</span>
+<span>  numReps <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  algorithm <span class="op">=</span> <span class="st">"smap"</span>, E <span class="op">=</span> <span class="fl">7</span>, library <span class="op">=</span> <span class="va">libs</span>, k <span class="op">=</span> <span class="fl">100</span>, numThreads <span class="op">=</span> <span class="fl">4</span>, verbosity <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">tempPredictsCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span>, numReps<span class="op">=</span><span class="fl">2</span>,</span>
-<span>                         algorithm<span class="op">=</span><span class="st">"smap"</span>, E<span class="op">=</span><span class="fl">7</span>, library<span class="op">=</span><span class="va">libs</span>, k<span class="op">=</span><span class="fl">100</span>, numThreads<span class="op">=</span><span class="fl">4</span>, verbosity<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">tempPredictsCrime</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/edm.html">edm</a></span><span class="op">(</span><span class="va">chicago</span><span class="op">[</span><span class="st">"Time"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Temperature"</span><span class="op">]</span>, <span class="va">chicago</span><span class="op">[</span><span class="st">"Crime"</span><span class="op">]</span>,</span>
+<span>  numReps <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  algorithm <span class="op">=</span> <span class="st">"smap"</span>, E <span class="op">=</span> <span class="fl">7</span>, library <span class="op">=</span> <span class="va">libs</span>, k <span class="op">=</span> <span class="fl">100</span>, numThreads <span class="op">=</span> <span class="fl">4</span>, verbosity <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <div class="alert alert-dismissible alert-info">
 <button type="button" class="btn-close" data-bs-dismiss="alert">
 </button>
@@ -204,10 +212,12 @@ machine with more CPU cores or faster cores will help significantly.</p>
 <span>  Correlation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="va">crimePredictsTemp</span><span class="op">$</span><span class="va">summary</span><span class="op">$</span><span class="va">rho</span>,</span>
 <span>    <span class="va">tempPredictsCrime</span><span class="op">$</span><span class="va">summary</span><span class="op">$</span><span class="va">rho</span></span>
-<span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">tidyDF</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Library</span>, y <span class="op">=</span> <span class="va">Correlation</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">Direction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"steelblue"</span>, <span class="st">"darkred"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">Direction</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"steelblue"</span>, <span class="st">"darkred"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">tempPredictsCrime</span><span class="op">$</span><span class="va">stats</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">crimePredictsTemp</span><span class="op">$</span><span class="va">stats</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">library</span>, y <span class="op">=</span> <span class="va">rho</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, color <span class="op">=</span> <span class="st">"darkred"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="chicago_files/figure-html/plot-ccm-rho-L-1.png" width="700"></p>
@@ -231,16 +241,18 @@ If we run `edm` with the `saveSMAPCoeffs=TRUE` option, we can store the fitted S
 ```r
 # Library size should be 4365
 tempPredictsCrime <- edm(chicago["Time"], chicago["Temperature"], chicago["Crime"],
-                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE, 
-                         numThreads=4)
+  algorithm = "smap", E = 7, k = Inf, saveSMAPCoeffs = TRUE,
+  numThreads = 4
+)
 #> Summary of predictions
 #>   E library theta      rho     mae
 #> 1 7    4365     1 0.467841 136.929
 #> Number of neighbours (k) is set to 4364
 
 crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature"],
-                         algorithm="smap", E=7, k=Inf, saveSMAPCoeffs=TRUE,
-                         numThreads=4)
+  algorithm = "smap", E = 7, k = Inf, saveSMAPCoeffs = TRUE,
+  numThreads = 4
+)
 #> Summary of predictions
 #>   E library theta      rho     mae
 #> 1 7    4365     1 0.548856 14.6611
@@ -249,14 +261,14 @@ crimePredictsTemp <- edm(chicago["Time"], chicago["Crime"], chicago["Temperature
 # . edm xmap temp crime, e(7) alg(smap) k(-1) savesmap(beta)
 # Percent complete: 0...10...20...30...40...50...60...70...80...90...
 # Percent complete: 0...10...20...30...40...50...60...70...80...90...
-# 
+#
 # Empirical Dynamic Modelling
 # Convergent Cross-mapping result for variables temp and crime
 # --------------------------------------------------------------------------
 #                  Mapping    Library size             rho             MAE
 # --------------------------------------------------------------------------
-#    crime ~ crime|M(temp)            4365          .46784          136.93 
-#     temp ~ temp|M(crime)            4365          .54886          14.661 
+#    crime ~ crime|M(temp)            4365          .46784          136.93
+#     temp ~ temp|M(crime)            4365          .54886          14.661
 # --------------------------------------------------------------------------
 # Note: Number of neighbours (k) is set to 4364
 # Note: The embedding dimension E is 7
@@ -268,7 +280,6 @@ Plotting them allows us to see the contemporaneous effect of temperature on crim
 ```r
 # . twoway (kdensity beta1_b1_rep1), xtitle("Contemporaneous effect of temperatur
 # > e on crime") ytitle("Density")
-
 ```
 <!- # ![Contemporaneous effect of temperature on crime](chicago-crime1.svg) ->
 
@@ -278,7 +289,6 @@ Plotting them allows us to see the contemporaneous effect of temperature on crim
 # > ("Contemporaneous effect of temperature on crime") msize(small))(lpoly beta1_
 # > b1_rep1 temp), legend(on order( 1 "Local coefficient" 2 "Local polynomial smo
 # > othing"))
-
 ```
 <!- ![Contemporaneous effect of temperature on crime](chicago-crime2.svg) ->
 
