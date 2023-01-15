@@ -40,7 +40,7 @@ public:
       _rng.init((unsigned long long)0);
     }
 
-    _numObsUsable = std::accumulate(usable.begin(), usable.end(), 0);
+    _numObsUsable = std::count(usable.begin(), usable.end(), true);
 
     if (crossfold > 0) {
       setup_crossfold_groups();

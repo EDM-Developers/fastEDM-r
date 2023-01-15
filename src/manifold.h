@@ -126,30 +126,12 @@ public:
     setup_observation_numbers();
   }
 
-  double dtWeight() const
-  {
-    return _dtWeight;
-  }
-  int numObs() const
-  {
-    return _t.size();
-  }
-  double time(int i) const
-  {
-    return _t[i];
-  }
-  bool panelMode() const
-  {
-    return _panel_mode;
-  }
-  int panel(int i) const
-  {
-    return _panelIDs[i];
-  }
-  const std::vector<int>& panelIDs() const
-  {
-    return _panelIDs;
-  }
+  double dtWeight() const { return _dtWeight; }
+  int numObs() const { return _t.size(); }
+  double time(int i) const { return _t[i]; }
+  bool panelMode() const { return _panel_mode; }
+  int panel(int i) const { return _panelIDs[i]; }
+  const std::vector<int>& panelIDs() const { return _panelIDs; }
 
   std::vector<bool> generate_usable(int maxE, bool copredictionMode = false) const;
 
@@ -166,27 +148,12 @@ public:
     return dts;
   }
 
-  int E_dt(int E) const
-  {
-    return (_dt || _reldt) * E;
-  }
-  int E_extras(int E) const
-  {
-    return _num_extras + _num_extras_lagged * (E - 1);
-  }
-  int E_actual(int E) const
-  {
-    return E + E_dt(E) + E_extras(E);
-  }
+  int E_dt(int E) const { return (_dt || _reldt) * E; }
+  int E_extras(int E) const { return _num_extras + _num_extras_lagged * (E - 1); }
+  int E_actual(int E) const { return E + E_dt(E) + E_extras(E); }
 
-  int numExtrasLagged() const
-  {
-    return _num_extras_lagged;
-  }
-  int numExtras() const
-  {
-    return _num_extras;
-  }
+  int numExtrasLagged() const { return _num_extras_lagged; }
+  int numExtras() const { return _num_extras; }
 };
 
 class Manifold

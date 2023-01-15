@@ -90,8 +90,9 @@ ThreadPool* taskRunnerPoolPtr = &taskRunnerPool;
 std::vector<std::function<PredictionResult()>> configure_tasks(
   const std::shared_ptr<ManifoldGenerator> generator, Options opts, const std::vector<int>& Es,
   const std::vector<int>& libraries, int k, int numReps, int crossfold, bool explore, bool full, bool shuffle,
-  bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode,
-  const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
+  bool saveFinalTargets, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs,
+  bool copredictMode, const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(),
+  void all_tasks_finished())
 {
   std::vector<std::function<PredictionResult()>> tasks;
 
@@ -165,9 +166,12 @@ std::vector<std::function<PredictionResult()>> configure_tasks(
 
         if (explore) {
           opts.savePrediction = saveFinalPredictions && ((iter == numReps) || (crossfold > 0)) && lastConfig;
+          opts.saveTargets = saveFinalTargets && ((iter == numReps) || (crossfold > 0)) && lastConfig;
         } else {
           opts.savePrediction = saveFinalPredictions && (iter == numReps) && lastConfig;
+          opts.saveTargets = saveFinalTargets && (iter == numReps) && lastConfig;
         }
+
         opts.saveSMAPCoeffs = saveSMAPCoeffs;
 
         if (newLibraryPredictionSplit) {
@@ -223,8 +227,8 @@ void setup_arrayfire()
 std::vector<PredictionResult> run_tasks(const std::shared_ptr<ManifoldGenerator> generator, Options opts,
                                         const std::vector<int>& Es, const std::vector<int>& libraries, int k,
                                         int numReps, int crossfold, bool explore, bool full, bool shuffle,
-                                        bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs,
-                                        bool copredictMode, const std::vector<bool>& usable,
+                                        bool saveFinalTargets, bool saveFinalPredictions, bool saveFinalCoPredictions,
+                                        bool saveSMAPCoeffs, bool copredictMode, const std::vector<bool>& usable,
                                         const std::string& rngState, IO* io, bool keep_going(),
                                         void all_tasks_finished())
 {
@@ -235,9 +239,10 @@ std::vector<PredictionResult> run_tasks(const std::shared_ptr<ManifoldGenerator>
     workerPoolPtr->set_num_workers(opts.nthreads);
   }
 
-  std::vector<std::function<PredictionResult()>> tasks = configure_tasks(
-    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
-    saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io, keep_going, all_tasks_finished);
+  std::vector<std::function<PredictionResult()>> tasks =
+    configure_tasks(generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalTargets,
+                    saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io,
+                    keep_going, all_tasks_finished);
 
   std::vector<PredictionResult> results;
 
@@ -251,8 +256,9 @@ std::vector<PredictionResult> run_tasks(const std::shared_ptr<ManifoldGenerator>
 std::vector<std::future<PredictionResult>> launch_tasks(
   const std::shared_ptr<ManifoldGenerator> generator, Options opts, const std::vector<int>& Es,
   const std::vector<int>& libraries, int k, int numReps, int crossfold, bool explore, bool full, bool shuffle,
-  bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs, bool copredictMode,
-  const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(), void all_tasks_finished())
+  bool saveFinalTargets, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveSMAPCoeffs,
+  bool copredictMode, const std::vector<bool>& usable, const std::string& rngState, IO* io, bool keep_going(),
+  void all_tasks_finished())
 {
 #if defined(WITH_ARRAYFIRE)
   setup_arrayfire();
@@ -262,9 +268,10 @@ std::vector<std::future<PredictionResult>> launch_tasks(
     workerPoolPtr->set_num_workers(opts.nthreads);
   }
 
-  std::vector<std::function<PredictionResult()>> tasks = configure_tasks(
-    generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
-    saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io, keep_going, all_tasks_finished);
+  std::vector<std::function<PredictionResult()>> tasks =
+    configure_tasks(generator, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalTargets,
+                    saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, io,
+                    keep_going, all_tasks_finished);
 
   std::vector<std::future<PredictionResult>> futures;
 
@@ -472,6 +479,13 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
       pred.Mp = nullptr;
     }
 
+    if (opts.saveTargets) {
+      pred.targets = std::make_unique<double[]>(numPredictions);
+      for (int i = 0; i < Mp.numTargets(); i++) {
+        pred.targets[i] = Mp.target(i);
+      }
+    }
+
     // If we're storing the prediction and/or the S-map coefficients, put them
     // into the resulting PredictionResult struct. Otherwise, let them be deleted.
     if (opts.savePrediction) {
@@ -494,7 +508,7 @@ PredictionResult edm_task(const std::shared_ptr<ManifoldGenerator> generator, Op
       pred.coeffs = nullptr;
     }
 
-    if (opts.savePrediction || opts.saveSMAPCoeffs) {
+    if (opts.saveTargets || opts.savePrediction || opts.saveSMAPCoeffs) {
       pred.predictionRows = std::move(predictionRows);
     }
 

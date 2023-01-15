@@ -66,6 +66,7 @@ struct Options
   bool explore;
   bool copredict;
   bool forceCompute;
+  bool saveTargets;
   bool savePrediction;
   bool saveSMAPCoeffs;
   int k, nthreads, library;
@@ -99,6 +100,7 @@ struct PredictionResult
 {
   retcode rc;
   size_t numThetas, numPredictions, numCoeffCols;
+  std::unique_ptr<double[]> targets;
   std::unique_ptr<double[]> predictions;
   std::unique_ptr<double[]> coeffs;
   std::unique_ptr<Manifold> M, Mp;

@@ -158,6 +158,10 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
     opts.cmdLine = "";
     opts.saveKUsed = true;
 
+    // TODO: Add a flag for this.
+    opts.saveTargets = false;
+    bool saveFinalTargets = false;
+
     if (io.verbosity > 1) {
       io.print(fmt::format("Num threads used is {}\n", opts.nthreads));
       io.print(
@@ -311,9 +315,10 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
     auto genPtr = std::shared_ptr<ManifoldGenerator>(&generator, [](ManifoldGenerator*) {});
 
-    std::vector<std::future<PredictionResult>> futures = launch_tasks(
-      genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalPredictions,
-      saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io, rcpp_keep_going, nullptr);
+    std::vector<std::future<PredictionResult>> futures =
+      launch_tasks(genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalTargets,
+                   saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io,
+                   rcpp_keep_going, nullptr);
 
     if (io.verbosity > 1) {
       io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));
