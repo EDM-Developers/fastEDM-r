@@ -1,0 +1,8 @@
+bibentry(bibtype = "Article",
+         title = "Beyond Linearity, Stability, and Equilibrium: The edm Package for Empirical Dynamic Modeling and Convergent Cross Mapping in Stata",
+         author = c(person("Jinjing", "Li"),
+                    person(c("Michael", "J."), "Zyphur"),
+                    person("George", "Sugihara"),
+                    person(c("Patrick", "J."), "Laub")),
+         year = "2021", journal="Stata Journal",
+         volume = "21(1)", pages = "pp. 220-258")
