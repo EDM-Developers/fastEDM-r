@@ -19,6 +19,7 @@ edm(
   crossfold = 0,
   full = FALSE,
   shuffle = FALSE,
+  seed = 0,
   copredict = c(),
   savePredictions = FALSE,
   saveCoPredictions = FALSE,
@@ -130,6 +131,9 @@ the same as leave-one-out cross-validation as the observation itself is not used
 the oldest observations go into the library set and the newest observations to the prediction set.
 Though if the randomize option is specified, the data is allocated into the two sets in a random
 fashion. If the replicate option is specified, then this randomization is enabled automatically.}
+
+\item{seed}{To allow for reproducibility of the internal random number generator, set this seed
+to a given integer value.}
 
 \item{copredict}{This option specifies the variable used for coprediction.
 A second prediction is run for each configuration of \eqn{E}, library, etc., using the same library set
