@@ -72,6 +72,7 @@ low-level, so beginners are recommended to instead use `easy_edm`.</p>
 <span>  crossfold <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  full <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  shuffle <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  copredict <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  savePredictions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  saveCoPredictions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -211,6 +212,11 @@ the same as leave-one-out cross-validation as the observation itself is not used
 the oldest observations go into the library set and the newest observations to the prediction set.
 Though if the randomize option is specified, the data is allocated into the two sets in a random
 fashion. If the replicate option is specified, then this randomization is enabled automatically.</p></dd>
+
+
+<dt>seed</dt>
+<dd><p>To allow for reproducibility of the internal random number generator, set this seed
+to a given integer value.</p></dd>
 
 
 <dt>copredict</dt>
