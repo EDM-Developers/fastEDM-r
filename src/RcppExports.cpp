@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // run_command
-Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas, Rcpp::Nullable<Rcpp::IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveManifolds, bool saveSMAPCoeffs, bool dt, bool reldt, double dtWeight, Rcpp::Nullable<Rcpp::List> extras, bool allowMissing, double missingDistance, double panelWeight, Rcpp::Nullable<Rcpp::NumericMatrix> panelWeights, int verbosity, bool showProgressBar, int numThreads, bool lowMemory, bool predictWithPast, std::string saveInputs);
-RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveFinalCoPredictionsSEXP, SEXP saveManifoldsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP reldtSEXP, SEXP dtWeightSEXP, SEXP extrasSEXP, SEXP allowMissingSEXP, SEXP missingDistanceSEXP, SEXP panelWeightSEXP, SEXP panelWeightsSEXP, SEXP verbositySEXP, SEXP showProgressBarSEXP, SEXP numThreadsSEXP, SEXP lowMemorySEXP, SEXP predictWithPastSEXP, SEXP saveInputsSEXP) {
+Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas, Rcpp::Nullable<Rcpp::IntegerVector> libs, int k, std::string algorithm, int numReps, int p, int crossfold, bool full, bool shuffle, int seed, bool saveFinalPredictions, bool saveFinalCoPredictions, bool saveManifolds, bool saveSMAPCoeffs, bool dt, bool reldt, double dtWeight, Rcpp::Nullable<Rcpp::List> extras, bool allowMissing, double missingDistance, double panelWeight, Rcpp::Nullable<Rcpp::NumericMatrix> panelWeights, int verbosity, bool showProgressBar, int numThreads, bool lowMemory, bool predictWithPast, std::string saveInputs);
+RcppExport SEXP _fastEDM_run_command(SEXP dfSEXP, SEXP esSEXP, SEXP tauSEXP, SEXP thetasSEXP, SEXP libsSEXP, SEXP kSEXP, SEXP algorithmSEXP, SEXP numRepsSEXP, SEXP pSEXP, SEXP crossfoldSEXP, SEXP fullSEXP, SEXP shuffleSEXP, SEXP seedSEXP, SEXP saveFinalPredictionsSEXP, SEXP saveFinalCoPredictionsSEXP, SEXP saveManifoldsSEXP, SEXP saveSMAPCoeffsSEXP, SEXP dtSEXP, SEXP reldtSEXP, SEXP dtWeightSEXP, SEXP extrasSEXP, SEXP allowMissingSEXP, SEXP missingDistanceSEXP, SEXP panelWeightSEXP, SEXP panelWeightsSEXP, SEXP verbositySEXP, SEXP showProgressBarSEXP, SEXP numThreadsSEXP, SEXP lowMemorySEXP, SEXP predictWithPastSEXP, SEXP saveInputsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,6 +30,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type crossfold(crossfoldSEXP);
     Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
     Rcpp::traits::input_parameter< bool >::type shuffle(shuffleSEXP);
+    Rcpp::traits::input_parameter< int >::type seed(seedSEXP);
     Rcpp::traits::input_parameter< bool >::type saveFinalPredictions(saveFinalPredictionsSEXP);
     Rcpp::traits::input_parameter< bool >::type saveFinalCoPredictions(saveFinalCoPredictionsSEXP);
     Rcpp::traits::input_parameter< bool >::type saveManifolds(saveManifoldsSEXP);
@@ -48,13 +49,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type lowMemory(lowMemorySEXP);
     Rcpp::traits::input_parameter< bool >::type predictWithPast(predictWithPastSEXP);
     Rcpp::traits::input_parameter< std::string >::type saveInputs(saveInputsSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, saveFinalPredictions, saveFinalCoPredictions, saveManifolds, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, panelWeight, panelWeights, verbosity, showProgressBar, numThreads, lowMemory, predictWithPast, saveInputs));
+    rcpp_result_gen = Rcpp::wrap(run_command(df, es, tau, thetas, libs, k, algorithm, numReps, p, crossfold, full, shuffle, seed, saveFinalPredictions, saveFinalCoPredictions, saveManifolds, saveSMAPCoeffs, dt, reldt, dtWeight, extras, allowMissing, missingDistance, panelWeight, panelWeights, verbosity, showProgressBar, numThreads, lowMemory, predictWithPast, saveInputs));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 30},
+    {"_fastEDM_run_command", (DL_FUNC) &_fastEDM_run_command, 31},
     {NULL, NULL, 0}
 };
 

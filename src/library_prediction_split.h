@@ -26,7 +26,7 @@ private:
 
 public:
   LibraryPredictionSetSplitter(bool explore, bool full, bool shuffle, int crossfold, std::vector<bool> usable,
-                               const std::string& rngState = "")
+                               const std::string& rngState = "", const int seed = 0)
     : _explore(explore)
     , _full(full)
     , _shuffle(shuffle)
@@ -37,7 +37,7 @@ public:
       // Sync the local random number generator with Stata's
       set_rng_state(rngState);
     } else {
-      _rng.init((unsigned long long)0);
+      _rng.init((unsigned long long)seed);
     }
 
     _numObsUsable = std::count(usable.begin(), usable.end(), true);

@@ -108,7 +108,7 @@ Rcpp::NumericMatrix to_R_matrix(const double* v, int r, int c, std::vector<bool>
 Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp::NumericVector thetas,
                        Rcpp::Nullable<Rcpp::IntegerVector> libs, int k = 0, std::string algorithm = "simplex",
                        int numReps = 1, int p = 1, int crossfold = 0, bool full = false, bool shuffle = false,
-                       bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
+                       int seed = 0, bool saveFinalPredictions = false, bool saveFinalCoPredictions = false,
                        bool saveManifolds = false, bool saveSMAPCoeffs = false, bool dt = false, bool reldt = false,
                        double dtWeight = 0.0, Rcpp::Nullable<Rcpp::List> extras = R_NilValue, bool allowMissing = false,
                        double missingDistance = 0.0, double panelWeight = 0.0,
@@ -317,8 +317,8 @@ Rcpp::List run_command(Rcpp::DataFrame df, Rcpp::IntegerVector es, int tau, Rcpp
 
     std::vector<std::future<PredictionResult>> futures =
       launch_tasks(genPtr, opts, Es, libraries, k, numReps, crossfold, explore, full, shuffle, saveFinalTargets,
-                   saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, &io,
-                   rcpp_keep_going, nullptr);
+                   saveFinalPredictions, saveFinalCoPredictions, saveSMAPCoeffs, copredictMode, usable, rngState, seed,
+                   &io, rcpp_keep_going, nullptr);
 
     if (io.verbosity > 1) {
       io.print(fmt::format("Waiting for {} results to come back\n", futures.size()));

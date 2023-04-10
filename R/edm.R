@@ -97,6 +97,9 @@
 #' Though if the randomize option is specified, the data is allocated into the two sets in a random
 #' fashion. If the replicate option is specified, then this randomization is enabled automatically.
 #'
+#' @param seed To allow for reproducibility of the internal random number generator, set this seed
+#' to a given integer value.
+#'
 #' @param copredict This option specifies the variable used for coprediction.
 #' A second prediction is run for each configuration of \eqn{E}, library, etc., using the same library set
 #' but with a prediction set built from the lagged embedding of this variable.
@@ -228,7 +231,7 @@
 #' #
 edm <- function(t, x, y = c(), panel = c(), E = 2, tau = 1, theta = 1, library = NULL,
                 k = 0, algorithm = "simplex", p = NULL, crossfold = 0, full = FALSE,
-                shuffle = FALSE, copredict = c(), savePredictions = FALSE,
+                shuffle = FALSE, seed = 0, copredict = c(), savePredictions = FALSE,
                 saveCoPredictions = FALSE, saveManifolds = FALSE,
                 saveSMAPCoeffs = FALSE, extras = NULL, allowMissing = FALSE,
                 missingDistance = 0.0, dt = FALSE, reldt = FALSE, dtWeight = 0.0,
@@ -318,10 +321,9 @@ edm <- function(t, x, y = c(), panel = c(), E = 2, tau = 1, theta = 1, library =
     panelWeight
   }
 
-  res <- run_command(df, E, tau, theta, library,
-    k,
+  res <- run_command(df, E, tau, theta, library, k,
     algorithm = algorithm, numReps = numReps,
-    p = p, crossfold = crossfold, full = full, shuffle = shuffle,
+    p = p, crossfold = crossfold, full = full, shuffle = shuffle, seed = seed,
     saveFinalPredictions = savePredictions,
     saveFinalCoPredictions = saveCoPredictions,
     saveManifolds = saveManifolds,
