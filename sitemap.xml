@@ -1,39 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/404.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/articles/chicago.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/index.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/reference/easy_edm.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/reference/edm.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/reference/fastEDM.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://edm-developers.github.io/fastEDM/reference/logistic_map.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://edm-developers.github.io/fastEDM-r/404.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/LICENSE-text.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/articles/chicago.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/articles/index.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/authors.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/index.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/news/index.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/reference/easy_edm.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/reference/edm.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/reference/fastEDM.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/reference/index.html</loc></url>
+<url><loc>https://edm-developers.github.io/fastEDM-r/reference/logistic_map.html</loc></url>
 </urlset>
+
