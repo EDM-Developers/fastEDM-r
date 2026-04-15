@@ -424,13 +424,13 @@ test_convergence_dist <- function(t, x, y, E_best, libraryMax, theta, verbosity,
 
   quantiles <- stats::quantile(dist, c(0.95, 0.975))
 
-  q975 <- quantiles[[1]]
-  q95 <- quantiles[[2]]
+  q95 <- quantiles[[1]]
+  q975 <- quantiles[[2]]
 
   rhoQuantile <- length(dist[dist < finalRho]) / length(dist)
 
   if (verbosity >= 1) {
-    cli::cli_alert_info("At library=E+2, found rho quantiles of {round(q975, 5)} (0.975) and {round(q95, 5)} (0.95)")
+    cli::cli_alert_info("At library=E+2, found rho quantiles of {round(q95, 5)} (0.95) and {round(q975, 5)} (0.975)")
     cli::cli_alert_info("At library=max, found final rho was {round(finalRho, 5)}, i.e. quantile={rhoQuantile}")
   }
 
