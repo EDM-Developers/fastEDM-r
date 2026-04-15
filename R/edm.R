@@ -230,7 +230,7 @@
 #' res <- edm(t, x)
 #' #
 edm <- function(t, x, y = c(), panel = c(), E = 2, tau = 1, theta = 1, library = NULL,
-                k = 0, algorithm = "simplex", p = NULL, crossfold = 0, full = FALSE,
+                k = 0, algorithm = "simplex", p = NULL, crossfold = 0, full = TRUE,
                 shuffle = FALSE, seed = 0, copredict = c(), savePredictions = FALSE,
                 saveCoPredictions = FALSE, saveManifolds = FALSE,
                 saveSMAPCoeffs = FALSE, extras = NULL, allowMissing = FALSE,
