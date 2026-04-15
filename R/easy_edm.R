@@ -189,11 +189,12 @@ test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, v
   )
 
   optIndex <- which(res$summary$rho == max(res$summary$rho))
-  optRho <- res$summary$rho[optIndex]
-  optTheta <- res$summary$theta[optIndex]
+  # When multiple thetas tie at max rho, take the smallest (most parsimonious)
+  optTheta <- min(res$summary$theta[optIndex])
+  optRho <- res$summary$rho[optIndex[1]]
 
   if (verbosity > 0) {
-    cli::cli_alert_success("Found optimal theta to be {optTheta}, with rho = {optRho}.")
+    cli::cli_alert_success("Found optimal theta to be {optTheta}, with rho = {round(optRho, 5)}.")
   }
 
   resBase <- edm(t, x,
@@ -271,7 +272,7 @@ get_optimal_effect <- function(t, x, y, E_best, verbosity, showProgressBar, isNo
   }
 
   yLag <- tslag(t, y, optLag)
-  if (isNonLinear) {
+  if (isNonLinear || optLag == 0) {
     # Transform y and data to match optimal lagged series
     yOpt <- yLag
 
