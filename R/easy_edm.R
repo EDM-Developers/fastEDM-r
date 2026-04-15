@@ -39,7 +39,7 @@
 #
 easy_edm <- function(cause, effect, time = NULL, data = NULL,
                      direction = "oneway", verbosity = 1, showProgressBar = NULL,
-                     normalize = TRUE) {
+                     normalize = TRUE, useKS = FALSE) {
   # !! Parameterise these values later
   convergence_method <- "quantile"
   max_theta <- 5
@@ -63,7 +63,7 @@ easy_edm <- function(cause, effect, time = NULL, data = NULL,
   # Test for non-linearity using S-Map
   test_output <- test_nonlinearity(
     t, x, E_best, max_theta, num_thetas, theta_reps,
-    verbosity, showProgressBar
+    verbosity, showProgressBar, useKS
   )
   optTheta <- test_output$theta
   isNonLinear <- test_output$outcome
@@ -180,7 +180,7 @@ find_embedding_dimension <- function(t, x, verbosity, showProgressBar) {
 
 # ---------------------------------------------------------------------------------------
 # Test for non-linearity using S-Map
-test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar) {
+test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, verbosity, showProgressBar, useKS = FALSE) {
   theta_values <- seq(0, max_theta, length.out = 1 + num_thetas)
 
   res <- edm(t, x,
@@ -197,27 +197,39 @@ test_nonlinearity <- function(t, x, E_best, max_theta, num_thetas, theta_reps, v
     cli::cli_alert_success("Found optimal theta to be {optTheta}, with rho = {round(optRho, 5)}.")
   }
 
-  resBase <- edm(t, x,
-    E = E_best, theta = 0, verbosity = 0, numReps = theta_reps,
-    k = 20, algorithm = "smap", showProgressBar = showProgressBar
-  )
-  resOpt <- edm(t, x,
-    E = E_best, theta = optTheta, verbosity = 0, numReps = theta_reps,
-    k = 20, algorithm = "smap", showProgressBar = showProgressBar
-  )
+  if (useKS) {
+    resBase <- edm(t, x,
+      E = E_best, theta = 0, verbosity = 0, numReps = theta_reps,
+      k = 20, algorithm = "smap", showProgressBar = showProgressBar
+    )
+    resOpt <- edm(t, x,
+      E = E_best, theta = optTheta, verbosity = 0, numReps = theta_reps,
+      k = 20, algorithm = "smap", showProgressBar = showProgressBar
+    )
 
-  sampleBase <- resBase$stats$rho
-  sampleOpt <- resOpt$stats$rho
+    sampleBase <- resBase$stats$rho
+    sampleOpt <- resOpt$stats$rho
 
-  ksOut <- stats::ks.test(sampleOpt, sampleBase, alternative = "less")
-  ksStat <- ksOut$statistic
-  ksPVal <- ksOut$p.value
+    ksOut <- stats::ks.test(sampleOpt, sampleBase, alternative = "less")
+    ksStat <- ksOut$statistic
+    ksPVal <- ksOut$p.value
 
-  if (verbosity > 0) {
-    cli::cli_alert_success("Found Kolmogorov-Smirnov test statistic to be {ksStat} with p-value={ksPVal}.")
+    if (verbosity > 0) {
+      cli::cli_alert_success("Found Kolmogorov-Smirnov test statistic to be {ksStat} with p-value={ksPVal}.")
+    }
+
+    isNonLinear <- ksPVal < 0.05
+  } else {
+    isNonLinear <- optTheta > 0
+
+    if (verbosity > 0) {
+      if (isNonLinear) {
+        cli::cli_alert_success("Nonlinearity detected (optimal theta > 0).")
+      } else {
+        cli::cli_alert_info("No nonlinearity detected (optimal theta = 0).")
+      }
+    }
   }
-
-  isNonLinear <- ksPVal < 0.05
 
   return(data.frame(theta = optTheta, outcome = isNonLinear))
 }
